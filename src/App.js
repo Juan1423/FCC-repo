@@ -25,6 +25,8 @@ import VerAuditorias from './modules/auditoria/componets/verAuditorias';
 import ExportarAuditorias from './modules/auditoria/componets/exportarAuditoria';
 
 
+// ✅ Importa el chatbot
+import { ChatBotIA } from './components/ChatBotIA';
 
 const CombinedProviders = ({ children }) => (
   <MenuProvider>
@@ -112,6 +114,7 @@ function App() {
           </Routes>
           </CombinedProviders>
       </BrowserRouter>
+      <ChatBotIA/>
     </div>
   );
 }
