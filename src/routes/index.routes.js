@@ -5,6 +5,8 @@ const path = require('path');
 const setupAuthRoutes = require('./auth.routes');
 const setupUploadsRoutes = require('./setupUploadsRoutes');
 
+const setupOpenAiRoutes = require('./openai.routes'); // Chatbot IA
+
 function routerApi(app) {
   const router = express.Router();
 
@@ -165,9 +167,11 @@ function routerApi(app) {
    */
 
   setupUploadsRoutes(app);
+
   setupHistoriaClinicaRoutes(router);
   setupAuthRoutes(router);
   setupCie11Routes(router);
+  setupOpenAiRoutes(router);
 }
 
 module.exports = routerApi;
