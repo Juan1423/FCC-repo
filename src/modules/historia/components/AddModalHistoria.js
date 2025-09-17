@@ -5,7 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AntecedentesFamiliares from './AntecedentesFamiliares';
 import AntecedentesPersonales from './AntecedentesPersonales';
-import { createAuditoria,} from '../../../services/auditoriaServices';
+import { logAuditAction } from '../../../services/auditoriaServices';
 import { getCurrentUserId } from "../../../utils/userUtils";
 const AddModalHistoria = ({ open, onClose, historiaId, onHistoriaUpdated, setIsNewHistory, isNewHistory}) => {
   const [activeStep, setActiveStep] = useState(0);
@@ -243,15 +243,8 @@ const AddModalHistoria = ({ open, onClose, historiaId, onHistoriaUpdated, setIsN
         fecha_modificacion: new Date().toISOString()
       };
   
-      const auditData = {
-        id_usuario: loggedInUserId,
-        modulo: "Historia",
-        operacion: isNewHistory ? "Crear" : "Editar", // Changed to match allowed values
-        detalle: JSON.stringify(detailedDescription),
-        fecha: new Date().toISOString()
-      };
-  
-      await createAuditoria(auditData);
+      const operacion = isNewHistory ? 'CREAR_HISTORIA' : 'EDITAR_HISTORIA';
+      await logAuditAction(operacion, detailedDescription);
       
       if (onHistoriaUpdated) {
         onHistoriaUpdated(response);
