@@ -8,7 +8,7 @@ import { updatePersonalSalud, getEspecialidades, getTipoEspecialidad } from '../
 import { TextInput, PhoneInput, AutocompleteInput, FileInput, DateInput } from '../../../components/Inputs';
 import { tipoIdentificacion,  paises } from '../../../components/data/Data';
 import dayjs from "dayjs";
-import {createAuditoria,} from "../../../services/auditoriaServices";
+import { logAuditAction } from "../../../services/auditoriaServices";
 import { getCurrentUserId } from "../../../utils/userUtils";
 const steps = ['Información Personal', 'Información de Contacto', 'Información Profesional'];
 
@@ -185,15 +185,7 @@ const ModalEditPersonalSalud = ({ open, onClose, personalData, onPersonalSaludUp
           fecha_modificacion: new Date().toISOString()
         };
 
-        const auditData = {
-          id_usuario: loggedInUserId,
-          modulo: "Personal Salud",
-          operacion: "EDITAR",
-          detalle: JSON.stringify(detailedDescription),
-          fecha: new Date().toISOString()
-        };
-        
-        await createAuditoria(auditData);
+        await logAuditAction('ACTUALIZAR_PERSONAL', detailedDescription);
         setSuccessAlert(true);
         onPersonalSaludUpdated();
         onClose();

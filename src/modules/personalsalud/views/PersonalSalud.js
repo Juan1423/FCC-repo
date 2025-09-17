@@ -9,7 +9,7 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { getPersonalSaludId, deleteLogicalPersonalSalud, getPersonalSalud } from '../../../services/personalsaludServices';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useState, useEffect } from 'react';
-import { createAuditoria,} from "../../../services/auditoriaServices";
+import { logAuditAction } from "../../../services/auditoriaServices";
 import { getCurrentUserId } from '../../../utils/userUtils';
 import BuscarPersonal from '../components/buscarPersonal';
 import ModalAddPersonalSalud from '../components/modalAddPersonal';
@@ -113,15 +113,8 @@ const PersonalSalud = () => {
         fecha_modificacion: new Date().toISOString()
       };
 
-      const auditData = {
-        id_usuario: loggedInUserId,
-        modulo: "Personal Salud",
-        operacion: personal.estado_personal ? "DESACTIVAR" : "ACTIVAR",
-        detalle: JSON.stringify(detailedDescription),
-        fecha: new Date().toISOString()
-      };
-      
-      await createAuditoria(auditData);
+      const operacion = personal.estado_personal ? "DESACTIVAR_PERSONAL" : "ACTIVAR_PERSONAL";
+      await logAuditAction(operacion, detailedDescription);
       fetchPersonalSalud();
       handleAlertClose();
     } catch (error) {

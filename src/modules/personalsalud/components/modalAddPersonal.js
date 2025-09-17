@@ -28,7 +28,7 @@ import {
 import { tipoIdentificacion, paises } from "../../../components/data/Data";
 import dayjs from "dayjs";
 //import { createAtencion } from "../../../services/atencion";
-import { createAuditoria,} from "../../../services/auditoriaServices";
+import { logAuditAction } from "../../../services/auditoriaServices";
 import { getCurrentUserId } from "../../../utils/userUtils";
 
 const steps = [
@@ -229,15 +229,7 @@ const ModalAddPersonalSalud = ({ open, onClose, onPersonalSaludAdded }) => {
           fecha_modificacion: new Date().toISOString()
         };
 
-        const auditData = {
-          id_usuario: loggedInUserId,
-          modulo: "Personal Salud",
-          operacion: "CREAR",
-          detalle: JSON.stringify(detailedDescription),
-          fecha: new Date().toISOString()
-        };
-        
-        await createAuditoria(auditData);
+        await logAuditAction('CREAR_PERSONAL', detailedDescription);
         onPersonalSaludAdded(true);
         onClose();
       }
