@@ -4,7 +4,13 @@ class AuditoriaService {
   constructor() {}
 
   async find() {
-    const res = await models.Auditoria.findAll();
+    const res = await models.Auditoria.findAll({
+      include: [{
+        model: models.Usuario,
+        as: 'usuario_auditoria',
+        attributes: ['nombre_usuario', 'apellido_usuario', 'correo_usuario']
+      }]
+    });
     return res;
   }
 
