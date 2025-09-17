@@ -17,7 +17,7 @@ const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 
 const swaggerOptions = {
     definition: swaggerDefinitions,
-    apis: ['./src/routes/*.js'], // Rutas de tus archivos con anotaciones Swagger
+    apis: ['./src/routes/**/*.js'], // Rutas de tus archivos con anotaciones Swagger
   };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
