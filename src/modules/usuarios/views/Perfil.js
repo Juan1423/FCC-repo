@@ -42,7 +42,7 @@ import NavbarAdmin from "../../../components/NavbarAdmin";
 import useImageCache from "../../../components/global/UseImageCache";
 import { API_IMAGE_URL } from "../../../services/apiConfig";
 import { getCurrentUserId } from "../../../utils/userUtils";
-import {createAuditoria,} from "../../../services/auditoriaServices";
+import { logAuditAction } from "../../../services/auditoriaServices";
 
 const Perfil = () => {
   const [user, setUser] = useState(null);
@@ -139,22 +139,8 @@ const Perfil = () => {
         fecha_modificacion: new Date().toISOString()
       };
 
-      await Promise.all([
-        createAuditoria({
-          id_usuario: loggedInUserId,
-          modulo: "Usuarios",
-          operacion: "Editar",
-          detalle: JSON.stringify(userAuditDescription),
-          fecha: new Date().toISOString()
-        }),
-        createAuditoria({
-          id_usuario: loggedInUserId,
-          modulo: "Personal Salud",
-          operacion: "Editar",
-          detalle: JSON.stringify(personalSaludAuditDescription),
-          fecha: new Date().toISOString()
-        })
-      ]);
+      await logAuditAction('EDITAR_USUARIO_PERFIL', userAuditDescription);
+      await logAuditAction('EDITAR_PERSONALSALUD_PERFIL', personalSaludAuditDescription);
       
       setUser(editedUser);
       setPersonalSalud(editedPersonalSalud);

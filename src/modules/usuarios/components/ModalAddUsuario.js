@@ -14,7 +14,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import { getPersonalSalud } from '../../../services/personalsaludServices';
-import { createAuditoria } from "../../../services/auditoriaServices";
+import { logAuditAction } from "../../../services/auditoriaServices";
 import { getCurrentUserId } from "../../../utils/userUtils";
 export default function ModalAddUsuario({ open, onClose, onAddUser, existingUsers }) {
   const [personalSalud, setPersonalSalud] = useState([]);
@@ -96,15 +96,7 @@ export default function ModalAddUsuario({ open, onClose, onAddUser, existingUser
         fecha_modificacion: new Date().toISOString()
       };
 
-      const auditData = {
-        id_usuario: loggedInUserId,
-        modulo: "Usuarios",
-        operacion: "CREAR",
-        detalle: JSON.stringify(detailedDescription),
-        fecha: new Date().toISOString()
-      };
-
-      await createAuditoria(auditData);
+      await logAuditAction('CREAR_USUARIO', detailedDescription);
       onClose();
     } catch (error) {
       console.error('Error creating user:', error);

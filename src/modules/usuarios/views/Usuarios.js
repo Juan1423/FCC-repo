@@ -6,7 +6,7 @@ import ModalAddUsuario from '../components/ModalAddUsuario';
 import TablaUsuario from '../components/TablaUsuarios';
 import SearchIcon from '@mui/icons-material/Search';
 import { getUsuarios, createUsuario, updateUsuario, deleteUsuario } from '../../../services/usuarioServices'
-import {createAuditoria,} from "../../../services/auditoriaServices";
+import { logAuditAction } from "../../../services/auditoriaServices";
 import { getCurrentUserId } from "../../../utils/userUtils";
 export default function Usuarios() {
   const [users, setUsers] = useState([]);
@@ -90,15 +90,7 @@ export default function Usuarios() {
           fecha_modificacion: new Date().toISOString()
         };
 
-        const auditData = {
-          id_usuario: loggedInUserId,
-          modulo: "Usuarios",
-          operacion: "EDITAR",
-          detalle: JSON.stringify(detailedDescription),
-          fecha: new Date().toISOString()
-        };
-
-        await createAuditoria(auditData);
+        await logAuditAction('EDITAR_USUARIO', detailedDescription);
       } else {
         setError('Error updating user');
       }
@@ -151,15 +143,8 @@ export default function Usuarios() {
           fecha_modificacion: new Date().toISOString()
         };
 
-        const auditData = {
-          id_usuario: loggedInUserId,
-          modulo: "Usuarios",
-          operacion: updatedUser.estado_usuario ? "ACTIVAR" : "DESACTIVAR",
-          detalle: JSON.stringify(detailedDescription),
-          fecha: new Date().toISOString()
-        };
-
-        await createAuditoria(auditData);
+        const operacion = updatedUser.estado_usuario ? "ACTIVAR_USUARIO" : "DESACTIVAR_USUARIO";
+        await logAuditAction(operacion, detailedDescription);
       } else {
         setError('Error updating user status');
       }
@@ -196,15 +181,7 @@ export default function Usuarios() {
         fecha_modificacion: new Date().toISOString()
       };
 
-      const auditData = {
-        id_usuario: loggedInUserId,
-        modulo: "Usuarios",
-        operacion: "ELIMINAR",
-        detalle: JSON.stringify(detailedDescription),
-        fecha: new Date().toISOString()
-      };
-
-      await createAuditoria(auditData);
+      await logAuditAction('ELIMINAR_USUARIO', detailedDescription);
     } catch (err) {
       console.error('Error deleting user:', err);
       setError('Error deleting user');
