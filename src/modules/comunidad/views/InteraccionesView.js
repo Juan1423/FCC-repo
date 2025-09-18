@@ -14,13 +14,13 @@ import {
   Collapse,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../components/NavbarAdmin";
-import Drawer from "../../components/Drawer";
-import comunidadService from '../../services/comunidadService';
+import NavbarAdmin from "../../../components/NavbarAdmin";
+import Drawer from "../../../components/Drawer";
+import comunidadService from '../../../services/comunidadService';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
-import { useMenu } from '../../components/base/MenuContext';
-import InteraccionPersonasSummary from './InteraccionPersonasSummary';
+import { useMenu } from '../../../components/base/MenuContext';
+import InteraccionPersonasSummary from '../components/InteraccionPersonasSummary';
 
 const Interacciones = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);

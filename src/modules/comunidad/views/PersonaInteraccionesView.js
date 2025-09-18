@@ -11,10 +11,10 @@ import {
   Paper,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
-import NavbarAdmin from "../../components/NavbarAdmin";
-import Drawer from "../../components/Drawer";
-import comunidadService from '../../services/comunidadService';
-import { useMenu } from '../../components/base/MenuContext';
+import NavbarAdmin from "../../../components/NavbarAdmin";
+import Drawer from "../../../components/Drawer";
+import comunidadService from '../../../services/comunidadService';
+import { useMenu } from '../../../components/base/MenuContext';
 
 const PersonaInteracciones = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);

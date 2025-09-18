@@ -12,10 +12,10 @@ import {
   ListItemText,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../components/NavbarAdmin";
-import Drawer from "../../components/Drawer";
-import comunidadService from '../../services/comunidadService';
-import { useMenu } from '../../components/base/MenuContext';
+import NavbarAdmin from "../../../components/NavbarAdmin";
+import Drawer from "../../../components/Drawer";
+import comunidadService from '../../../services/comunidadService';
+import { useMenu } from '../../../components/base/MenuContext';
 
 const AddInteraccion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);

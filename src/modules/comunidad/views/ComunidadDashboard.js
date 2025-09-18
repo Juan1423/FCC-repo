@@ -8,9 +8,9 @@ import {
   Button,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../components/NavbarAdmin";
-import Drawer from "../../components/Drawer";
-import { useMenu } from '../../components/base/MenuContext';
+import NavbarAdmin from "../../../components/NavbarAdmin";
+import Drawer from "../../../components/Drawer";
+import { useMenu } from '../../../components/base/MenuContext';
 
 const Comunidad = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);

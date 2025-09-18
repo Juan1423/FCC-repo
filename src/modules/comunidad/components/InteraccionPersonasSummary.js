@@ -8,7 +8,7 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import comunidadService from '../../services/comunidadService';
+import comunidadService from '../../../services/comunidadService';
 
 const InteraccionPersonasSummary = ({ interaccionId }) => {
   const [personas, setPersonas] = useState([]);
