@@ -29,6 +29,7 @@ import Interacciones from './modules/comunidad/Interacciones';
 import AddPersona from './modules/comunidad/AddPersona';
 import AddInteraccion from './modules/comunidad/AddInteraccion';
 import PersonaInteracciones from './modules/comunidad/PersonaInteracciones';
+import EditInteraccion from './modules/comunidad/EditInteraccion';
 
 
 // ✅ Importa el chatbot
@@ -133,6 +134,10 @@ function App() {
             <Route 
               path="/fcc-comunidad/interacciones/nueva"
               element={<PrivateRoute element={AddInteraccion} allowedRoles={['admin']} />} 
+            />
+            <Route 
+              path="/fcc-comunidad/interacciones/:id/editar"
+              element={<PrivateRoute element={EditInteraccion} allowedRoles={['admin']} />} 
             />
             <Route 
               path="/accessdenied"
