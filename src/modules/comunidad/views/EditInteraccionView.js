@@ -21,7 +21,13 @@ const EditInteraccion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [personas, setPersonas] = useState([]);
   const [selectedPersonas, setSelectedPersonas] = useState([]);
-  const [nombre, setNombre] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [archivo, setArchivo] = useState("");
+  const [observaciones, setObservaciones] = useState("");
+  const [estado, setEstado] = useState("Activa");
   const navigate = useNavigate();
   const { id } = useParams();
   const { setCurrentMenu } = useMenu();
@@ -30,18 +36,21 @@ const EditInteraccion = () => {
 
   useEffect(() => {
     setCurrentMenu('Editar Interacción');
-    // Fetch all personas
     comunidadService.getPersonas().then((response) => {
       setPersonas(response.data);
     });
 
-    // Fetch interaction data
-    // TODO: Implement getInteraccionById in comunidadService
-    // comunidadService.getInteraccionById(id).then((response) => {
-    //   const interaccion = response.data;
-    //   setNombre(interaccion.descripcion_interaccion);
-    //   setSelectedPersonas(interaccion.personas.map(p => p.id_persona));
-    // });
+    comunidadService.getInteraccionById(id).then((response) => {
+      const interaccion = response.data;
+      setDescripcion(interaccion.descripcion_interaccion || "");
+      setTipo(interaccion.tipo_interaccion || "");
+      setFechaInicio(interaccion.fecha_inicio_interaccion ? new Date(interaccion.fecha_inicio_interaccion).toISOString().split('T')[0] : "");
+      setFechaFin(interaccion.fecha_fin_interaccion ? new Date(interaccion.fecha_fin_interaccion).toISOString().split('T')[0] : "");
+      setArchivo(interaccion.archivo_interaccion || "");
+      setObservaciones(interaccion.observciones_interaccion || "");
+      setEstado(interaccion.estado_interaccion || "Activa");
+      setSelectedPersonas(interaccion.personasAsociadas ? interaccion.personasAsociadas.map(p => p.id_persona) : []);
+    });
   }, [id, setCurrentMenu]);
 
   const handlePersonaChange = (event) => {
@@ -49,26 +58,16 @@ const EditInteraccion = () => {
     setSelectedPersonas(typeof value === 'string' ? value.split(',') : value);
   };
 
-  // Fetch interaction data
-    comunidadService.getInteraccionById(id).then((response) => {
-      const interaccion = response.data;
-      setNombre(interaccion.descripcion_interaccion);
-      // Assuming interaccion object has a 'personas' array with 'id_persona'
-      // TODO: Backend needs to return associated personas with the interaction
-      // For now, we'll just set selectedPersonas to an empty array or based on existing data structure
-      setSelectedPersonas(interaccion.personas ? interaccion.personas.map(p => p.id_persona) : []);
-    });
-
   const handleSubmit = (event) => {
     event.preventDefault();
     const interaccion = {
-      descripcion_interaccion: nombre,
-      tipo_interaccion: "", // Placeholder
-      fecha_inicio_interaccion: new Date(),
-      fecha_fin_interaccion: new Date(),
-      archivo_interaccion: "", // Placeholder
-      observciones_interaccion: "", // Placeholder
-      estado_interaccion: "Activa", // Placeholder
+      descripcion_interaccion: descripcion,
+      tipo_interaccion: tipo,
+      fecha_inicio_interaccion: fechaInicio,
+      fecha_fin_interaccion: fechaFin,
+      archivo_interaccion: archivo,
+      observciones_interaccion: observaciones,
+      estado_interaccion: estado,
       personas: selectedPersonas,
     };
     comunidadService.updateInteraccion(id, interaccion).then(() => {
@@ -105,19 +104,81 @@ const EditInteraccion = () => {
 
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Nombre"
+            label="Descripción"
             fullWidth
             sx={{ mb: 2 }}
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
           />
+          <TextField
+            label="Tipo"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+          />
+          <TextField
+            label="Fecha de Inicio"
+            type="date"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            label="Fecha de Fin"
+            type="date"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={fechaFin}
+            onChange={(e) => setFechaFin(e.target.value)}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            label="Archivo"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={archivo}
+            onChange={(e) => setArchivo(e.target.value)}
+          />
+          <TextField
+            label="Observaciones"
+            fullWidth
+            multiline
+            rows={4}
+            sx={{ mb: 2 }}
+            value={observaciones}
+            onChange={(e) => setObservaciones(e.target.value)}
+          />
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Estado</InputLabel>
+            <Select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value)}
+            >
+              <MenuItem value="Activa">Activa</MenuItem>
+              <MenuItem value="Inactiva">Inactiva</MenuItem>
+            </Select>
+          </FormControl>
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Personas</InputLabel>
             <Select
               multiple
               value={selectedPersonas}
               onChange={handlePersonaChange}
-              renderValue={(selected) => selected.join(', ')}
+              renderValue={(selected) =>
+                selected
+                  .map((id) => {
+                    const persona = personas.find((p) => p.id_persona === id);
+                    return persona ? `${persona.nombre_persona} ${persona.apellido_persona}` : '';
+                  })
+                  .join(', ')
+              }
             >
               {personas.map((persona) => (
                 <MenuItem key={persona.id_persona} value={persona.id_persona}>

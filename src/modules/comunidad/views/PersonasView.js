@@ -31,15 +31,25 @@ const Personas = () => {
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
 
-  useEffect(() => {
-    setCurrentMenu('Personas');
+  const fetchPersonas = () => {
     comunidadService.getPersonas().then((response) => {
       setPersonas(response.data);
     });
+  };
+
+  useEffect(() => {
+    setCurrentMenu('Personas');
+    fetchPersonas();
   }, [setCurrentMenu]);
 
   const handleExpandClick = (personId) => {
     setExpandedPersonId(expandedPersonId === personId ? null : personId);
+  };
+
+  const handleDelete = (id) => {
+    comunidadService.deletePersona(id).then(() => {
+      fetchPersonas();
+    });
   };
 
   return (
@@ -82,18 +92,41 @@ const Personas = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
                 <TableCell>Nombre</TableCell>
-                <TableCell>Interacciones</TableCell>
+                <TableCell>Apellido</TableCell>
+                <TableCell>Correo</TableCell>
+                <TableCell>Teléfono</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {personas.map((persona) => (
                 <React.Fragment key={persona.id_persona}>
                   <TableRow>
-                    <TableCell>{persona.id_persona}</TableCell>
-                    <TableCell>{persona.nombre_persona} {persona.apellido_persona}</TableCell>
+                    <TableCell>{persona.nombre_persona}</TableCell>
+                    <TableCell>{persona.apellido_persona}</TableCell>
+                    <TableCell>{persona.correo_persona}</TableCell>
+                    <TableCell>{persona.telefono_persona}</TableCell>
+                    <TableCell>{persona.estado_persona}</TableCell>
                     <TableCell>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        sx={{ mr: 1 }}
+                        onClick={() => navigate(`/fcc-comunidad/personas/${persona.id_persona}/detalles`)}
+                      >
+                        Detalles
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        size="small"
+                        onClick={() => handleDelete(persona.id_persona)}
+                      >
+                        Eliminar
+                      </Button>
                       <IconButton
                         onClick={() => handleExpandClick(persona.id_persona)}
                       >

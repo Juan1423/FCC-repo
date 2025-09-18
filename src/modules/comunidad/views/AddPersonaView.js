@@ -24,6 +24,12 @@ const AddPersona = () => {
   const [selectedCanton, setSelectedCanton] = useState("");
   const [selectedParroquia, setSelectedParroquia] = useState("");
   const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [direccion, setDireccion] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [foto, setFoto] = useState("");
+  const [estado, setEstado] = useState("Activo");
   const [tiposPersona, setTiposPersona] = useState([]);
   const [selectedTipoPersona, setSelectedTipoPersona] = useState("");
   const navigate = useNavigate();
@@ -64,17 +70,17 @@ const AddPersona = () => {
     event.preventDefault();
     const persona = {
       nombre_persona: nombre,
-      apellido_persona: "", // Placeholder
-      direccion_persona: "", // Placeholder
-      correo_persona: "", // Placeholder
-      telefono_persona: null, // Placeholder
-      foto_persona: "", // Placeholder
-      estado_persona: "Activo", // Placeholder
+      apellido_persona: apellido,
+      direccion_persona: direccion,
+      correo_persona: correo,
+      telefono_persona: telefono,
+      foto_persona: foto,
+      estado_persona: estado,
       id_parroquia: selectedParroquia,
       id_tipo_persona: selectedTipoPersona,
     };
     comunidadService.createPersona(persona).then(() => {
-      navigate("/fcc-comunidad/personas");
+      navigate("/fcc-comunidad/personas", { replace: true });
     });
   };
 
@@ -113,6 +119,51 @@ const AddPersona = () => {
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
           />
+          <TextField
+            label="Apellido"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={apellido}
+            onChange={(e) => setApellido(e.target.value)}
+          />
+          <TextField
+            label="Dirección"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={direccion}
+            onChange={(e) => setDireccion(e.target.value)}
+          />
+          <TextField
+            label="Correo"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+          />
+          <TextField
+            label="Teléfono"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+          />
+          <TextField
+            label="Foto (URL)"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={foto}
+            onChange={(e) => setFoto(e.target.value)}
+          />
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Estado</InputLabel>
+            <Select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value)}
+            >
+              <MenuItem value="Activo">Activo</MenuItem>
+              <MenuItem value="Inactivo">Inactivo</MenuItem>
+            </Select>
+          </FormControl>
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Provincia</InputLabel>
             <Select

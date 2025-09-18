@@ -21,7 +21,13 @@ const AddInteraccion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [personas, setPersonas] = useState([]);
   const [selectedPersonas, setSelectedPersonas] = useState([]);
-  const [nombre, setNombre] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [archivo, setArchivo] = useState("");
+  const [observaciones, setObservaciones] = useState("");
+  const [estado, setEstado] = useState("Activa");
   const navigate = useNavigate();
   const { setCurrentMenu } = useMenu();
 
@@ -42,17 +48,17 @@ const AddInteraccion = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     const interaccion = {
-      descripcion_interaccion: nombre,
-      tipo_interaccion: "", // Placeholder
-      fecha_inicio_interaccion: new Date(),
-      fecha_fin_interaccion: new Date(),
-      archivo_interaccion: "", // Placeholder
-      observciones_interaccion: "", // Placeholder
-      estado_interaccion: "Activa", // Placeholder
+      descripcion_interaccion: descripcion,
+      tipo_interaccion: tipo,
+      fecha_inicio_interaccion: fechaInicio,
+      fecha_fin_interaccion: fechaFin,
+      archivo_interaccion: archivo,
+      observciones_interaccion: observaciones,
+      estado_interaccion: estado,
       personas: selectedPersonas,
     };
     comunidadService.createInteraccion(interaccion).then(() => {
-      navigate("/fcc-comunidad/interacciones");
+      navigate("/fcc-comunidad/interacciones", { replace: true });
     });
   };
 
@@ -85,19 +91,81 @@ const AddInteraccion = () => {
 
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Nombre"
+            label="Descripción"
             fullWidth
             sx={{ mb: 2 }}
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
           />
+          <TextField
+            label="Tipo"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+          />
+          <TextField
+            label="Fecha de Inicio"
+            type="date"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            label="Fecha de Fin"
+            type="date"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={fechaFin}
+            onChange={(e) => setFechaFin(e.target.value)}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            label="Archivo"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={archivo}
+            onChange={(e) => setArchivo(e.target.value)}
+          />
+          <TextField
+            label="Observaciones"
+            fullWidth
+            multiline
+            rows={4}
+            sx={{ mb: 2 }}
+            value={observaciones}
+            onChange={(e) => setObservaciones(e.target.value)}
+          />
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Estado</InputLabel>
+            <Select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value)}
+            >
+              <MenuItem value="Activa">Activa</MenuItem>
+              <MenuItem value="Inactiva">Inactiva</MenuItem>
+            </Select>
+          </FormControl>
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Personas</InputLabel>
             <Select
               multiple
               value={selectedPersonas}
               onChange={handlePersonaChange}
-              renderValue={(selected) => selected.join(', ')}
+              renderValue={(selected) =>
+                selected
+                  .map((id) => {
+                    const persona = personas.find((p) => p.id_persona === id);
+                    return persona ? `${persona.nombre_persona} ${persona.apellido_persona}` : '';
+                  })
+                  .join(', ')
+              }
             >
               {personas.map((persona) => (
                 <MenuItem key={persona.id_persona} value={persona.id_persona}>

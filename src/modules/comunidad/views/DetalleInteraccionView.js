@@ -3,21 +3,18 @@ import {
   Box,
   Typography,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   CircularProgress,
   Alert,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../components/NavbarAdmin";
-import Drawer from "../../components/Drawer";
-import comunidadService from '../../services/comunidadService';
-import { useMenu } from '../../components/base/MenuContext';
+import NavbarAdmin from "../../../components/NavbarAdmin";
+import Drawer from "../../../components/Drawer";
+import comunidadService from '../../../services/comunidadService';
+import { useMenu } from '../../../components/base/MenuContext';
 
 const DetalleInteraccion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -131,27 +128,18 @@ const DetalleInteraccion = () => {
           Personas Asociadas
         </Typography>
 
-        {interaccion.personas && interaccion.personas.length > 0 ? (
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Nombre</TableCell>
-                  <TableCell>Apellido</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {interaccion.personas.map((persona) => (
-                  <TableRow key={persona.id_persona}>
-                    <TableCell>{persona.id_persona}</TableCell>
-                    <TableCell>{persona.nombre_persona}</TableCell>
-                    <TableCell>{persona.apellido_persona}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+        {interaccion.personasAsociadas && interaccion.personasAsociadas.length > 0 ? (
+          <Paper sx={{ p: 3 }}>
+            <List>
+              {interaccion.personasAsociadas.map((persona, i) => (
+                <ListItem key={persona.id_persona}>
+                  <ListItemText
+                    primary={`${i + 1}. ${persona.nombre_persona} ${persona.apellido_persona}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
         ) : (
           <Typography>No hay personas asociadas a esta interacción.</Typography>
         )}
