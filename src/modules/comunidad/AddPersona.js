@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import NavbarAdmin from "../../components/NavbarAdmin";
 import Drawer from "../../components/Drawer";
 import comunidadService from '../../services/comunidadService';
+import { useMenu } from '../../components/base/MenuContext';
 
 const AddPersona = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -23,19 +24,28 @@ const AddPersona = () => {
   const [selectedCanton, setSelectedCanton] = useState("");
   const [selectedParroquia, setSelectedParroquia] = useState("");
   const [nombre, setNombre] = useState("");
+  const [tiposPersona, setTiposPersona] = useState([]);
+  const [selectedTipoPersona, setSelectedTipoPersona] = useState("");
   const navigate = useNavigate();
+  const { setCurrentMenu } = useMenu();
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
 
   useEffect(() => {
+    setCurrentMenu('Agregar Persona');
     comunidadService.getProvincias().then((response) => {
       setProvincias(response.data);
     });
-  }, []);
+    comunidadService.getTiposPersona().then((response) => {
+      setTiposPersona(response.data);
+    });
+  }, [setCurrentMenu]);
 
   const handleProvinciaChange = (event) => {
     const provinciaId = event.target.value;
     setSelectedProvincia(provinciaId);
+    setSelectedCanton(""); // Reset canton selection
+    setSelectedParroquia(""); // Reset parroquia selection
     comunidadService.getCantones().then((response) => {
       setCantones(response.data.filter((canton) => canton.id_provincia === provinciaId));
     });
@@ -44,6 +54,7 @@ const AddPersona = () => {
   const handleCantonChange = (event) => {
     const cantonId = event.target.value;
     setSelectedCanton(cantonId);
+    setSelectedParroquia(""); // Reset parroquia selection
     comunidadService.getParroquias().then((response) => {
       setParroquias(response.data.filter((parroquia) => parroquia.id_canton === cantonId));
     });
@@ -52,8 +63,15 @@ const AddPersona = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     const persona = {
-      nombre,
+      nombre_persona: nombre,
+      apellido_persona: "", // Placeholder
+      direccion_persona: "", // Placeholder
+      correo_persona: "", // Placeholder
+      telefono_persona: null, // Placeholder
+      foto_persona: "", // Placeholder
+      estado_persona: "Activo", // Placeholder
       id_parroquia: selectedParroquia,
+      id_tipo_persona: selectedTipoPersona,
     };
     comunidadService.createPersona(persona).then(() => {
       navigate("/fcc-comunidad/personas");
@@ -70,6 +88,7 @@ const AddPersona = () => {
           flexGrow: 1,
           p: { xs: 2, md: 4 },
           width: { md: `calc(100% - 240px)` },
+          mt: { xs: 7, sm: 8 }, // Adjust margin-top to account for AppBar height
         }}
       >
         <Typography
@@ -101,8 +120,8 @@ const AddPersona = () => {
               onChange={handleProvinciaChange}
             >
               {provincias.map((provincia) => (
-                <MenuItem key={provincia.id} value={provincia.id}>
-                  {provincia.nombre}
+                <MenuItem key={provincia.id_provincia} value={provincia.id_provincia}>
+                  {provincia.nombre_provincia}
                 </MenuItem>
               ))}
             </Select>
@@ -115,8 +134,8 @@ const AddPersona = () => {
               disabled={!selectedProvincia}
             >
               {cantones.map((canton) => (
-                <MenuItem key={canton.id} value={canton.id}>
-                  {canton.nombre}
+                <MenuItem key={canton.id_canton} value={canton.id_canton}>
+                  {canton.nombre_canton}
                 </MenuItem>
               ))}
             </Select>
@@ -129,8 +148,21 @@ const AddPersona = () => {
               disabled={!selectedCanton}
             >
               {parroquias.map((parroquia) => (
-                <MenuItem key={parroquia.id} value={parroquia.id}>
-                  {parroquia.nombre}
+                <MenuItem key={parroquia.id_parroquia} value={parroquia.id_parroquia}>
+                  {parroquia.nombre_parroquia}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Tipo de Persona</InputLabel>
+            <Select
+              value={selectedTipoPersona}
+              onChange={(e) => setSelectedTipoPersona(e.target.value)}
+            >
+              {tiposPersona.map((tipo) => (
+                <MenuItem key={tipo.id_tipo_persona} value={tipo.id_tipo_persona}>
+                  {tipo.descripcion_tipo_persona}
                 </MenuItem>
               ))}
             </Select>

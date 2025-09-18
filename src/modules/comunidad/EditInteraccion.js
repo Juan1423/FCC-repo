@@ -11,33 +11,53 @@ import {
   Checkbox,
   ListItemText,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import NavbarAdmin from "../../components/NavbarAdmin";
 import Drawer from "../../components/Drawer";
 import comunidadService from '../../services/comunidadService';
 import { useMenu } from '../../components/base/MenuContext';
 
-const AddInteraccion = () => {
+const EditInteraccion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [personas, setPersonas] = useState([]);
   const [selectedPersonas, setSelectedPersonas] = useState([]);
   const [nombre, setNombre] = useState("");
   const navigate = useNavigate();
+  const { id } = useParams();
   const { setCurrentMenu } = useMenu();
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
 
   useEffect(() => {
-    setCurrentMenu('Agregar Interacción');
+    setCurrentMenu('Editar Interacción');
+    // Fetch all personas
     comunidadService.getPersonas().then((response) => {
       setPersonas(response.data);
     });
-  }, [setCurrentMenu]);
+
+    // Fetch interaction data
+    // TODO: Implement getInteraccionById in comunidadService
+    // comunidadService.getInteraccionById(id).then((response) => {
+    //   const interaccion = response.data;
+    //   setNombre(interaccion.descripcion_interaccion);
+    //   setSelectedPersonas(interaccion.personas.map(p => p.id_persona));
+    // });
+  }, [id, setCurrentMenu]);
 
   const handlePersonaChange = (event) => {
     const { value } = event.target;
     setSelectedPersonas(typeof value === 'string' ? value.split(',') : value);
   };
+
+  // Fetch interaction data
+    comunidadService.getInteraccionById(id).then((response) => {
+      const interaccion = response.data;
+      setNombre(interaccion.descripcion_interaccion);
+      // Assuming interaccion object has a 'personas' array with 'id_persona'
+      // TODO: Backend needs to return associated personas with the interaction
+      // For now, we'll just set selectedPersonas to an empty array or based on existing data structure
+      setSelectedPersonas(interaccion.personas ? interaccion.personas.map(p => p.id_persona) : []);
+    });
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -51,7 +71,7 @@ const AddInteraccion = () => {
       estado_interaccion: "Activa", // Placeholder
       personas: selectedPersonas,
     };
-    comunidadService.createInteraccion(interaccion).then(() => {
+    comunidadService.updateInteraccion(id, interaccion).then(() => {
       navigate("/fcc-comunidad/interacciones");
     });
   };
@@ -80,7 +100,7 @@ const AddInteraccion = () => {
             color: "primary.main",
           }}
         >
-          Agregar Interacción
+          Editar Interacción
         </Typography>
 
         <form onSubmit={handleSubmit}>
@@ -108,7 +128,7 @@ const AddInteraccion = () => {
             </Select>
           </FormControl>
           <Button type="submit" variant="contained" color="primary">
-            Guardar
+            Guardar Cambios
           </Button>
         </form>
       </Box>
@@ -116,4 +136,4 @@ const AddInteraccion = () => {
   );
 };
 
-export default AddInteraccion;
+export default EditInteraccion;

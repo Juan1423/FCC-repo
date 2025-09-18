@@ -11,25 +11,36 @@ import {
   TableRow,
   Paper,
   IconButton,
+  Collapse,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import NavbarAdmin from "../../components/NavbarAdmin";
 import Drawer from "../../components/Drawer";
 import comunidadService from '../../services/comunidadService';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import { useMenu } from '../../components/base/MenuContext';
+import PersonaInteraccionesSummary from './PersonaInteraccionesSummary';
 
 const Personas = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [personas, setPersonas] = useState([]);
+  const [expandedPersonId, setExpandedPersonId] = useState(null);
   const navigate = useNavigate();
+  const { setCurrentMenu } = useMenu();
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
 
   useEffect(() => {
+    setCurrentMenu('Personas');
     comunidadService.getPersonas().then((response) => {
       setPersonas(response.data);
     });
-  }, []);
+  }, [setCurrentMenu]);
+
+  const handleExpandClick = (personId) => {
+    setExpandedPersonId(expandedPersonId === personId ? null : personId);
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -41,6 +52,7 @@ const Personas = () => {
           flexGrow: 1,
           p: { xs: 2, md: 4 },
           width: { md: `calc(100% - 240px)` },
+          mt: { xs: 7, sm: 8 }, // Adjust margin-top to account for AppBar height
         }}
       >
         <Typography
@@ -77,19 +89,30 @@ const Personas = () => {
             </TableHead>
             <TableBody>
               {personas.map((persona) => (
-                <TableRow key={persona.id}>
-                  <TableCell>{persona.id}</TableCell>
-                  <TableCell>{persona.nombre}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      onClick={() =>
-                        navigate(`/fcc-comunidad/personas/${persona.id}/interacciones`)
-                      }
-                    >
-                      <ArrowForwardIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
+                <React.Fragment key={persona.id_persona}>
+                  <TableRow>
+                    <TableCell>{persona.id_persona}</TableCell>
+                    <TableCell>{persona.nombre_persona} {persona.apellido_persona}</TableCell>
+                    <TableCell>
+                      <IconButton
+                        onClick={() => handleExpandClick(persona.id_persona)}
+                      >
+                        {expandedPersonId === persona.id_persona ? (
+                          <ArrowDropUpIcon />
+                        ) : (
+                          <ArrowDropDownIcon />
+                        )}
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                      <Collapse in={expandedPersonId === persona.id_persona} timeout="auto" unmountOnExit>
+                        <PersonaInteraccionesSummary personaId={persona.id_persona} />
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>

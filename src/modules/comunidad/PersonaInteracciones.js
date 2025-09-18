@@ -14,19 +14,22 @@ import { useParams } from "react-router-dom";
 import NavbarAdmin from "../../components/NavbarAdmin";
 import Drawer from "../../components/Drawer";
 import comunidadService from '../../services/comunidadService';
+import { useMenu } from '../../components/base/MenuContext';
 
 const PersonaInteracciones = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [interacciones, setInteracciones] = useState([]);
   const { id } = useParams();
+  const { setCurrentMenu } = useMenu();
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
 
   useEffect(() => {
+    setCurrentMenu('Interacciones de Persona');
     comunidadService.getInteraccionesByPersona(id).then((response) => {
       setInteracciones(response.data);
     });
-  }, [id]);
+  }, [id, setCurrentMenu]);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -38,6 +41,7 @@ const PersonaInteracciones = () => {
           flexGrow: 1,
           p: { xs: 2, md: 4 },
           width: { md: `calc(100% - 240px)` },
+          mt: { xs: 7, sm: 8 }, // Adjust margin-top to account for AppBar height
         }}
       >
         <Typography
@@ -64,9 +68,9 @@ const PersonaInteracciones = () => {
             </TableHead>
             <TableBody>
               {interacciones.map((interaccion) => (
-                <TableRow key={interaccion.id}>
-                  <TableCell>{interaccion.id}</TableCell>
-                  <TableCell>{interaccion.nombre}</TableCell>
+                <TableRow key={interaccion.id_interaccion}>
+                  <TableCell>{interaccion.id_interaccion}</TableCell>
+                  <TableCell>{interaccion.descripcion_interaccion}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

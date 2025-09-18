@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -10,12 +10,18 @@ import {
 import { useNavigate } from "react-router-dom";
 import NavbarAdmin from "../../components/NavbarAdmin";
 import Drawer from "../../components/Drawer";
+import { useMenu } from '../../components/base/MenuContext';
 
 const Comunidad = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
+  const { setCurrentMenu } = useMenu();
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
+
+  useEffect(() => {
+    setCurrentMenu('Comunidad');
+  }, [setCurrentMenu]);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -27,6 +33,7 @@ const Comunidad = () => {
           flexGrow: 1,
           p: { xs: 2, md: 4 },
           width: { md: `calc(100% - 240px)` },
+          mt: { xs: 7, sm: 8 }, // Adjust margin-top to account for AppBar height
         }}
       >
         <Typography
