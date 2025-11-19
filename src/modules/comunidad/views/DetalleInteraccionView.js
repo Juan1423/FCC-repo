@@ -15,6 +15,7 @@ import NavbarAdmin from "../../../components/NavbarAdmin";
 import Drawer from "../../../components/Drawer";
 import comunidadService from '../../../services/comunidadService';
 import { useMenu } from '../../../components/base/MenuContext';
+import { API_IMAGE_URL } from '../../../services/apiConfig';
 
 const DetalleInteraccion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -111,7 +112,32 @@ const DetalleInteraccion = () => {
           <Typography><strong>Tipo:</strong> {interaccion.tipo_interaccion}</Typography>
           <Typography><strong>Fecha Inicio:</strong> {new Date(interaccion.fecha_inicio_interaccion).toLocaleString()}</Typography>
           <Typography><strong>Fecha Fin:</strong> {new Date(interaccion.fecha_fin_interaccion).toLocaleString()}</Typography>
-          <Typography><strong>Archivo:</strong> {interaccion.archivo_interaccion || 'N/A'}</Typography>
+          
+          <Typography component="div" sx={{ mt: 2, mb: 2 }}>
+            <strong>Archivo:</strong>
+            {interaccion.archivo_interaccion ? (
+              <Box sx={{ mt: 1 }}>
+                {/\.(jpg|jpeg|png|gif)$/i.test(interaccion.archivo_interaccion) ? (
+                  <img 
+                    src={`${(API_IMAGE_URL || 'http://localhost:5000/api/fcc').replace('/api/fcc', '')}${interaccion.archivo_interaccion}`} 
+                    alt="Archivo de interacción" 
+                    style={{ maxWidth: '100%', height: 'auto', maxHeight: '400px' }} 
+                  />
+                ) : (
+                  <a 
+                    href={`${(API_IMAGE_URL || 'http://localhost:5000/api/fcc').replace('/api/fcc', '')}${interaccion.archivo_interaccion}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    Ver/Descargar Archivo
+                  </a>
+                )}
+              </Box>
+            ) : (
+              ' N/A'
+            )}
+          </Typography>
+
           <Typography><strong>Observaciones:</strong> {interaccion.observciones_interaccion || 'N/A'}</Typography>
           <Typography><strong>Estado:</strong> {interaccion.estado_interaccion}</Typography>
         </Paper>
