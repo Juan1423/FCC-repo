@@ -1,0 +1,100 @@
+stages:
+  - build
+  - test
+  - docker
+  - deploy
+
+variables:
+  PROJECT_DIR: client
+  DOCKER_IMAGE: registry.gitlab.com/christopheryepezch/fundacion-hc
+  SKIP_BUILD: "false"
+  SKIP_TEST: "false"
+  SKIP_DOCKER: "false"
+  SKIP_DEPLOY: "false"
+
+cache:
+  key:
+    files:
+      - $PROJECT_DIR/package-lock.json
+  paths:
+    - $PROJECT_DIR/.npm/
+    - $PROJECT_DIR/node_modules/
+
+.node_template: &node_template
+  image: node:20
+  before_script:
+    - cd $PROJECT_DIR
+    - npm ci --cache .npm --prefer-offline
+
+build:
+  <<: *node_template
+  stage: build
+  script: 
+    - npm run build
+  artifacts:
+    paths:
+      - $PROJECT_DIR/build/
+  rules:
+    - if: $SKIP_BUILD == "false"
+      when: on_success
+    - when: never
+
+cypress:
+  image: cypress/browsers:node-20.9.0-chrome-118.0.5993.88-1-ff-118.0.2-edge-118.0.2088.46-1
+  stage: test
+  script:
+    - cd $PROJECT_DIR
+    - npm ci --cache .npm --prefer-offline
+    - npm start & 
+    - npx wait-on 'http-get://localhost:3000'
+    - npx cypress run --browser chrome --record --env USER_EMAIL=$CYPRESS_USER_EMAIL,USER_PASSWORD=$CYPRESS_USER_PASSWORD,BASE_URL=$CYPRESS_BASE_URL
+  artifacts:
+    when: always
+    paths:
+      - $PROJECT_DIR/cypress/videos/**/*.mp4
+      - $PROJECT_DIR/cypress/screenshots/**/*.png
+    expire_in: 1 week
+  cache:
+    key:
+      files:
+        - $PROJECT_DIR/package-lock.json
+    paths:
+      - $PROJECT_DIR/.npm/
+      - $PROJECT_DIR/node_modules/
+      - .cache/Cypress
+  allow_failure: true
+  rules:
+    - if: $SKIP_TEST == "false"
+      when: on_success
+    - when: never
+
+docker-build:
+  stage: docker
+  image: docker:latest
+  services: 
+    - docker:dind
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - docker build --pull -t "$CI_REGISTRY_IMAGE" $PROJECT_DIR
+    - docker push "$CI_REGISTRY_IMAGE"
+  rules:
+    - if: $SKIP_DOCKER == "false"
+      when: on_success
+    - when: never
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+  script:
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh -o StrictHostKeyChecking=no root@$PROD_SERVER_IP "docker pull $DOCKER_IMAGE && docker stop clientfundacion || true && docker rm clientfundacion || true && docker run -p 3005:3005 -d --name clientfundacion $DOCKER_IMAGE && sudo systemctl restart nginx"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $SKIP_DEPLOY == "false"
+      when: on_success
+    - if: $SKIP_DEPLOY == "false"
+      when: manual
+    - when: never
