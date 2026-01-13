@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const tipo_personaController = require('../../controllers/comunidad.controllers/tipo_persona.controller');
+const tipoPersonaController = require('../../controllers/comunidad.controllers/tipo_persona.controller');
 
 /**
  * @swagger
@@ -25,7 +25,7 @@ const tipo_personaController = require('../../controllers/comunidad.controllers/
  *               items:
  *                 $ref: '#/components/schemas/TipoPersona'
  */
-router.get('/', tipo_personaController.get);
+router.get('/', tipoPersonaController.get);
 
 /**
  * @swagger
@@ -50,7 +50,7 @@ router.get('/', tipo_personaController.get);
  *       404:
  *         description: Tipo de persona no encontrado
  */
-router.get('/:id', tipo_personaController.getById);
+router.get('/:id', tipoPersonaController.getById);
 
 /**
  * @swagger
@@ -70,7 +70,7 @@ router.get('/:id', tipo_personaController.getById);
  *       400:
  *         description: Datos de entrada inválidos
  */
-router.post('/', tipo_personaController.create);
+router.post('/', tipoPersonaController.create);
 
 /**
  * @swagger
@@ -97,7 +97,7 @@ router.post('/', tipo_personaController.create);
  *       404:
  *         description: Tipo de persona no encontrado
  */
-router.put('/:id', tipo_personaController.update);
+router.put('/:id', tipoPersonaController.update);
 
 /**
  * @swagger
@@ -118,6 +118,6 @@ router.put('/:id', tipo_personaController.update);
  *       404:
  *         description: Tipo de persona no encontrado
  */
-router.delete('/:id', tipo_personaController._delete);
+router.delete('/:id', tipoPersonaController._delete);
 
 module.exports = router;
