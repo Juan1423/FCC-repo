@@ -16,7 +16,7 @@ class TipoGestion extends Model {
     }
 
 }
-
+// comentario de prueba
 const TipoGestionSchema = {
     id_tipo_gestion:{
         allowNull: false,
