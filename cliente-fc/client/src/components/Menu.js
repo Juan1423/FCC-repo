@@ -45,6 +45,18 @@ const menuData = [
     roles: ["admin"],
   },
   {
+    nombre_menu: "Normativas",
+    url: "/fcc-normativa",
+    icon: <AssignmentIcon />,
+    roles: ["admin"],
+  },
+  {
+    nombre_menu: "Procesos",
+    url: "/fcc-proceso",
+    icon: <AssignmentIcon />,
+    roles: ["admin"],
+  },
+  {
     nombre_menu: "Personal",
     url: "/fcc-personal-salud",
     icon: <LocalHospitalIcon />,

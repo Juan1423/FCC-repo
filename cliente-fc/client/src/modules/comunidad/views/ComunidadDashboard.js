@@ -178,6 +178,129 @@ const Comunidad = () => {
               </CardContent>
             </Card>
           </Grid>
+          <Grid item xs={12} md={6} lg={5} sx={{display:"flex"}}>
+            <Card sx={{
+              width:"100%",
+              height:"100%",
+              display:"flex",
+              flexDirection:"column",
+              transition:"transform 0.3s",
+              "&:hover":{
+                transform:"translateY(-5px)",
+                boxShadow:4
+              }
+            }}>
+              <CardContent
+                sx={{
+                  flexGrow: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  p: 3,
+                }}
+              >
+                <Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontSize: "1.25rem",
+                      fontWeight: "bold",
+                      mb: 2,
+                      color: "primary.main",
+                    }}
+                  >
+                    Normativas
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: "1rem",
+                      color: "text.secondary",
+                      mb: 3,
+                    }}
+                  >
+                    Gestiona las Normativas.
+                  </Typography>
+                </Box>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  sx={{
+                    py: 1.5,
+                    fontSize: "1rem",
+                    borderRadius: 2,
+                    textTransform: "none",
+                  }}
+                  onClick={() => navigate("/fcc-comunidad/normativa")}
+                >
+                  Ver Normativas
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Tarjeta Procesos */}
+          <Grid item xs={12} md={6} lg={5} sx={{display:"flex"}}>
+            <Card sx={{
+              width:"100%",
+              height:"100%",
+              display:"flex",
+              flexDirection:"column",
+              transition:"transform 0.3s",
+              "&:hover":{
+                transform:"translateY(-5px)",
+                boxShadow:4
+              }
+            }}>
+              <CardContent
+                sx={{
+                  flexGrow: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  p: 3,
+                }}
+              >
+                <Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontSize: "1.25rem",
+                      fontWeight: "bold",
+                      mb: 2,
+                      color: "primary.main",
+                    }}
+                  >
+                    Procesos
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: "1rem",
+                      color: "text.secondary",
+                      mb: 3,
+                    }}
+                  >
+                    Gestiona los procesos.
+                  </Typography>
+                </Box>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  sx={{
+                    py: 1.5,
+                    fontSize: "1rem",
+                    borderRadius: 2,
+                    textTransform: "none",
+                  }}
+                  onClick={() => navigate("/fcc-proceso")}
+                >
+                  Ver Procesos
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
         </Grid>
       </Box>
     </Box>
