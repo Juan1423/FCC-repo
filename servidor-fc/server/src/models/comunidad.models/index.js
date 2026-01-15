@@ -10,7 +10,7 @@ const { TipoPersona, TipoPersonaSchema } = require('./tipo_persona.model');
 const { Persona, PersonaSchema } = require('./persona.model');
 const { Interaccion, InteraccionSchema } = require('./interaccion.model');
 const { PersonaInteraccion, PersonaInteraccionSchema } = require('./persona_interaccion.model');
-
+const { DocumentoInteraccion, DocumentoInteraccionSchema } = require('./documento_interaccion.model');
 
 function setupComunidadModels(sequelize) {
 
@@ -23,6 +23,7 @@ function setupComunidadModels(sequelize) {
    Persona.init(PersonaSchema, Persona.config(sequelize));
    Interaccion.init(InteraccionSchema, Interaccion.config(sequelize));
    PersonaInteraccion.init(PersonaInteraccionSchema, PersonaInteraccion.config(sequelize));
+   DocumentoInteraccion.init(DocumentoInteraccionSchema, DocumentoInteraccion.config(sequelize));
    Procesos.init(ProcesoSchema, Procesos.config(sequelize));
    TipoProceso.init(TipoProcesoSchema, TipoProceso.config(sequelize));
    Normativa.init(NormativaSchema, Normativa.config(sequelize));
@@ -34,6 +35,8 @@ function setupComunidadModels(sequelize) {
    Parroquia.associate({ Canton,Persona});
    TipoPersona.associate({ Persona});
    Persona.associate({ Parroquia, TipoPersona, Interaccion, PersonaInteraccion});
+   Interaccion.associate({ Persona, PersonaInteraccion});
+   DocumentoInteraccion.associate(sequelize.models);
    Interaccion.associate({ Persona, PersonaInteraccion,Procesos});
    Normativa.associate({TipoNormativa, Procesos})
    Procesos.associate({Interaccion,TipoProceso, Normativa});
