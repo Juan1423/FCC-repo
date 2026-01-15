@@ -2,6 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Se asegura que el directorio existe
 const uploadDir = path.join(__dirname, '../uploads/comunidad/documentos_interaccion');
 if (!fs.existsSync(uploadDir)){
     fs.mkdirSync(uploadDir, { recursive: true});
@@ -37,7 +38,7 @@ const fileFilter = (req, file, cb) => {
 
 const uploadDocumentoInteraccion = multer({ 
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, 
+    limits: { fileSize: 10 * 1024 * 1024 }, // Limite de 10MB
     fileFilter: fileFilter
 });
 

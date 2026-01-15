@@ -16,7 +16,7 @@ class DocumentoInteraccionService {
   async delete(id) {
     const doc = await models.DocumentoInteraccion.findByPk(id);
     if (!doc) throw new Error('Documento no encontrado');
-    // Borrado lógico o físico según tu necesidad. Aquí uso lógico.
+    // Borrado lógico
     await doc.update({ estado: 'INACTIVO' });
     return { id };
   }

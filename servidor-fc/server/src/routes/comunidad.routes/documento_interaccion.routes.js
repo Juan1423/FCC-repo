@@ -3,7 +3,7 @@ const router = express.Router();
 const controller = require('../../controllers/comunidad.controllers/documento_interaccion.controller');
 const upload = require('../../utils/multerConfigDocumentos');
 
-// Prefijo sugerido en index.routes: /comunidad/documentos
+// Prefijo para poner en index.routes: /comunidad/documentos
 
 router.get('/interaccion/:interaccionId', controller.getByInteraccion);
 

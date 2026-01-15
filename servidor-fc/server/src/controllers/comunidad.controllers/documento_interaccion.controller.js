@@ -24,7 +24,7 @@ const create = async (req, res) => {
     const data = {
       interaccion_id: interaccionId,
       nombre_original: file.originalname,
-      ruta_archivo: file.filename, // Guardamos el nombre generado por Multer
+      ruta_archivo: file.filename, 
       tipo_mime: file.mimetype,
       tamanio_bytes: file.size,
       descripcion: descripcion || ''
@@ -47,13 +47,13 @@ const deleteDoc = async (req, res) => {
     }
 }
 
-// Endpoint para servir el archivo (descarga)
+
 const downloadFile = async (req, res) => {
     const { filename } = req.params;
     const path = require('path');
     const fs = require('fs');
     
-    // Ajustar ruta según tu configuración de multer
+    
     const filePath = path.join(__dirname, '../../../uploads/documentos_interaccion', filename);
     
     if (fs.existsSync(filePath)) {
