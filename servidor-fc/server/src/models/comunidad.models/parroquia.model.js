@@ -11,7 +11,7 @@ class Parroquia extends Model {
     }  //-- static config
 
     static associate(models) {
-        Parroquia.belongsTo(models.Canton, { //---relacion 1
+    Parroquia.belongsTo(models.Canton, { //---relacion 1
             foreignKey: 'id_canton',
             as: 'canton_parroquia',
         });//----hasOne
