@@ -16,7 +16,7 @@ class DocumentoInteraccion extends Model {
     static associate(models) {
         this.belongsTo(models.Interaccion, {
             foreignKey: 'interaccion_id',
-            as: 'interaccion'
+            as: 'documentacion_interaccion_interracion'
         });
     }
 }
