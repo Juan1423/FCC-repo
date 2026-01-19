@@ -11,10 +11,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
-import comunidadService from '../../../services/comunidadService';
-import { useMenu } from '../../../components/base/MenuContext';
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
+import comunidadService from '../../../../services/comunidadService';
+import { useMenu } from '../../../../components/base/MenuContext';
 
 const EditPersona = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);

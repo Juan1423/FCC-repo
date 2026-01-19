@@ -27,7 +27,7 @@ import {
 import Swal from 'sweetalert2';
 
 // Asegúrate de que la ruta al servicio sea correcta según tu estructura
-import documentoService from '../../../services/documentoInteraccionService'; 
+import documentoService from '../../../../services/documentoInteraccionService'; 
 
 const DocumentosManager = ({ interaccionId }) => {
     const [documentos, setDocumentos] = useState([]);
@@ -36,12 +36,7 @@ const DocumentosManager = ({ interaccionId }) => {
     const [file, setFile] = useState(null);
     const [descripcion, setDescripcion] = useState('');
 
-    useEffect(() => {
-        if (interaccionId) {
-            loadDocumentos();
-        }
-    }, [interaccionId]);
-
+   
     const loadDocumentos = async () => {
         setLoading(true);
         try {
@@ -53,6 +48,13 @@ const DocumentosManager = ({ interaccionId }) => {
             setLoading(false);
         }
     };
+
+     useEffect(() => {
+        if (interaccionId) {
+            loadDocumentos();
+        }
+    }, [interaccionId]);
+
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {

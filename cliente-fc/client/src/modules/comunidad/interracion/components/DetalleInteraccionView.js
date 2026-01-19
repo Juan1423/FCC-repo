@@ -11,12 +11,12 @@ import {
   ListItemText,
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
-import comunidadService from '../../../services/comunidadService';
-import DocumentosManager from '../components/DocumentosManager';
-import { useMenu } from '../../../components/base/MenuContext';
-import { API_IMAGE_URL } from '../../../services/apiConfig';
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
+import comunidadService from '../../../../services/comunidadService';
+import DocumentosManager from './DocumentosManager';
+import { useMenu } from '../../../../components/base/MenuContext';
+import { API_IMAGE_URL } from '../../../../services/apiConfig';
 
 const DetalleInteraccion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);

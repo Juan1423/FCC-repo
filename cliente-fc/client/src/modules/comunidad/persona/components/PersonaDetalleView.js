@@ -9,10 +9,10 @@ import {
   Alert,
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
-import comunidadService from '../../../services/comunidadService';
-import { useMenu } from '../../../components/base/MenuContext';
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
+import comunidadService from '../../../../services/comunidadService';
+import { useMenu } from '../../../../components/base/MenuContext';
 
 const PersonaDetalleView = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
