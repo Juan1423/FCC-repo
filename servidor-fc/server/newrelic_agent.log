@@ -2998,4 +2998,3 @@
 {"v":0,"level":30,"name":"newrelic","hostname":"DESKTOP-20KL1LU","pid":25796,"time":"2026-01-15T04:30:10.078Z","msg":"Valid event_harvest_config received. Updating harvest cycles. {\"report_period_ms\":5000,\"harvest_limits\":{\"error_event_data\":8,\"log_event_data\":833,\"analytic_event_data\":833,\"custom_event_data\":250}}"}
 {"v":0,"level":30,"name":"newrelic","hostname":"DESKTOP-20KL1LU","pid":25796,"time":"2026-01-15T04:30:10.081Z","msg":"Agent state changed from connected to started."}
 {"v":0,"level":30,"name":"newrelic","hostname":"DESKTOP-20KL1LU","pid":25796,"time":"2026-01-15T04:30:11.085Z","msg":"Starting initial 1000ms harvest."}
->>>>>>> 6d608604dbbcc40cd68cb83db6db4204f9315746
