@@ -35,7 +35,6 @@ function setupComunidadModels(sequelize) {
    Parroquia.associate({ Canton,Persona});
    TipoPersona.associate({ Persona});
    Persona.associate({ Parroquia, TipoPersona, Interaccion, PersonaInteraccion});
-   Interaccion.associate({ Persona, PersonaInteraccion});
    DocumentoInteraccion.associate(sequelize.models);
    Interaccion.associate({ Persona, PersonaInteraccion,Procesos});
    Normativa.associate({TipoNormativa, Procesos})
