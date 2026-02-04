@@ -1,12 +1,16 @@
+const express = require('express');
+const router = express.Router();
 
-const tipo_documentoRouter = require('./tipo_documento.route');
+const tipoDocumentoRoutes = require('./tipoDocumento.routes');
+const categoriaDocumentoRoutes = require('./categoriaDocumento.routes');
+const documentoRoutes = require('./documento.routes');
+const documentoArchivoRoutes = require('./documentoArchivo.routes');
+const documentoHistorialRoutes = require('./documentoHistorial.routes');
 
+router.use('/tipo-documento', tipoDocumentoRoutes);
+router.use('/categoria-documento', categoriaDocumentoRoutes);
+router.use('/documento', documentoRoutes);
+router.use('/documento-archivo', documentoArchivoRoutes);
+router.use('/documento-historial', documentoHistorialRoutes);
 
-function setupDocumentacionRoutes(router) {
-  
-  router.use('/tipo_documento', tipo_documentoRouter)
-
-
-  }
-
-module.exports = setupDocumentacionRoutes;
+module.exports = router;

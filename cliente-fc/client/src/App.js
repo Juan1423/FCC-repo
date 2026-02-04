@@ -24,6 +24,8 @@ import Auditoria from './modules/auditoria/view/Auditoria';
 import VerAuditorias from './modules/auditoria/componets/verAuditorias';
 import ExportarAuditorias from './modules/auditoria/componets/exportarAuditoria';
 import ComunidadModule from './modules/comunidad';
+import NormativaModule from './modules/normativa';
+import ProcesoModule from './modules/proceso';
 
 
 // ✅ Importa el chatbot
@@ -105,6 +107,14 @@ function App() {
               path="/fcc-exportar-auditoria"
               element={<PrivateRoute element={ExportarAuditorias} allowedRoles={['admin']} />} 
             />
+            <Route 
+              path="/fcc-normativa/*"
+              element={<PrivateRoute element={NormativaModule} allowedRoles={['admin']} />} 
+            /> 
+            <Route 
+              path="/fcc-proceso/*"
+              element={<PrivateRoute element={ProcesoModule} allowedRoles={['admin']} />} 
+            />         
             <Route 
               path="/fcc-comunidad/*"
               element={<PrivateRoute element={ComunidadModule} allowedRoles={['admin']} />} 

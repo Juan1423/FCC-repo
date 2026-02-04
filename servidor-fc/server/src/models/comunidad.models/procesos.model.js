@@ -15,7 +15,7 @@ class Procesos extends Model {
             foreignKey: 'id_proceso',
             as: 'interaccionprocesos',
         });
-        Procesos.belongsTo(models.Tipoproceso, {  //------ 1 Canton tiene n Parroquia
+        Procesos.belongsTo(models.TipoProceso, {  //------ 1 Canton tiene n Parroquia
             foreignKey: 'id_tipo_proceso',
             as: 'tipo_proceso_proceso',
         });

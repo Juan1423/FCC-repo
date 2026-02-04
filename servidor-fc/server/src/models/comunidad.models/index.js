@@ -1,7 +1,7 @@
 const { Provincia, ProvinciaSchema } = require('./provincia.model');
 const { Canton, CantonSchema} = require('./canton.model');
 const { Procesos, ProcesoSchema} = require('./procesos.model');
-const { Tipoproceso, TipoProcesoSchema} = require('./tipo_proceso');
+const { TipoProceso, TipoProcesoSchema} = require('./tipo_proceso.model');
 const { Normativa, NormativaSchema} = require('./normativa.model');
 const { TipoNormativa, TipoNormativaSchema} = require('./tipo_normativa.model');
 
@@ -26,7 +26,7 @@ function setupComunidadModels(sequelize) {
    Procesos.init(ProcesoSchema, Procesos.config(sequelize));
    TipoProceso.init(TipoProcesoSchema, TipoProceso.config(sequelize));
    Normativa.init(NormativaSchema, Normativa.config(sequelize));
-   TipoNormativa.init(TipoNormativaSchema, Tipo_normativa.config(sequelize));
+   TipoNormativa.init(TipoNormativaSchema, TipoNormativa.config(sequelize));
 
    //association
    Provincia.associate({ Canton });
@@ -36,7 +36,7 @@ function setupComunidadModels(sequelize) {
    Persona.associate({ Parroquia, TipoPersona, Interaccion, PersonaInteraccion});
    Interaccion.associate({ Persona, PersonaInteraccion,Procesos});
    Normativa.associate({TipoNormativa, Procesos})
-   Procesos.associate({Interaccion,Tipoproceso, Normativa});
+   Procesos.associate({Interaccion,TipoProceso, Normativa});
 
 
 
