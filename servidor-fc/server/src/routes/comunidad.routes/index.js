@@ -7,7 +7,9 @@ const tipo_personaRouter = require('./tipo_persona.routes');
 
 const personaRouter = require('./persona.routes');
 const interaccionRouter = require('./interaccion.routes');
-
+const documentoInteraccionRouter = require('./documento_interaccion.routes');
+const normativaRouter = require('./normativa.routes');
+const tipoNormativaRouter = require('./tipo_normativa.routes')
 
 
 function setupComunidadRoutes(router) {
@@ -22,6 +24,9 @@ function setupComunidadRoutes(router) {
   router.use('/tipo_persona', tipo_personaRouter)
   router.use('/persona', personaRouter)
   router.use('/interaccion', interaccionRouter)
+  router.use('/comunidad/documentos', documentoInteraccionRouter)
+  router.use('/normativa', normativaRouter)
+  router.use('/tipo_normativa', tipoNormativaRouter)
 
   }
 

@@ -1,0 +1,4 @@
+/*
+Este archivo es un placeholder para crear el 
+directorio de auditoria para usarse en el futuro
+*/

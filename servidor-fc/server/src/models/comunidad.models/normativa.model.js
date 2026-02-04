@@ -5,7 +5,7 @@ class Normativa extends Model {
             sequelize,
             tableName: 'normativa', //---- tabla en la bdd
             modelName: 'Normativa', //---- nobmre del Modelo en el codigo
-            schema: 'scprototipo', //---eesquem en la base de datos
+            schema: 'fcc_historiaclinica', //---eesquem en la base de datos
             timestamps: false, // no incluir fecha creacion y actualizacion
         };
     }

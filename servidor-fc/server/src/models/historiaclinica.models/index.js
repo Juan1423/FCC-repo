@@ -1,10 +1,7 @@
 const { Enfermedad, EnfermedadSchema } = require("./enfermedades.model");
 const { Usuario, UsuarioSchema } = require("./usuario.model");
 const { Examen, ExamenSchema } = require("./examen.model");
-const {
-  TipoEspecialidad,
-  TipoEspecialidadSchema,
-} = require("./tipo_especialidad.model");
+const { TipoEspecialidad, TipoEspecialidadSchema} = require("./tipo_especialidad.model");
 const { Especialidad, EspecialidadSchema } = require("./especialidad.model");
 const { Aps, ApsSchema } = require("./atencion.model");
 const { PersonalSalud, PersonalSaludSchema } = require("./personalsalud.model");
@@ -19,10 +16,7 @@ function setupHistoriaClinicaModels(sequelize) {
   //models
   Enfermedad.init(EnfermedadSchema, Enfermedad.config(sequelize));
   Examen.init(ExamenSchema, Examen.config(sequelize));
-  TipoEspecialidad.init(
-    TipoEspecialidadSchema,
-    TipoEspecialidad.config(sequelize)
-  );
+  TipoEspecialidad.init(TipoEspecialidadSchema,TipoEspecialidad.config(sequelize));
   Especialidad.init(EspecialidadSchema, Especialidad.config(sequelize));
   Aps.init(ApsSchema, Aps.config(sequelize));
   PersonalSalud.init(PersonalSaludSchema, PersonalSalud.config(sequelize));

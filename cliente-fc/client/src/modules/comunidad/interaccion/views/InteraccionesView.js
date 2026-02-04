@@ -14,41 +14,41 @@ import {
   Collapse,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
-import comunidadService from '../../../services/comunidadService';
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
+import comunidadService from '../../../../services/comunidadService';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
-import { useMenu } from '../../../components/base/MenuContext';
-import PersonaInteraccionesSummary from '../components/PersonaInteraccionesSummary';
+import { useMenu } from '../../../../components/base/MenuContext';
+import InteraccionPersonasSummary from '../components/InteraccionPersonasSummary';
 
-const Personas = () => {
+const Interacciones = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [personas, setPersonas] = useState([]);
-  const [expandedPersonId, setExpandedPersonId] = useState(null);
+  const [interacciones, setInteracciones] = useState([]);
+  const [expandedInteraccionId, setExpandedInteraccionId] = useState(null);
   const navigate = useNavigate();
   const { setCurrentMenu } = useMenu();
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
 
-  const fetchPersonas = () => {
-    comunidadService.getPersonas().then((response) => {
-      setPersonas(response.data);
+  const fetchInteracciones = () => {
+    comunidadService.getInteracciones().then((response) => {
+      setInteracciones(response.data);
     });
   };
 
   useEffect(() => {
-    setCurrentMenu('Personas');
-    fetchPersonas();
+    setCurrentMenu('Interacciones');
+    fetchInteracciones();
   }, [setCurrentMenu]);
 
-  const handleExpandClick = (personId) => {
-    setExpandedPersonId(expandedPersonId === personId ? null : personId);
+  const handleExpandClick = (interaccionId) => {
+    setExpandedInteraccionId(expandedInteraccionId === interaccionId ? null : interaccionId);
   };
 
   const handleDelete = (id) => {
-    comunidadService.deletePersona(id).then(() => {
-      fetchPersonas();
+    comunidadService.deleteInteraccion(id).then(() => {
+      fetchInteracciones();
     });
   };
 
@@ -76,46 +76,48 @@ const Personas = () => {
             color: "primary.main",
           }}
         >
-          Personas de la Comunidad
+          Interacciones de la Comunidad
         </Typography>
 
         <Button
           variant="contained"
           color="primary"
           sx={{ mb: 4 }}
-          onClick={() => navigate("/fcc-comunidad/personas/nueva")}
+          onClick={() => navigate("/fcc-comunidad/interacciones/nueva")}
         >
-          Agregar Persona
+          Agregar Interacción
         </Button>
 
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Apellido</TableCell>
-                <TableCell>Correo</TableCell>
-                <TableCell>Teléfono</TableCell>
+                <TableCell>ID</TableCell>
+                <TableCell>Descripción</TableCell>
+                <TableCell>Tipo</TableCell>
+                <TableCell>Fecha Inicio</TableCell>
+                <TableCell>Fecha Fin</TableCell>
                 <TableCell>Estado</TableCell>
                 <TableCell>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {personas.map((persona) => (
-                <React.Fragment key={persona.id_persona}>
+              {interacciones.map((interaccion) => (
+                <React.Fragment key={interaccion.id_interaccion}>
                   <TableRow>
-                    <TableCell>{persona.nombre_persona}</TableCell>
-                    <TableCell>{persona.apellido_persona}</TableCell>
-                    <TableCell>{persona.correo_persona}</TableCell>
-                    <TableCell>{persona.telefono_persona}</TableCell>
-                    <TableCell>{persona.estado_persona}</TableCell>
+                    <TableCell>{interaccion.id_interaccion}</TableCell>
+                    <TableCell>{interaccion.descripcion_interaccion}</TableCell>
+                    <TableCell>{interaccion.tipo_interaccion}</TableCell>
+                    <TableCell>{new Date(interaccion.fecha_inicio_interaccion).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(interaccion.fecha_fin_interaccion).toLocaleDateString()}</TableCell>
+                    <TableCell>{interaccion.estado_interaccion}</TableCell>
                     <TableCell>
                       <Button
                         variant="contained"
                         color="primary"
                         size="small"
                         sx={{ mr: 1 }}
-                        onClick={() => navigate(`/fcc-comunidad/personas/${persona.id_persona}/detalles`)}
+                        onClick={() => navigate(`/fcc-comunidad/interacciones/${interaccion.id_interaccion}/detalles`)}
                       >
                         Detalles
                       </Button>
@@ -124,7 +126,7 @@ const Personas = () => {
                         color="secondary"
                         size="small"
                         sx={{ mr: 1 }}
-                        onClick={() => navigate(`/fcc-comunidad/personas/${persona.id_persona}/editar`)}
+                        onClick={() => navigate(`/fcc-comunidad/interacciones/${interaccion.id_interaccion}/editar`)}
                       >
                         Editar
                       </Button>
@@ -132,14 +134,14 @@ const Personas = () => {
                         variant="contained"
                         color="error"
                         size="small"
-                        onClick={() => handleDelete(persona.id_persona)}
+                        onClick={() => handleDelete(interaccion.id_interaccion)}
                       >
                         Eliminar
                       </Button>
                       <IconButton
-                        onClick={() => handleExpandClick(persona.id_persona)}
+                        onClick={() => handleExpandClick(interaccion.id_interaccion)}
                       >
-                        {expandedPersonId === persona.id_persona ? (
+                        {expandedInteraccionId === interaccion.id_interaccion ? (
                           <ArrowDropUpIcon />
                         ) : (
                           <ArrowDropDownIcon />
@@ -148,9 +150,9 @@ const Personas = () => {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-                      <Collapse in={expandedPersonId === persona.id_persona} timeout="auto" unmountOnExit>
-                        <PersonaInteraccionesSummary personaId={persona.id_persona} />
+                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+                      <Collapse in={expandedInteraccionId === interaccion.id_interaccion} timeout="auto" unmountOnExit>
+                        <InteraccionPersonasSummary interaccionId={interaccion.id_interaccion} />
                       </Collapse>
                     </TableCell>
                   </TableRow>
@@ -164,4 +166,4 @@ const Personas = () => {
   );
 };
 
-export default Personas;
+export default Interacciones;

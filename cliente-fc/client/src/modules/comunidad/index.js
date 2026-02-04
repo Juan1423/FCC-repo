@@ -1,16 +1,15 @@
 
-import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ComunidadDashboard from './views/ComunidadDashboard';
-import PersonasView from './views/PersonasView';
-import InteraccionesView from './views/InteraccionesView';
-import AddPersonaView from './views/AddPersonaView';
-import AddInteraccionView from './views/AddInteraccionView';
-import PersonaInteraccionesView from './views/PersonaInteraccionesView';
-import EditInteraccionView from './views/EditInteraccionView';
-import DetalleInteraccionView from './views/DetalleInteraccionView';
-import PersonaDetalleView from './views/PersonaDetalleView';
-import EditPersonaView from './views/EditPersonaView';
+import PersonasView from './persona/view/PersonasView';
+import InteraccionesView from './interaccion/views/InteraccionesView';
+import AddPersonaView from './persona/components/AddPersonaView';
+import AddInteraccionView from './interaccion/components/AddInteraccionView';
+import PersonaInteraccionesView from './persona/components/PersonaInteraccionesView';
+import EditInteraccionView from './interaccion/components/EditInteraccionView';
+import DetalleInteraccionView from './interaccion/components/DetalleInteraccionView';
+import PersonaDetalleView from './persona/components/PersonaDetalleView';
+import EditPersonaView from './persona/components/EditPersonaView';
 import NormativasView from './views/NormativasView';
 
 const ComunidadModule = () => {

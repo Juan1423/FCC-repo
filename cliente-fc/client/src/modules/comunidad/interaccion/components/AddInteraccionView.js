@@ -11,13 +11,13 @@ import {
   Checkbox,
   ListItemText,
 } from "@mui/material";
-import { useNavigate, useParams } from "react-router-dom";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
-import comunidadService from '../../../services/comunidadService';
-import { useMenu } from '../../../components/base/MenuContext';
+import { useNavigate } from "react-router-dom";
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
+import comunidadService from '../../../../services/comunidadService';
+import { useMenu } from '../../../../components/base/MenuContext';
 
-const EditInteraccion = () => {
+const AddInteraccion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [personas, setPersonas] = useState([]);
   const [selectedPersonas, setSelectedPersonas] = useState([]);
@@ -25,52 +25,45 @@ const EditInteraccion = () => {
   const [tipo, setTipo] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
-  const [archivo, setArchivo] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const [observaciones, setObservaciones] = useState("");
   const [estado, setEstado] = useState("Activa");
   const navigate = useNavigate();
-  const { id } = useParams();
   const { setCurrentMenu } = useMenu();
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
 
   useEffect(() => {
-    setCurrentMenu('Editar Interacción');
+    setCurrentMenu('Agregar Interacción');
     comunidadService.getPersonas().then((response) => {
       setPersonas(response.data);
     });
-
-    comunidadService.getInteraccionById(id).then((response) => {
-      const interaccion = response.data;
-      setDescripcion(interaccion.descripcion_interaccion || "");
-      setTipo(interaccion.tipo_interaccion || "");
-      setFechaInicio(interaccion.fecha_inicio_interaccion ? new Date(interaccion.fecha_inicio_interaccion).toISOString().split('T')[0] : "");
-      setFechaFin(interaccion.fecha_fin_interaccion ? new Date(interaccion.fecha_fin_interaccion).toISOString().split('T')[0] : "");
-      setArchivo(interaccion.archivo_interaccion || "");
-      setObservaciones(interaccion.observciones_interaccion || "");
-      setEstado(interaccion.estado_interaccion || "Activa");
-      setSelectedPersonas(interaccion.personasAsociadas ? interaccion.personasAsociadas.map(p => p.id_persona) : []);
-    });
-  }, [id, setCurrentMenu]);
+  }, [setCurrentMenu]);
 
   const handlePersonaChange = (event) => {
     const { value } = event.target;
     setSelectedPersonas(typeof value === 'string' ? value.split(',') : value);
   };
 
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    const interaccion = {
-      descripcion_interaccion: descripcion,
-      tipo_interaccion: tipo,
-      fecha_inicio_interaccion: fechaInicio,
-      fecha_fin_interaccion: fechaFin,
-      archivo_interaccion: archivo,
-      observciones_interaccion: observaciones,
-      estado_interaccion: estado,
-      personas: selectedPersonas,
-    };
-    comunidadService.updateInteraccion(id, interaccion).then(() => {
+    const formData = new FormData();
+    formData.append('descripcion_interaccion', descripcion);
+    formData.append('tipo_interaccion', tipo);
+    formData.append('fecha_inicio_interaccion', fechaInicio);
+    formData.append('fecha_fin_interaccion', fechaFin);
+    formData.append('observciones_interaccion', observaciones);
+    formData.append('estado_interaccion', estado);
+    selectedPersonas.forEach(id => formData.append('personas[]', id));
+    if (selectedFile) {
+      formData.append('archivo_interaccion', selectedFile);
+    }
+
+    comunidadService.createInteraccion(formData).then(() => {
       navigate(-1);
     });
   };
@@ -99,7 +92,7 @@ const EditInteraccion = () => {
             color: "primary.main",
           }}
         >
-          Editar Interacción
+          Agregar Interacción
         </Typography>
 
         <form onSubmit={handleSubmit}>
@@ -139,13 +132,20 @@ const EditInteraccion = () => {
               shrink: true,
             }}
           />
-          <TextField
-            label="Archivo"
-            fullWidth
-            sx={{ mb: 2 }}
-            value={archivo}
-            onChange={(e) => setArchivo(e.target.value)}
-          />
+          <Box sx={{ mb: 2 }}>
+            <Button
+              variant="contained"
+              component="label"
+            >
+              Subir Archivo
+              <input
+                type="file"
+                hidden
+                onChange={handleFileChange}
+              />
+            </Button>
+            {selectedFile && <Typography sx={{ ml: 2, display: 'inline' }}>{selectedFile.name}</Typography>}
+          </Box>
           <TextField
             label="Observaciones"
             fullWidth
@@ -189,7 +189,7 @@ const EditInteraccion = () => {
             </Select>
           </FormControl>
           <Button type="submit" variant="contained" color="primary">
-            Guardar Cambios
+            Guardar
           </Button>
         </form>
       </Box>
@@ -197,4 +197,4 @@ const EditInteraccion = () => {
   );
 };
 
-export default EditInteraccion;
+export default AddInteraccion;
