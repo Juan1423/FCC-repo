@@ -1,4 +1,4 @@
-const DocumentoService = require('../../services/documentacion.services/documento.services');
+const DocumentoService = require('../../services/documentacion.services/documento.service');
 const service = new DocumentoService();
 
 

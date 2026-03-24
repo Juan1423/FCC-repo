@@ -1,4 +1,4 @@
-const { models } = require('../../lib/sequelize');
+const { models } = require('../../libs/sequelize');
 
 class DocumentoService  { 
   

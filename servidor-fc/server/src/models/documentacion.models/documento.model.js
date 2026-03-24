@@ -6,7 +6,7 @@ class Documento extends Model {
             sequelize,
             tableName: 'documento',
             modelName: 'Documento',
-            schema: 'valeryssh',
+            schema: 'fcc_historiaclinica',
             timestamps: false,
         };
     }
