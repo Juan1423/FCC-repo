@@ -1,5 +1,9 @@
 import './styles/App.css';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { isAuthenticated } from './services/authServices';
+import { Fab } from '@mui/material';
+import { Chat as ChatIcon } from '@mui/icons-material';
+import ChatAccessModal from './components/ChatAccessModal';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PrivateRoute from './routes/PrivateRoute'
 import Login from './modules/auth/views/Login';
@@ -26,7 +30,8 @@ import ExportarAuditorias from './modules/auditoria/componets/exportarAuditoria'
 import ComunidadModule from './modules/comunidad';
 import NormativaModule from './modules/normativa';
 import ProcesoModule from './modules/proceso';
-
+import ChatCliente from './modules/chatcliente/views/ChatCliente';
+import ChatbotAdminPage from './modules/chatcliente/views/ChatbotAdminPage';
 
 // ✅ Importa el chatbot
 import { ChatBotIA } from './components/ChatBotIA';
@@ -40,11 +45,70 @@ const CombinedProviders = ({ children }) => (
 );
 
 function App() {
+  const [showChatbot, setShowChatbot] = useState(false);
+  const [showChatbotAsVisitor, setShowChatbotAsVisitor] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [chatbotKey, setChatbotKey] = useState(0);
+  const [userAuthenticated, setUserAuthenticated] = useState(false);
+
+  // Verificar si el usuario ya está autenticado al cargar
+  useEffect(() => {
+    setUserAuthenticated(isAuthenticated());
+  }, []);
+
+  const handleChatbotClick = () => {
+    if (isAuthenticated()) {
+      // Si ya está autenticado, abrir el chatbot directamente sin modal
+      setShowChatbotAsVisitor(true);
+      setShowLoginModal(false);  // No mostrar login modal porque ya está loggeado
+    } else {
+      // Si no está autenticado, mostrar el modal de acceso (login o visitante)
+      setShowChatbot(true);
+    }
+  };
   return (
     <div className="App">
       <BrowserRouter>
       <CombinedProviders>
-          <Routes>
+        {/* FAB global del chatbot */}
+        <Fab
+          color="primary"
+          aria-label="chatbot"
+          sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 2000 }}
+          onClick={handleChatbotClick}
+        >
+          <ChatIcon />
+        </Fab>
+
+        {/* Modal para elegir entre login o visitante */}
+        <ChatAccessModal 
+          open={showChatbot} 
+          onClose={() => setShowChatbot(false)}
+          onContinueAsVisitor={() => {
+            setShowChatbot(false);
+            setShowChatbotAsVisitor(true);
+          }}
+          onLoginClick={() => {
+            setShowChatbot(false);
+            setShowLoginModal(true);
+            setShowChatbotAsVisitor(true);
+          }}
+        />
+
+        {/* Chatbot para visitantes (30 preguntas) o usuarios autenticados */}
+        {showChatbotAsVisitor && (
+          <ChatBotIA
+            key={chatbotKey}
+            onClose={() => setShowChatbotAsVisitor(false)}
+            selectedPrompt={null}
+            forceClearMemory={chatbotKey}
+            maxQuestions={30}
+            isVisitor={!isAuthenticated()}
+            showLoginModalInitially={showLoginModal}
+            onLoginModalClose={() => setShowLoginModal(false)}
+          />
+        )}
+        <Routes>
             <Route exact path="/" element={<Login />} />
             <Route 
               path="/fcc-menu-principal" 
@@ -120,6 +184,14 @@ function App() {
               element={<PrivateRoute element={ComunidadModule} allowedRoles={['admin']} />} 
             />
             <Route 
+              path="/fcc-chatbot/*"
+              element={<PrivateRoute element={ChatCliente} allowedRoles={['admin']} />} 
+            />
+            <Route 
+              path="/fcc-chatbot-admin"
+              element={<PrivateRoute element={ChatbotAdminPage} allowedRoles={['admin']} />} 
+            />
+            <Route 
               path="/accessdenied"
               element={<AccessDenied />}
             />
@@ -129,7 +201,6 @@ function App() {
           </Routes>
           </CombinedProviders>
       </BrowserRouter>
-      <ChatBotIA/>
     </div>
   );
 }

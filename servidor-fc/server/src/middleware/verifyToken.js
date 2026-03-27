@@ -36,6 +36,7 @@ const verifyToken = async (req, res, next) => {
   }
 
   const token = req.headers["token"]; // Ensure the header key matches the client-side
+  console.log("------------------------------------------------------\nTOKEN Enviado:", token)
   const secret = process.env.JWT_SECRET;
   if (token) {
     jwt.verify(token, secret, (error, data) => {

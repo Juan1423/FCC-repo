@@ -1,5 +1,5 @@
 const express = require('express');
-const { create, getAll, getById, update, remove, activate, clearMemory, uploadPdf } = require('../controllers/prompt.controller');
+const { create, getAll, getById, update, remove, activate, clearMemory, uploadPdf } = require('../../controllers/chatcliente.controllers/prompt.controller');
 const { verifyToken } = require('../../middleware/verifyToken');
 const multer = require('multer');
 
