@@ -58,6 +58,7 @@ function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [chatbotKey, setChatbotKey] = useState(0);
   const [userAuthenticated, setUserAuthenticated] = useState(false);
+  const [wantsLogin, setWantsLogin] = useState(false);
 
   // Verificar si el usuario ya está autenticado al cargar
   useEffect(() => {
@@ -68,25 +69,29 @@ function App() {
     if (isAuthenticated()) {
       // Si ya está autenticado, abrir el chatbot directamente sin modal
       setShowChatbotAsVisitor(true);
-      setShowLoginModal(false);  // No mostrar login modal porque ya está loggeado
+      setShowLoginModal(false);
+      setWantsLogin(false);
     } else {
       // Si no está autenticado, mostrar el modal de acceso (login o visitante)
       setShowChatbot(true);
+      setWantsLogin(false);
     }
   };
   return (
     <div className="App">
       <BrowserRouter>
       <CombinedProviders>
-        {/* FAB global del chatbot - Esquina inferior derecha */}
-        <Fab
-          color="primary"
-          aria-label="chatbot"
-          sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 2000 }}
-          onClick={handleChatbotClick}
-        >
-          <ChatIcon />
-        </Fab>
+        {/* FAB global del chatbot - Solo para no autenticados */}
+        {!userAuthenticated && (
+          <Fab
+            color="primary"
+            aria-label="chatbot"
+            sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 2000 }}
+            onClick={handleChatbotClick}
+          >
+            <ChatIcon />
+          </Fab>
+        )}
 
         {/* Chatbot Servidor - Esquina inferior izquierda */}
         <ChatIAServidor />
@@ -98,25 +103,37 @@ function App() {
           onContinueAsVisitor={() => {
             setShowChatbot(false);
             setShowChatbotAsVisitor(true);
+            setWantsLogin(false);
           }}
           onLoginClick={() => {
+            console.log('Clic en Iniciar Sesión');
             setShowChatbot(false);
             setShowLoginModal(true);
             setShowChatbotAsVisitor(true);
+            setWantsLogin(true);
+            console.log('Estado: showChatbotAsVisitor=true, wantsLogin=true, showLoginModal=true');
           }}
         />
 
         {/* Chatbot para visitantes (30 preguntas) o usuarios autenticados */}
         {showChatbotAsVisitor && (
           <ChatBotIA
-            key={chatbotKey}
+            key={`chatbot-${chatbotKey}-${wantsLogin}`}
             onClose={() => setShowChatbotAsVisitor(false)}
             selectedPrompt={null}
             forceClearMemory={chatbotKey}
             maxQuestions={30}
-            isVisitor={!isAuthenticated()}
+            isVisitor={!wantsLogin && !isAuthenticated()}
             showLoginModalInitially={showLoginModal}
             onLoginModalClose={() => setShowLoginModal(false)}
+            onLoginSuccess={() => {
+              console.log('Login exitoso, chatbot se mantiene visible...');
+              setShowChatbot(false);
+              // NO cerrar el chatbot, solo cerrar el modal de login
+              setShowLoginModal(false);
+              setUserAuthenticated(true);
+              setWantsLogin(false);
+            }}
           />
         )}
         <Routes>
@@ -219,7 +236,7 @@ function App() {
               element={<PrivateRoute element={AsesoramientoView} allowedRoles={['admin']} />} 
             />
             <Route
-              path="/fcc-capacitaciones*"              
+              path="/fcc-capacitaciones/*"              
               element={<PrivateRoute element={CapacitacionesModule} allowedRoles={['admin']} />}
             />           
             <Route 

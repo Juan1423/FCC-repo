@@ -27,7 +27,10 @@ export const ChatBotIA = ({
   isVisitor = false, // Si es visitante, no mostrar login
   showLoginModalInitially = false, // Mostrar login modal al abrir
   onLoginModalClose, // Callback cuando se cierra el login modal
+  onLoginSuccess, // Callback cuando el login es exitoso
 }) => {
+  console.log('ChatBotIA props:', { showLoginModalInitially, isVisitor, onLoginSuccess: !!onLoginSuccess });
+  
   const [messages, setMessages] = useState([
     { from: 'bot', text: '¡Hola! Soy el chatbot de la Fundación. ¿En qué puedo ayudarte?' }
   ]);
@@ -49,9 +52,9 @@ export const ChatBotIA = ({
   const messagesEndRef = useRef(null);
   const chatbotRef = useRef(null);
 
-  // Mostrar login solo si no hay sesión activa y NO es visitante
+  // Verificar sesión existente o mostrar login según props
   useEffect(() => {
-    const token = getAuthToken();
+    console.log('ChatBotIA montado - showLoginModalInitially:', showLoginModalInitially, 'isVisitor:', isVisitor);
     
     // Si es visitante, no mostrar login modal
     if (isVisitor) {
@@ -59,6 +62,14 @@ export const ChatBotIA = ({
       return;
     }
     
+    // Si se pidió mostrar login modal inicialmente, mostrarlo
+    if (showLoginModalInitially) {
+      setShowLogin(true);
+      return;
+    }
+    
+    // Verificar si ya hay sesión activa
+    const token = getAuthToken();
     if (token && !isLoggedIn) {
       try {
         const userInfo = getUserInfo();
@@ -66,22 +77,14 @@ export const ChatBotIA = ({
           setUser(userInfo);
           setUserName(userInfo.nombre);
           setIsLoggedIn(true);
+          setShowLogin(false);
           console.log('Sesión verificada:', userInfo.nombre);
         }
       } catch (error) {
         setShowLogin(true);
       }
-    } else if (!token && !isLoggedIn) {
-      setShowLogin(true);
     }
-  }, []); // Solo ejecutar una vez al montar
-
-  // Mostrar login modal si se indicó al abrir
-  useEffect(() => {
-    if (showLoginModalInitially) {
-      setShowLogin(true);
-    }
-  }, [showLoginModalInitially]);
+  }, [showLoginModalInitially, isVisitor]);
 
   // Si se fuerza borrar memoria desde fuera - SOLO limpia la sesión actual, NO la BD
   useEffect(() => {
@@ -204,6 +207,11 @@ export const ChatBotIA = ({
         }
         
         setSnackbar({ open: true, message: `¡Bienvenido ${nombreUsuario}! Acceso ilimitado activado.`, type: 'success' });
+        
+        // Notificar al componente padre que el login fue exitoso
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        }
       } else {
         setSnackbar({ open: true, message: 'Credenciales inválidas. Verifica email y contraseña', type: 'error' });
       }
@@ -343,8 +351,13 @@ export const ChatBotIA = ({
         </div>
         {/* Login modal al abrir si no hay token */}
         {showLogin && (
-          <Modal open={showLogin} onClose={() => { /* No permitir cerrar sin login */ }}>
-            <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', p: 4, borderRadius: 3, boxShadow: 3 }}>
+          <Modal 
+            open={showLogin} 
+            onClose={() => { /* No permitir cerrar sin login */ }}
+            slots={{ backdrop: 'div' }}
+            slotProps={{ backdrop: { sx: { zIndex: 9998 } } }}
+          >
+            <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', p: 4, borderRadius: 3, boxShadow: 3, zIndex: 9999 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
                 <span style={{ fontSize: 40 }} role="img" aria-label="robot">🤖</span>
                 <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 'bold', margin: 0 }}>Iniciar Sesión</Typography>
