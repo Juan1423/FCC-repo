@@ -87,6 +87,12 @@ const menuData = [
     roles: ["admin"],
   },
   {
+      nombre_menu: "Chatbot",
+      url: "/fcc-chatbot",
+      icon: <HelpOutlineIcon />,
+      roles: ["admin"],
+    },
+  {
     nombre_menu: "Ajustes",
     url: "/fcc-configuracion",
     icon: <SettingsIcon />,
