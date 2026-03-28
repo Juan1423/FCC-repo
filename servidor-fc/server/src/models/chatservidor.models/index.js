@@ -1,16 +1,16 @@
-const { TipoGestion, TipoGestionSchema } = require('./tipo_gestion.model');
+const { DocumentoConocimiento, DocumentoConocimientoSchema } = require('./documento_conocimiento.model');
+const { SegmentoVector, SegmentoVectorSchema } = require('./segmento_vector.model');
+const { HistorialIA, HistorialIASchema } = require('./historial_ia.model');
 
+function setupIAModels(sequelize) {
+    DocumentoConocimiento.init(DocumentoConocimientoSchema, DocumentoConocimiento.config(sequelize));
+    SegmentoVector.init(SegmentoVectorSchema, SegmentoVector.config(sequelize));
+    HistorialIA.init(HistorialIASchema, HistorialIA.config(sequelize));
 
-
-function setupChatServidorModels(sequelize) {
-
-
-   //models
-   TipoGestion.init(TipoGestionSchema, TipoGestion.config(sequelize));
-
-   //association
-   //TipoGestion.associate({ Canton });// formato para inicializar las asociasiones
-
+    // Configurar asociaciones si las hay
+    DocumentoConocimiento.associate(sequelize.models);
+    SegmentoVector.associate(sequelize.models);
+    HistorialIA.associate(sequelize.models);
 }
 
-module.exports = setupChatServidorModels;
+module.exports = setupIAModels;
