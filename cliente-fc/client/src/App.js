@@ -33,6 +33,13 @@ import ProcesoModule from './modules/proceso';
 import ChatCliente from './modules/chatcliente/views/ChatCliente';
 import ChatbotAdminPage from './modules/chatcliente/views/ChatbotAdminPage';
 
+/*import AsistenteInternoView from './modules/chatservidor/views/AsistenteInternoView';*/
+import CapacitacionesModule from './modules/capacitaciones';
+import IADashboard from './modules/chatservidor/views/IADashboard';
+import GestionConocimientoView from './modules/chatservidor/views/GestionConocimientoView';
+import HistorialIAView from './modules/chatservidor/views/HistorialIAView';
+import AsesoramientoView from './modules/chatservidor/views/AsesoramientoView';
+
 // ✅ Importa el chatbot
 import { ChatBotIA } from './components/ChatBotIA';
 
@@ -191,6 +198,26 @@ function App() {
               path="/fcc-chatbot-admin"
               element={<PrivateRoute element={ChatbotAdminPage} allowedRoles={['admin']} />} 
             />
+            <Route 
+              path="/fcc-asistente-ia" 
+              element={<PrivateRoute element={IADashboard} allowedRoles={['admin']} />} 
+            />
+             <Route 
+              path="/fcc-asistente-ia/conocimiento" 
+              element={<PrivateRoute element={GestionConocimientoView} allowedRoles={['admin']} />} 
+            />
+            <Route 
+              path="/fcc-asistente-ia/historial" 
+              element={<PrivateRoute element={HistorialIAView} allowedRoles={['admin']} />} 
+            />
+            <Route 
+              path="/fcc-asistente-ia/asesoramiento" 
+              element={<PrivateRoute element={AsesoramientoView} allowedRoles={['admin']} />} 
+            />
+            <Route
+              path="/fcc-capacitaciones*"              
+              element={<PrivateRoute element={CapacitacionesModule} allowedRoles={['admin']} />}
+            />           
             <Route 
               path="/accessdenied"
               element={<AccessDenied />}

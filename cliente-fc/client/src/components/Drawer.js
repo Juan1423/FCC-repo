@@ -20,7 +20,9 @@ import {
   AdminPanelSettings as AdminPanelSettingsIcon,
   Group as GroupIcon,
   MedicalInformation as MedicalInformationIcon,
-  KeyboardArrowDown as KeyboardArrowDownIcon
+  KeyboardArrowDown as KeyboardArrowDownIcon,
+  School as SchoolIcon,
+  SmartToy as SmartToyIcon,
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getUserInfo } from '../services/authServices';
@@ -134,6 +136,8 @@ export default function ResponsiveDrawer({ open, onClose }) {
         { text: 'Personal Salud', path: '/fcc-personal-salud', icon: <MedicalInformationIcon /> },
         {text: 'Auditoría', path: '/fcc-auditoria', icon: <AssignmentTurnedInIcon/>},
         { text: 'Comunidad', path: '/fcc-comunidad', icon: <GroupIcon /> },
+        { text: 'Capacitaciones', path: '/fcc-capacitaciones', icon: <SchoolIcon />},
+        { text: 'Asistente IA', path: '/fcc-asistente-ia', icon: <SmartToyIcon /> }
       ]
     },
     { text: 'Perfil', path: '/perfil', icon: <AccountCircleIcon /> },
