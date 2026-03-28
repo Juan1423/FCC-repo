@@ -40,8 +40,9 @@ import GestionConocimientoView from './modules/chatservidor/views/GestionConocim
 import HistorialIAView from './modules/chatservidor/views/HistorialIAView';
 import AsesoramientoView from './modules/chatservidor/views/AsesoramientoView';
 
-// ✅ Importa el chatbot
+// ✅ Importa los chatbots
 import { ChatBotIA } from './components/ChatBotIA';
+import { ChatBotIA as ChatIAServidor } from './components/ChatIAServidor';
 
 const CombinedProviders = ({ children }) => (
   <MenuProvider>
@@ -77,7 +78,7 @@ function App() {
     <div className="App">
       <BrowserRouter>
       <CombinedProviders>
-        {/* FAB global del chatbot */}
+        {/* FAB global del chatbot - Esquina inferior derecha */}
         <Fab
           color="primary"
           aria-label="chatbot"
@@ -86,6 +87,9 @@ function App() {
         >
           <ChatIcon />
         </Fab>
+
+        {/* Chatbot Servidor - Esquina inferior izquierda */}
+        <ChatIAServidor />
 
         {/* Modal para elegir entre login o visitante */}
         <ChatAccessModal 
