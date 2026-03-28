@@ -1,0 +1,1 @@
+docker run --name bdd_fcc_v1 -p 5433:5432 -e POSTGRES_USER=fundacionconcristo -e POSTGRES_PASSWORD=Fundacioncc.2023 -e POSTGRES_DB=base_fcc_v1 -d pgvector/pgvector:pg17
