@@ -81,8 +81,8 @@ function App() {
     <div className="App">
       <BrowserRouter>
       <CombinedProviders>
-        {/* FAB global del chatbot - Solo para no autenticados */}
-        {!userAuthenticated && (
+        {/* FAB global del chatbot - Solo cuando no está abierto ningún chatbot */}
+        {!userAuthenticated && !showChatbotAsVisitor && (
           <Fab
             color="primary"
             aria-label="chatbot"
