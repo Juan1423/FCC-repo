@@ -3,14 +3,50 @@ import {
   Box,
   Typography,
   Grid,
-  Card,
   CardContent,
   Button,
 } from "@mui/material";
+import Card from "../../../components/Card"
+import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import TextSnippetIcon from '@mui/icons-material/TextSnippet';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import { useNavigate } from "react-router-dom";
 import NavbarAdmin from "../../../components/NavbarAdmin";
 import Drawer from "../../../components/Drawer";
 import { useMenu } from '../../../components/base/MenuContext';
+
+const dataTarjeta = [
+  {
+    title: "Personas",
+    icon: <EmojiPeopleIcon/>,
+    description: "Gestion de las personas de la comunidad",
+    path: "/fcc-comunidad/personas",
+    color: "#29cf45"
+  },
+  {
+    title: "Interacciones",
+    icon: <HandshakeIcon/>,
+    description: "Gestion de las interaciones de la comunidad",
+    path: "/fcc-comunidad/interacciones",
+    color: "#2976cf"
+  },
+  {
+    title: "Normativas",
+    icon: <TextSnippetIcon/>,
+    description: "Gestion de las normativas de la comunidad",
+    path: "/fcc-comunidad/normativa",
+    color: "#9d39cc"
+  },
+  {
+    title: "Procesos",
+    icon: <AccountTreeIcon/>,
+    description: "Gestion de los procesos de la comunidad",
+    path: "/fcc-proceso",
+    color: "#cf9529"
+  },
+]
+
 
 const Comunidad = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -51,255 +87,17 @@ const Comunidad = () => {
         </Typography>
 
         <Grid container spacing={3} justifyContent="center">
-          {/* Tarjeta Personas */}
-          <Grid item xs={12} md={6} lg={5} sx={{ display: "flex" }}>
-            <Card
-              sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                transition: "transform 0.3s",
-                "&:hover": {
-                  transform: "translateY(-5px)",
-                  boxShadow: 4,
-                },
-              }}
-            >
-              <CardContent
-                sx={{
-                  flexGrow: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  p: 3,
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontSize: "1.25rem",
-                      fontWeight: "bold",
-                      mb: 2,
-                      color: "primary.main",
-                    }}
-                  >
-                    Personas
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "1rem",
-                      color: "text.secondary",
-                      mb: 3,
-                    }}
-                  >
-                    Gestiona las personas de la comunidad.
-                  </Typography>
-                </Box>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  sx={{
-                    py: 1.5,
-                    fontSize: "1rem",
-                    borderRadius: 2,
-                    textTransform: "none",
-                  }}
-                  onClick={() => navigate("/fcc-comunidad/personas")}
-                >
-                  Ver Personas
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Tarjeta Interacciones */}
-          <Grid item xs={12} md={6} lg={5} sx={{ display: "flex" }}>
-            <Card
-              sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                transition: "transform 0.3s",
-                "&:hover": {
-                  transform: "translateY(-5px)",
-                  boxShadow: 4,
-                },
-              }}
-            >
-              <CardContent
-                sx={{
-                  flexGrow: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  p: 3,
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontSize: "1.25rem",
-                      fontWeight: "bold",
-                      mb: 2,
-                      color: "primary.main",
-                    }}
-                  >
-                    Interacciones
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "1rem",
-                      color: "text.secondary",
-                      mb: 3,
-                    }}
-                  >
-                    Gestiona las interacciones de la comunidad.
-                  </Typography>
-                </Box>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  sx={{
-                    py: 1.5,
-                    fontSize: "1rem",
-                    borderRadius: 2,
-                    textTransform: "none",
-                  }}
-                  onClick={() => navigate("/fcc-comunidad/interacciones")}
-                >
-                  Ver Interacciones
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6} lg={5} sx={{display:"flex"}}>
-            <Card sx={{
-              width:"100%",
-              height:"100%",
-              display:"flex",
-              flexDirection:"column",
-              transition:"transform 0.3s",
-              "&:hover":{
-                transform:"translateY(-5px)",
-                boxShadow:4
-              }
-            }}>
-              <CardContent
-                sx={{
-                  flexGrow: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  p: 3,
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontSize: "1.25rem",
-                      fontWeight: "bold",
-                      mb: 2,
-                      color: "primary.main",
-                    }}
-                  >
-                    Normativas
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "1rem",
-                      color: "text.secondary",
-                      mb: 3,
-                    }}
-                  >
-                    Gestiona las Normativas.
-                  </Typography>
-                </Box>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  sx={{
-                    py: 1.5,
-                    fontSize: "1rem",
-                    borderRadius: 2,
-                    textTransform: "none",
-                  }}
-                  onClick={() => navigate("/fcc-comunidad/normativa")}
-                >
-                  Ver Normativas
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Tarjeta Procesos */}
-          <Grid item xs={12} md={6} lg={5} sx={{display:"flex"}}>
-            <Card sx={{
-              width:"100%",
-              height:"100%",
-              display:"flex",
-              flexDirection:"column",
-              transition:"transform 0.3s",
-              "&:hover":{
-                transform:"translateY(-5px)",
-                boxShadow:4
-              }
-            }}>
-              <CardContent
-                sx={{
-                  flexGrow: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  p: 3,
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontSize: "1.25rem",
-                      fontWeight: "bold",
-                      mb: 2,
-                      color: "primary.main",
-                    }}
-                  >
-                    Procesos
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "1rem",
-                      color: "text.secondary",
-                      mb: 3,
-                    }}
-                  >
-                    Gestiona los procesos.
-                  </Typography>
-                </Box>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  sx={{
-                    py: 1.5,
-                    fontSize: "1rem",
-                    borderRadius: 2,
-                    textTransform: "none",
-                  }}
-                  onClick={() => navigate("/fcc-proceso")}
-                >
-                  Ver Procesos
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
+          {dataTarjeta.map((item, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <Card
+                  title={item.title}
+                  description={item.description}
+                  icon={item.icon} // Ahora 'item.icon' es un elemento válido (<Icon />)
+                  color={item.color}
+                  onClick={() => navigate(item.path)}
+                />
+              </Grid>
+            ))}
 
         </Grid>
       </Box>
