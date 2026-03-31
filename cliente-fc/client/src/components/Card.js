@@ -34,7 +34,12 @@ const Card = ({ title, icon, description, onClick, color = '#1976d2' }) => {
           backgroundColor: color,
           mr: 3,
           flexShrink: 0,
+          '& svg': {
+            fontSize: 32,
+            color: 'white',
+          },
         }}
+     
       >
         {icon}
       </Box>
