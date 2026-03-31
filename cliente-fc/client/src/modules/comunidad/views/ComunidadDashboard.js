@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Grid,
-  CardContent,
-  Button,
 } from "@mui/material";
 import Card from "../../../components/Card"
 import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
@@ -86,20 +83,18 @@ const Comunidad = () => {
           Gestión de la Comunidad
         </Typography>
 
-        <Grid container spacing={3} justifyContent="center">
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }, gap: 4 }}>
           {dataTarjeta.map((item, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Card
-                  title={item.title}
-                  description={item.description}
-                  icon={item.icon} // Ahora 'item.icon' es un elemento válido (<Icon />)
-                  color={item.color}
-                  onClick={() => navigate(item.path)}
-                />
-              </Grid>
-            ))}
-
-        </Grid>
+              <Card
+                key={index}
+                title={item.title}
+                description={item.description}
+                icon={item.icon}
+                color={item.color}
+                onClick={() => navigate(item.path)}
+              />
+          ))}
+        </Box>
       </Box>
     </Box>
   );
