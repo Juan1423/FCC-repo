@@ -21,19 +21,19 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { CircularProgress } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import NavbarAdmin from "../../../components/NavbarAdmin";
+import NavbarAdmin from "../../../../components/NavbarAdmin";
 import CuadroPaciente from "../components/CuadroPaciente";
 import TablaOrganos from "../components/TablaOrganos";
 import TablaExamenFisico from "../components/TablaExamenFisico";
 import Diagnostico from "../components/Diagnostico";
 import Tratamiento from "../components/Tratamiento";
-import {createAtencion,createSignosVitales,} from "../../../services/atencion";
-import {getHistoria,updateHistoria,} from "../../../services/historiaServices";
-import {organs,regions,NewAtencionSteps,} from "../../../components/data/Data";
-import { usePacienteContext } from "../../../components/base/PacienteContext";
+import {createAtencion,createSignosVitales,} from "../../../../services/atencion";
+import {getHistoria,updateHistoria,} from "../../../../services/historiaServices";
+import {organs,regions,NewAtencionSteps,} from "../../../../components/data/Data";
+import { usePacienteContext } from "../../../../components/base/PacienteContext";
 import Antecedentes from "../../historia/components/Antecedentes";
-import { logAuditAction } from "../../../services/auditoriaServices";
-import { getCurrentUserId } from "../../../utils/userUtils";
+import { logAuditAction } from "../../../../services/auditoriaServices";
+import { getCurrentUserId } from "../../../../utils/userUtils";
 const steps = NewAtencionSteps;
 
 function StepContent({

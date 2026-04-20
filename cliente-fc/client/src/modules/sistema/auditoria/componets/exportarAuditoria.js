@@ -13,11 +13,11 @@ import {
   Tooltip,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
 import { useNavigate } from "react-router-dom";
-import { getAuditorias } from "../../../services/auditoriaServices";
-import { generarPDF } from "../../../components/pdfGeneradorAuditoria";
+import { getAuditorias } from "../../../../services/auditoriaServices";
+import { generarPDF } from "../../../../components/pdfGeneradorAuditoria";
 
 const ExportarAuditorias = () => {
   const [auditorias, setAuditorias] = useState([]);

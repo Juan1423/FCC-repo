@@ -20,7 +20,6 @@ import ComputerIcon from '@mui/icons-material/Computer';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import Groups2Icon from '@mui/icons-material/Groups2';
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
-import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import GroupIcon from "@mui/icons-material/Group";
@@ -32,32 +31,38 @@ import { getPacientes } from "../services/pacientesServices";
 import { getPersonalSalud } from "../services/personalsaludServices";
 import { getHistorias } from "../services/historiaServices";
 import { getAllAtenciones } from "../services/atencion";
-import Auditoria from "../modules/auditoria/view/Auditoria";
+import Auditoria from "../modules/sistema/auditoria/view/Auditoria";
 
 const menuData = [
   {
     nombre_menu: "Salud",
-    url: "/fcc-pacientes",
+    url: "/fcc-salud",
     icon: <MedicalServicesIcon />,
     roles: ["admin", "doctor", "personal_salud"],
   },
   {
     nombre_menu: "Gestion",
-    url: "/fcc-comunidad",
+    url: "/fcc-gestion",
     icon: <Groups2Icon />,
     roles: ["admin"],
   },
   {
     nombre_menu: "Sistema",
-    url: "/fcc-proceso",
+    url: "/fcc-sistema",
     icon: <ComputerIcon />,
     roles: ["admin"],
   },
   {
     nombre_menu: "ChatBot",
-    url: "/fcc-proceso",
+    url: "/fcc-chat",
     icon: <AddCommentIcon />,
     roles: ["admin"],
+  },
+   {
+    nombre_menu: "Ajustes",
+    url: "/fcc-configuracion",
+    icon: <SettingsIcon />,
+    roles: ["admin", "personal_salud"],
   }
 ];
 

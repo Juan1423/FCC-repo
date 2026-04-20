@@ -1,6 +1,6 @@
 
 import { Routes, Route } from 'react-router-dom';
-import ComunidadDashboard from './views/ComunidadDashboard';
+
 import PersonasView from './persona/view/PersonasView';
 import InteraccionesView from './interaccion/views/InteraccionesView';
 import AddPersonaView from './persona/components/AddPersonaView';
@@ -15,7 +15,7 @@ import NormativasView from './views/NormativasView';
 const ComunidadModule = () => {
   return (
     <Routes>
-      <Route path="/" element={<ComunidadDashboard />} />
+
       <Route path="/personas" element={<PersonasView />} />
       <Route path="/personas/nueva" element={<AddPersonaView />} />
       <Route path="/personas/:id/interacciones" element={<PersonaInteraccionesView />} />

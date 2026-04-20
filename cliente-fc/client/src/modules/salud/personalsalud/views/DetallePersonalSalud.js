@@ -25,8 +25,8 @@ import {
   Description as DescriptionIcon,
   LocalHospital as LocalHospitalIcon
 } from '@mui/icons-material';
-import { getPersonalSaludId } from '../../../services/personalsaludServices';
-import { BASE_API_URL } from '../../../services/apiConfig';
+import { getPersonalSaludId } from '../../../../services/personalsaludServices';
+import { BASE_API_URL } from '../../../../services/apiConfig';
 
 const DetallePersonalSalud = () => {
     const { id } = useParams();

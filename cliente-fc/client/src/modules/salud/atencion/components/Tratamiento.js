@@ -6,11 +6,11 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import EditIcon from '@mui/icons-material/Edit';
-import { getExamenByHistoria, createExamen, deleteExamen, updateExamen } from '../../../services/examenServices';
-import { usePacienteContext } from '../../../components/base/PacienteContext';
-import { API_IMAGE_URL } from "../../../services/apiConfig";
-import { logAuditAction } from '../../../services/auditoriaServices';
-import { getCurrentUserId } from "../../../utils/userUtils";
+import { getExamenByHistoria, createExamen, deleteExamen, updateExamen } from '../../../../services/examenServices';
+import { usePacienteContext } from '../../../../components/base/PacienteContext';
+import { API_IMAGE_URL } from "../../../../services/apiConfig";
+import { logAuditAction } from '../../../../services/auditoriaServices';
+import { getCurrentUserId } from "../../../../utils/userUtils";
 
 const StyledModal = styled(Modal)(({ theme }) => ({
   display: 'flex',

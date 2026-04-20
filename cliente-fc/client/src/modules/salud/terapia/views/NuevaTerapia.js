@@ -33,11 +33,11 @@ import AbcIcon from '@mui/icons-material/Abc';
 import CloseIcon from '@mui/icons-material/Close';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getPaciente } from '../../../services/pacientesServices';
-import { createTerapia, getTerapiaByPaciente, getLastTerapia } from '../../../services/terapia';
-import { getHistoria, getHistoriaFile } from '../../../services/historiaServices';
-import { logAuditAction } from "../../../services/auditoriaServices";
-import { getCurrentUserId } from "../../../utils/userUtils";
+import { getPaciente } from '../../../../services/pacientesServices';
+import { createTerapia, getTerapiaByPaciente, getLastTerapia } from '../../../../services/terapia';
+import { getHistoria, getHistoriaFile } from '../../../../services/historiaServices';
+import { logAuditAction } from "../../../../services/auditoriaServices";
+import { getCurrentUserId } from "../../../../utils/userUtils";
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   display: 'flex',

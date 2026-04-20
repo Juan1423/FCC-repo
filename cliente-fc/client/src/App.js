@@ -6,39 +6,43 @@ import { Chat as ChatIcon } from '@mui/icons-material';
 import ChatAccessModal from './components/ChatAccessModal';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PrivateRoute from './routes/PrivateRoute'
-import Login from './modules/auth/views/Login';
+import Login from './modules/sistema/auth/views/Login';
 import MenuPrincipal from './components/MenuPrincipal';
-import Usuarios from './modules/usuarios/views/Usuarios';
+import Usuarios from './modules/sistema/usuarios/views/Usuarios';
 import Error404 from './components/Error404';
-import Paciente from './modules/pacientes/views/Paciente';
-import DetallePaciente from './modules/pacientes/views/DetallePaciente';
-import PersonalSalud from './modules/personalsalud/views/PersonalSalud';
-import DetallePersonalSalud from './modules/personalsalud/views/DetallePersonalSalud';
-import Atencion from './modules/atencion/views/Atencion';
-import NuevaAtencionMedica from './modules/atencion/views/NuevaAtencionMedica';
-import Historia from './modules/historia/views/Historia';
-import Terapia from './modules/terapia/views/Terapia';
-import NuevaTerapia from './modules/terapia/views/NuevaTerapia';
+import Paciente from './modules/salud/pacientes/views/Paciente';
+import DetallePaciente from './modules/salud/pacientes/views/DetallePaciente';
+import PersonalSalud from './modules/salud/personalsalud/views/PersonalSalud';
+import DetallePersonalSalud from './modules/salud/personalsalud/views/DetallePersonalSalud';
+import Atencion from './modules/salud/atencion/views/Atencion';
+import NuevaAtencionMedica from './modules/salud/atencion/views/NuevaAtencionMedica';
+import Historia from './modules/salud/historia/views/Historia';
+import Terapia from './modules/salud/terapia/views/Terapia';
+import NuevaTerapia from './modules/salud/terapia/views/NuevaTerapia';
 import AccessDenied from './components/AccessDenied';
-import Configuracion from './modules/configuracion/views/Configuracion';
+import Configuracion from './modules/sistema/configuracion/views/Configuracion';
 import { MenuProvider } from './components/base/MenuContext';
 import { PacienteProvider } from './components/base/PacienteContext';
-import Perfil from './modules/usuarios/views/Perfil';
-import Auditoria from './modules/auditoria/view/Auditoria';
-import VerAuditorias from './modules/auditoria/componets/verAuditorias';
-import ExportarAuditorias from './modules/auditoria/componets/exportarAuditoria';
-import ComunidadModule from './modules/comunidad';
-import NormativaModule from './modules/normativa';
-import ProcesoModule from './modules/proceso';
-import ChatCliente from './modules/chatcliente/views/ChatCliente';
-import ChatbotAdminPage from './modules/chatcliente/views/ChatbotAdminPage';
+import Perfil from './modules/sistema/usuarios/views/Perfil';
+import Auditoria from './modules/sistema/auditoria/view/Auditoria';
+import VerAuditorias from './modules/sistema/auditoria/componets/verAuditorias';
+import ExportarAuditorias from './modules/sistema/auditoria/componets/exportarAuditoria';
+import ComunidadModule from './modules/gestion/comunidad';
+import NormativaModule from './modules/gestion/normativa';
+import ProcesoModule from './modules/gestion/proceso';
+import ChatCliente from './modules/chatbot/chatcliente/views/ChatCliente';
+import ChatbotAdminPage from './modules/chatbot/chatcliente/views/ChatbotAdminPage';
+import SistemaDashboard from './modules/sistema/SistemaDashboard';
+import GestionDashboard from './modules/gestion/GestionDashboard';
+import SaludDashboard from './modules/salud/SaludDashboard';
+import ChatDashboard from './modules/chatbot/ChatbotDashboard';
 
 /*import AsistenteInternoView from './modules/chatservidor/views/AsistenteInternoView';*/
-import CapacitacionesModule from './modules/capacitaciones';
-import IADashboard from './modules/chatservidor/views/IADashboard';
-import GestionConocimientoView from './modules/chatservidor/views/GestionConocimientoView';
-import HistorialIAView from './modules/chatservidor/views/HistorialIAView';
-import AsesoramientoView from './modules/chatservidor/views/AsesoramientoView';
+import CapacitacionesModule from './modules/gestion/capacitaciones';
+import IADashboard from './modules/chatbot/chatservidor/views/IADashboard';
+import GestionConocimientoView from './modules/chatbot/chatservidor/views/GestionConocimientoView';
+import HistorialIAView from './modules/chatbot/chatservidor/views/HistorialIAView';
+import AsesoramientoView from './modules/chatbot/chatservidor/views/AsesoramientoView';
 
 // ✅ Importa los chatbots
 import { ChatBotIA } from './components/ChatBotIA';
@@ -238,6 +242,22 @@ function App() {
             <Route
               path="/fcc-capacitaciones/*"              
               element={<PrivateRoute element={CapacitacionesModule} allowedRoles={['admin']} />}
+            />
+            <Route
+              path="/fcc-sistema"              
+              element={<PrivateRoute element={SistemaDashboard} allowedRoles={['admin']} />}
+            />    
+             <Route
+              path="/fcc-gestion"              
+              element={<PrivateRoute element={GestionDashboard} allowedRoles={['admin']} />}
+            />    
+             <Route
+              path="/fcc-salud"              
+              element={<PrivateRoute element={SaludDashboard} allowedRoles={['admin']} />}
+            />
+            <Route
+              path="/fcc-chat"              
+              element={<PrivateRoute element={ChatDashboard} allowedRoles={['admin']} />}
             />           
             <Route 
               path="/accessdenied"

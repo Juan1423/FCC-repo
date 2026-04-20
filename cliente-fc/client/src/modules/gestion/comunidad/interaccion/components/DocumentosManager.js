@@ -27,7 +27,7 @@ import {
 import Swal from 'sweetalert2';
 
 // Asegúrate de que la ruta al servicio sea correcta según tu estructura
-import documentoService from '../../../../services/documentoInteraccionService'; 
+import documentoService from '../../../../../services/documentoInteraccionService'; 
 
 const DocumentosManager = ({ interaccionId }) => {
     const [documentos, setDocumentos] = useState([]);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getPaciente } from "../../../services/pacientesServices";
+import { getPaciente } from "../../../../services/pacientesServices";
 import {
   Container,
   Typography,
@@ -27,8 +27,8 @@ import {
 } from "@mui/icons-material";
 import BloodtypeIcon from '@mui/icons-material/Bloodtype';
 import PsychologyIcon from '@mui/icons-material/Psychology';
-import { API_IMAGE_URL } from "../../../services/apiConfig";
-import PDFGeneratorPaciente from "../../../components/PdfGeneratorPaciente";
+import { API_IMAGE_URL } from "../../../../services/apiConfig";
+import PDFGeneratorPaciente from "../../../../components/PdfGeneratorPaciente";
 
 const DetallePaciente = () => {
   const navigate = useNavigate();

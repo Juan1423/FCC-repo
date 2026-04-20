@@ -34,15 +34,15 @@ import {
   MedicalServices as MedicalServicesIcon,
   LocalHospital as LocalHospitalIcon
 } from "@mui/icons-material";
-import { getUsuario, updateUsuario } from "../../../services/usuarioServices";
-import { getPersonalSaludId, updatePersonalSalud, getEstadisticas } from "../../../services/personalsaludServices";
-import { getUserInfo } from "../../../services/authServices";
-import Drawer from "../../../components/Drawer";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import useImageCache from "../../../components/global/UseImageCache";
-import { API_IMAGE_URL } from "../../../services/apiConfig";
-import { getCurrentUserId } from "../../../utils/userUtils";
-import { logAuditAction } from "../../../services/auditoriaServices";
+import { getUsuario, updateUsuario } from "../../../../services/usuarioServices";
+import { getPersonalSaludId, updatePersonalSalud, getEstadisticas } from "../../../../services/personalsaludServices";
+import { getUserInfo } from "../../../../services/authServices";
+import Drawer from "../../../../components/Drawer";
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import useImageCache from "../../../../components/global/UseImageCache";
+import { API_IMAGE_URL } from "../../../../services/apiConfig";
+import { getCurrentUserId } from "../../../../utils/userUtils";
+import { logAuditAction } from "../../../../services/auditoriaServices";
 
 const Perfil = () => {
   const [user, setUser] = useState(null);

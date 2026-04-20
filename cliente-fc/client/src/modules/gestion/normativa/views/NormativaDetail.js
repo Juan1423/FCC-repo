@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import normativaServices from '../../../services/normativasService';
+import normativaServices from '../../../../services/normativasService';
 
 const NormativaDetail = () => {
   const { id } = useParams();

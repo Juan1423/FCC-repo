@@ -1,7 +1,7 @@
 // Prompts.js (moved to modules/chatcliente/views)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL } from '../../../services/apiConfig';
+import { API_URL } from '../../../../services/apiConfig';
 import {
   Table,
   TableBody,

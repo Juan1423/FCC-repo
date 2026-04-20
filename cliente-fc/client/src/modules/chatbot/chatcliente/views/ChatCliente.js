@@ -7,10 +7,10 @@ import {
   Tab,
   Paper,
 } from '@mui/material';
-import NavbarAdmin from '../../../components/NavbarAdmin';
-import Drawer from '../../../components/Drawer';
+import NavbarAdmin from '../../../../components/NavbarAdmin';
+import Drawer from '../../../../components/Drawer';
 import Prompts from './Prompts';
-import HistorialChat from '../../../components/HistorialChat';
+import HistorialChat from '../../../../components/HistorialChat';
 
 const ChatCliente = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);

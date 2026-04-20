@@ -1,4 +1,4 @@
-import logo from "../../../assets/img/logo-fcc.png";
+import logo from "../../../../assets/img/logo-fcc.png";
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Snackbar, Alert, CircularProgress, Box } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';

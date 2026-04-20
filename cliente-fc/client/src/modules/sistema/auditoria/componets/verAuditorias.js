@@ -17,10 +17,10 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
 import { useNavigate } from "react-router-dom";
-import { getAuditorias } from "../../../services/auditoriaServices";
+import { getAuditorias } from "../../../../services/auditoriaServices";
 import AuditoriasTable from "./auditoriaTable";
 
 const VerAuditorias = () => {

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Typography, Card, CardContent, Tabs, Tab } from '@mui/material';
-import NavbarAdmin from '../../../components/NavbarAdmin';
-import Drawer from '../../../components/Drawer';
+import NavbarAdmin from '../../../../components/NavbarAdmin';
+import Drawer from '../../../../components/Drawer';
 import NormativaList from '../components/NormativaList';
 import TipoNormativaList from '../components/TipoNormativaList';
-import { useMenu } from '../../../components/base/MenuContext';
+import { useMenu } from '../../../../components/base/MenuContext';
 
 const NormativaDashboard = () => {
   const [drawerOpen, setDrawerOpen] = React.useState(false);

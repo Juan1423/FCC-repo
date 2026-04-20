@@ -1,13 +1,13 @@
 import React from "react";
 import { Box, Grid, Typography, Container } from "@mui/material";
-import Card from "../../../components/Card";
+import Card from "../../../../components/Card";
 import DescriptionIcon from "@mui/icons-material/Description";
 import HistoryIcon from "@mui/icons-material/History";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import { useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
-import { useMenu } from "../../../components/base/MenuContext";
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
+import { useMenu } from "../../../../components/base/MenuContext";
 
 const IADashboard = () => {
   const [drawerOpen, setDrawerOpen] = React.useState(false);

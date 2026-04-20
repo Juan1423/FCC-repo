@@ -15,10 +15,10 @@ import {
   IconButton
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
-import { useMenu } from '../../../components/base/MenuContext';
-import iaService from '../../../services/iaService';
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
+import { useMenu } from '../../../../components/base/MenuContext';
+import iaService from '../../../../services/iaService';
 import { useNavigate } from 'react-router-dom';
 
 const HistorialIAView = () => {

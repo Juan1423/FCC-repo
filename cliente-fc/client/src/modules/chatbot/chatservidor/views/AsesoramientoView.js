@@ -11,11 +11,11 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import NavbarAdmin from "../../../components/NavbarAdmin";
-import Drawer from "../../../components/Drawer";
-import { useMenu } from '../../../components/base/MenuContext';
+import NavbarAdmin from "../../../../components/NavbarAdmin";
+import Drawer from "../../../../components/Drawer";
+import { useMenu } from '../../../../components/base/MenuContext';
 import { useNavigate } from 'react-router-dom';
-import iaService from '../../../services/iaService';
+import iaService from '../../../../services/iaService';
 import jsPDF from 'jspdf';
 
 const AsesoramientoView = () => {

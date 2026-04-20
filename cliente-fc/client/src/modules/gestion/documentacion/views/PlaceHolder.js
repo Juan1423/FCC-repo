@@ -6,7 +6,7 @@ const NombreDeComponente = () =>{
 
     return(
 
-        <div>html del componente</div>
+        <div>Documentacion</div>
     )
 } 
 

@@ -3,8 +3,8 @@ import {
   Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Switch, Modal, Typography, Box, CircularProgress, TextField
 } from '@mui/material';
 import { Autocomplete } from '@mui/material';
-import cie11Service from '../../../services/cie11Service.js';
-import { logAuditAction } from "../../../services/auditoriaServices";
+import cie11Service from '../../../../services/cie11Service.js';
+import { logAuditAction } from "../../../../services/auditoriaServices";
 
 const Diagnostico = ({ formData, setFormData }) => {
   const [selectedDisease, setSelectedDisease] = useState(null);
