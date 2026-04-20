@@ -1,5 +1,5 @@
-const TipoprocesoService = require('../../services/comunidad.services/tipoproceso.service');
-const service = new TipoprocesoService();
+const TipoProcesoService = require('../../services/comunidad.services/tipoproceso.service');
+const service = new TipoProcesoService();
 
 
 const create = async ( req, res ) => {

@@ -1,21 +1,21 @@
 const { models } = require('../../libs/sequelize');
 
-class TipoprocesoService  { 
+class TipoProcesoService  { 
   
     constructor() {}
 
     async find() {
-      const res = await models.Tipoproceso.findAll();   //--- nombre del models = models.Provincia
+      const res = await models.TipoProceso.findAll();   //--- nombre del models = models.Provincia
       return res;
     }
 
     async findOne(id) {
-      const res = await models.Tipoproceso.findByPk(id);
+      const res = await models.TipoProceso.findByPk(id);
       return res;
     }
 
     async create(data) {
-      const res = await models.Tipoproceso.create(data);
+      const res = await models.TipoProceso.create(data);
       return res;
     }
 
@@ -33,5 +33,5 @@ class TipoprocesoService  {
   
   }
   
-  module.exports = TipoprocesoService;  //---- module.exports = exporta la Clase de Servicio 
+  module.exports = TipoProcesoService;  //---- module.exports = exporta la Clase de Servicio 
 //------------permite que se pueda acceder caso contrario estar[ia encapsulada y no tendr[ia acceso

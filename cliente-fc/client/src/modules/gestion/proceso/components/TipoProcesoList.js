@@ -31,7 +31,7 @@ const TipoProcesoList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar tipo de proceso?')) return;
     try {
-      await axios.delete(`${API_URL}/tipoproceso/${id}`);
+      await axios.delete(`${API_URL}/tipo_proceso/${id}`);
       fetch();
     } catch (err) {
       setError('Error al eliminar tipo de proceso');
@@ -65,9 +65,9 @@ const TipoProcesoList = () => {
     }
     try {
       if (editingId) {
-        await axios.put(`${API_URL}/tipoproceso/${editingId}`, formData);
+        await axios.put(`${API_URL}/tipo_proceso/${editingId}`, formData);
       } else {
-        await axios.post(`${API_URL}/tipoproceso`, formData);
+        await axios.post(`${API_URL}/tipo_proceso`, formData);
       }
       fetch();
       setOpenModal(false);

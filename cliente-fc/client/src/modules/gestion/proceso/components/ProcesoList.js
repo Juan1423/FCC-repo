@@ -43,7 +43,7 @@ const ProcesoList = () => {
 
   const fetchTipos = async () => {
     try {
-      const res = await axios.get(`${API_URL}/tipoproceso`);
+      const res = await axios.get(`${API_URL}/tipo_proceso`);
       const map = {};
       (res.data || []).forEach((t) => {
         map[t.id_tipo_proceso] = t.nombre_tipo_proceso;
