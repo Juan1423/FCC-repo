@@ -10,6 +10,9 @@ const interaccionRouter = require('./interaccion.routes');
 const documentoInteraccionRouter = require('./documento_interaccion.routes');
 const normativaRouter = require('./normativa.routes');
 const tipoNormativaRouter = require('./tipo_normativa.routes')
+const procesoRouter = require('./procesos.routes');
+const tipoProcesoRouter = require('./tipoproceso.routes')
+
 
 
 function setupComunidadRoutes(router) {
@@ -27,6 +30,8 @@ function setupComunidadRoutes(router) {
   router.use('/comunidad/documentos', documentoInteraccionRouter)
   router.use('/normativa', normativaRouter)
   router.use('/tipo_normativa', tipoNormativaRouter)
+  router.use('/proceso', procesoRouter)
+  router.use('/tipo_proceso', tipoProcesoRouter)
 
   }
 
