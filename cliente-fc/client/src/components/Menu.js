@@ -15,7 +15,10 @@ import {
 import { styled } from "@mui/material/styles";
 import NavbarAdmin from "./NavbarAdmin";
 import { useNavigate } from "react-router-dom";
-import PersonIcon from "@mui/icons-material/Person";
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import ComputerIcon from '@mui/icons-material/Computer';
+import AddCommentIcon from '@mui/icons-material/AddComment';
+import Groups2Icon from '@mui/icons-material/Groups2';
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
@@ -33,77 +36,29 @@ import Auditoria from "../modules/auditoria/view/Auditoria";
 
 const menuData = [
   {
-    nombre_menu: "Pacientes",
+    nombre_menu: "Salud",
     url: "/fcc-pacientes",
-    icon: <PersonIcon />,
-    roles: ["admin", "doctor", "personal_salud"],
-  },
-  {
-    nombre_menu: "Comunidad",
-    url: "/fcc-comunidad",
-    icon: <GroupIcon />,
-    roles: ["admin"],
-  },
-  {
-    nombre_menu: "Normativas",
-    url: "/fcc-normativa",
-    icon: <AssignmentIcon />,
-    roles: ["admin"],
-  },
-  {
-    nombre_menu: "Procesos",
-    url: "/fcc-proceso",
-    icon: <AssignmentIcon />,
-    roles: ["admin"],
-  },
-  {
-    nombre_menu: "Personal",
-    url: "/fcc-personal-salud",
-    icon: <LocalHospitalIcon />,
-    roles: ["admin"],
-  },
-  {
-    nombre_menu: "Atención",
-    url: "/fcc-atencion",
     icon: <MedicalServicesIcon />,
     roles: ["admin", "doctor", "personal_salud"],
   },
   {
-    nombre_menu: "Terapias",
-    url: "/fcc-terapias",
-    icon: <MonitorHeartIcon />,
-    roles: ["admin", "doctor", "personal_salud"],
-  },
-  {
-    nombre_menu: "Historias",
-    url: "/fcc-historias-clinicas",
-    icon: <AssignmentIcon />,
-    roles: ["admin", "doctor", "personal_salud"],
-  },
-  {
-    nombre_menu: "Usuarios",
-    url: "/fcc-usuarios",
-    icon: <GroupIcon />,
+    nombre_menu: "Gestion",
+    url: "/fcc-comunidad",
+    icon: <Groups2Icon />,
     roles: ["admin"],
   },
   {
-      nombre_menu: "Chatbot",
-      url: "/fcc-chatbot",
-      icon: <HelpOutlineIcon />,
-      roles: ["admin"],
-    },
-  {
-    nombre_menu: "Ajustes",
-    url: "/fcc-configuracion",
-    icon: <SettingsIcon />,
-    roles: ["admin", "personal_salud"],
-  },
-  {
-    nombre_menu: "Auditoria",
-    url: "/fcc-auditoria",
-    icon: <GroupIcon />,
+    nombre_menu: "Sistema",
+    url: "/fcc-proceso",
+    icon: <ComputerIcon />,
     roles: ["admin"],
   },
+  {
+    nombre_menu: "ChatBot",
+    url: "/fcc-proceso",
+    icon: <AddCommentIcon />,
+    roles: ["admin"],
+  }
 ];
 
 const StyledPaper = styled(Paper)(({ theme }) => ({

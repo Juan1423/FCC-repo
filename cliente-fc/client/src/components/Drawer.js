@@ -134,7 +134,7 @@ export default function ResponsiveDrawer({ open, onClose }) {
       subItems: [
         { text: 'Usuarios', path: '/fcc-usuarios', icon: <GroupIcon /> },
         { text: 'Personal Salud', path: '/fcc-personal-salud', icon: <MedicalInformationIcon /> },
-        {text: 'Auditoría', path: '/fcc-auditoria', icon: <AssignmentTurnedInIcon/>},
+        { text: 'Auditoría', path: '/fcc-auditoria', icon: <AssignmentTurnedInIcon/>},
         { text: 'Comunidad', path: '/fcc-comunidad', icon: <GroupIcon /> },
         { text: 'Capacitaciones', path: '/fcc-capacitaciones', icon: <SchoolIcon />},
         { text: 'Asistente IA', path: '/fcc-asistente-ia', icon: <SmartToyIcon /> }
