@@ -27,7 +27,7 @@ const SegmentoVectorSchema = {
         allowNull: false
     },
     contenido: { type: DataTypes.TEXT, allowNull: false },
-    embedding: { type: 'vector(1536)', allowNull: true } 
+    //embedding: { type: 'vector(1536)', allowNull: true } 
 };
 
 module.exports = { SegmentoVector, SegmentoVectorSchema };

@@ -1,4 +1,4 @@
-const TipoDocumentoService = require('../../services/documentacion.services/tipo_documento.service');
+const TipoDocumentoService = require('../../services/documentacion.services/tipo_documento.services');
 const service = new TipoDocumentoService();
 
 

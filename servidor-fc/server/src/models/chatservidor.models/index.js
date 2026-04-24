@@ -11,6 +11,7 @@ function setupIAModels(sequelize) {
     DocumentoConocimiento.associate(sequelize.models);
     SegmentoVector.associate(sequelize.models);
     HistorialIA.associate(sequelize.models);
+    
 }
 
 module.exports = setupIAModels;

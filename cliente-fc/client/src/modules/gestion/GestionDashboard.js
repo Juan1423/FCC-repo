@@ -42,6 +42,13 @@ const dataTarjeta = [
     path: "/fcc-proceso",
     color: "#cf9529"
   },
+  {
+    title: "Documentacion",
+    icon: <AccountTreeIcon/>,
+    description: "Gestion de los documentos de la fundacion",
+    path: "/fcc-documentacion",
+    color: "#cf29c7"
+  },
 ]
 
 

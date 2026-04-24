@@ -1,5 +1,5 @@
-const DocumentoService = require('../../services/documentacion.services/documento.services');
-const service = new DocumentoService();
+const TipoInstitucionService = require('../../services/documentacion.services/tipo_institucion.services');
+const service = new TipoInstitucionService();
 
 
 const create = async ( req, res ) => {

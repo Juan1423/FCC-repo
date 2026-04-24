@@ -36,6 +36,7 @@ import SistemaDashboard from './modules/sistema/SistemaDashboard';
 import GestionDashboard from './modules/gestion/GestionDashboard';
 import SaludDashboard from './modules/salud/SaludDashboard';
 import ChatDashboard from './modules/chatbot/ChatbotDashboard';
+import DocumentacionModule from './modules/gestion/documentacion';
 
 /*import AsistenteInternoView from './modules/chatservidor/views/AsistenteInternoView';*/
 import CapacitacionesModule from './modules/gestion/capacitaciones';
@@ -242,6 +243,10 @@ function App() {
             <Route
               path="/fcc-capacitaciones/*"              
               element={<PrivateRoute element={CapacitacionesModule} allowedRoles={['admin']} />}
+            />
+            <Route
+              path="/fcc-documentacion/*"
+              element={<PrivateRoute element={DocumentacionModule} allowedRoles={['admin']} />}
             />
             <Route
               path="/fcc-sistema"              

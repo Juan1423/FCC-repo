@@ -1,21 +1,21 @@
 const { models } = require('../../libs/sequelize');
 
-class TipoDocumentoService  { 
+class DocNormativaService  { 
   
     constructor() {}
 
     async find() {
-      const res = await models.TipoDocumento.findAll();  
+      const res = await models.DocNormativa.findAll();   //--- nombre del models = models.DocNormativa
       return res;
     }
 
     async findOne(id) {
-      const res = await models.TipoDocumento.findByPk(id);
+      const res = await models.DocNormativa.findByPk(id);
       return res;
     }
 
     async create(data) {
-      const res = await models.TipoDocumento.create(data);
+      const res = await models.DocNormativa.create(data);
       return res;
     }
 
@@ -33,4 +33,5 @@ class TipoDocumentoService  {
   
   }
   
-  module.exports = TipoDocumentoService; 
+  module.exports = DocNormativaService;  //---- module.exports = exporta la Clase de Servicio 
+//------------permite que se pueda acceder caso contrario estar[ia encapsulada y no tendr[ia acceso

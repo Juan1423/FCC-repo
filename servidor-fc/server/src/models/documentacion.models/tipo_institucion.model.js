@@ -1,39 +1,39 @@
 const { Model, DataTypes } = require('sequelize');
 
-class TipoDocumento extends Model {
+class TipoInstitucion extends Model {
     static config(sequelize) {
         return {
             sequelize,
-            tableName: 'tipo_documento',
-            modelName: 'TipoDocumento',
+            tableName: 'tipo_institucion',
+            modelName: 'TipoInstitucion',
             schema: 'fcc_historiaclinica',
             timestamps: false,
         };
     }
 
     static associate(models) {
-        TipoDocumento.hasMany(models.Documento, {
-            foreignKey: 'id_tipo_documento',
-            as: 'documentos',
+        TipoInstitucion.hasMany(models.Institucion, {
+            foreignKey: 'id_tipo_institucion',
+            as: 'tipo_institucion_institucion',
         });
     }
 }
 
-const TipoDocumentoSchema = {
-    id_tipo_documento: {
+const TipoInstitucionSchema = {
+    id_tipo_institucion: {
         allowNull: false,
         primaryKey: true,
         type: DataTypes.BIGINT,
         autoIncrement: true,
     },
-    nombre_tipo_documento: {
+    nombre_tipo_institucion: {
         type: DataTypes.STRING(250),
         allowNull: true,
     },
-    descripcion_tipo_documento: {
+    descripcion_tipo_institucion: {
         type: DataTypes.STRING(250),
         allowNull: true,
     },
 };
 
-module.exports = { TipoDocumento, TipoDocumentoSchema };
+module.exports = { TipoInstitucion, TipoInstitucionSchema };
