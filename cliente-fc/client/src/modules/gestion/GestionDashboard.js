@@ -8,7 +8,6 @@ import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import DescriptionIcon from '@mui/icons-material/Description';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import { useNavigate } from "react-router-dom";
 import NavbarAdmin from "../../components/NavbarAdmin";
@@ -44,18 +43,11 @@ const dataTarjeta = [
     path: "/fcc-proceso",
     color: "#cf9529"
   },
-  {
-    title: "Documentacion",
-    icon: <DescriptionIcon/>,
-    description: "Gestion de documentos, procesos y normativas",
-    path: "/fcc-documentacion/documentos",
-    color: "#cf29c7"
-  },
-  {
+   {
     title: "Indicadores",
     icon: <AnalyticsIcon/>,
     description: "Gestion de indicadores y registros",
-    path: "/fcc-documentacion/indicadores",
+    path: "/fcc-indicadores",
     color: "#29cfcf"
   },
 ]

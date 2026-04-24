@@ -36,7 +36,8 @@ import SistemaDashboard from './modules/sistema/SistemaDashboard';
 import GestionDashboard from './modules/gestion/GestionDashboard';
 import SaludDashboard from './modules/salud/SaludDashboard';
 import ChatDashboard from './modules/chatbot/ChatbotDashboard';
-import DocumentacionModule from './modules/gestion/documentacion';
+
+import IndicadoresDocumentacionView from './modules/gestion/documentacion/views/IndicadoresDocumentacionView';
 
 /*import AsistenteInternoView from './modules/chatservidor/views/AsistenteInternoView';*/
 import CapacitacionesModule from './modules/gestion/capacitaciones';
@@ -245,10 +246,6 @@ function App() {
               element={<PrivateRoute element={CapacitacionesModule} allowedRoles={['admin']} />}
             />
             <Route
-              path="/fcc-documentacion/*"
-              element={<PrivateRoute element={DocumentacionModule} allowedRoles={['admin']} />}
-            />
-            <Route
               path="/fcc-sistema"              
               element={<PrivateRoute element={SistemaDashboard} allowedRoles={['admin']} />}
             />    
@@ -263,7 +260,11 @@ function App() {
             <Route
               path="/fcc-chat"              
               element={<PrivateRoute element={ChatDashboard} allowedRoles={['admin']} />}
-            />           
+            />   
+            <Route
+              path="/fcc-indicadores"              
+              element={<PrivateRoute element={IndicadoresDocumentacionView} allowedRoles={['admin']} />}
+            />         
             <Route 
               path="/accessdenied"
               element={<AccessDenied />}
