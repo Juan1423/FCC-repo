@@ -17,7 +17,7 @@ import {
   DialogActions,
   TextField,
 } from '@mui/material';
-import * as api from '../../../../services/documentacionIndicadorService';
+import * as documentacionService from '../../../../services/documentacionService';
 
 const emptyForm = () => ({
   nombre_tipo_indicador: '',
@@ -36,7 +36,7 @@ const TipoIndicadorList = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.getTipoIndicadores();
+      const data = await documentacionService.getTipoIndicadores();
       setItems(Array.isArray(data) ? data : []);
     } catch (e) {
       setItems([]);
@@ -68,9 +68,9 @@ const TipoIndicadorList = () => {
   const handleSave = async () => {
     try {
       if (editingId) {
-        await api.updateTipoIndicador(editingId, form);
+        await documentacionService.updateTipoIndicador(editingId, form);
       } else {
-        await api.createTipoIndicador(form);
+        await documentacionService.createTipoIndicador(form);
       }
       setOpenModal(false);
       await load();
@@ -84,7 +84,7 @@ const TipoIndicadorList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este tipo de indicador?')) return;
     try {
-      await api.deleteTipoIndicador(id);
+      await documentacionService.deleteTipoIndicador(id);
       await load();
     } catch (e) {
       const msg = e?.response?.data?.message || e.message;

@@ -12,18 +12,18 @@ const institucionRoutes = require('./institucion.route');
 const registrarProcesosRoutes = require('./registrar_procesos.route');
 
 function setupDocumentacionRoutes(router) {
-    router.use('/tipo-documento', tipoDocumentoRoutes);
+    router.use('/tipo_documento', tipoDocumentoRoutes);
     router.use('/documento', documentoRoutes);
-    router.use('/tipo-indicador', tipoIndicadorRoutes);
-    router.use('/tipo-institucion', tipoInstitucionRoutes);
-    router.use('/doc-tipo-normativa', docTipoNormativaRoutes);
-    router.use('/doc-tipo-proceso', docTipoProcesoRoutes);
+    router.use('/tipo_indicador', tipoIndicadorRoutes);
+    router.use('/tipo_institucion', tipoInstitucionRoutes);
+    router.use('/tipo_normativa', docTipoNormativaRoutes);
+    router.use('/tipo_proceso', docTipoProcesoRoutes);
     router.use('/modulo', moduloRoutes);
     router.use('/proceso', procesoRoutes);
-    router.use('/doc-normativa', docNormativaRoutes);
+    router.use('/normativa', docNormativaRoutes);
     router.use('/indicador', indicadorRoutes);
     router.use('/institucion', institucionRoutes);
-    router.use('/registrar-procesos', registrarProcesosRoutes);
+    router.use('/registrar_procesos', registrarProcesosRoutes);
 }
 
 module.exports = setupDocumentacionRoutes;
