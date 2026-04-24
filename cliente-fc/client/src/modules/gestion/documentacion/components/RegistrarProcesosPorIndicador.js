@@ -21,7 +21,7 @@ import {
   MenuItem,
   CircularProgress,
 } from '@mui/material';
-import * as api from '../../../../services/documentacionIndicadorService';
+import * as documentacionService from '../../../../services/documentacionIndicadorService';
 
 /**
  * CRUD de filas `registrar_procesos` filtradas por id_indicador.
@@ -43,7 +43,7 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
 
   const loadCatalogos = useCallback(async () => {
     try {
-      const [p, n] = await Promise.all([api.getProcesosDoc(), api.getDocNormativas()]);
+      const [p, n] = await Promise.all([documentacionService.getProcesosDoc(), documentacionService.getDocNormativas()]);
       setProcesos(Array.isArray(p) ? p : []);
       setNormativas(Array.isArray(n) ? n : []);
     } catch {
@@ -56,7 +56,7 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
     if (idIndicador == null) return;
     setLoading(true);
     try {
-      const all = await api.getRegistrarProcesos();
+      const all = await documentacionService.getRegistrarProcesos();
       const list = Array.isArray(all) ? all : [];
       setRows(list.filter((r) => String(r.id_indicador) === String(idIndicador)));
     } catch {
@@ -119,9 +119,9 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
     };
     try {
       if (editingId) {
-        await api.updateRegistrarProcesos(editingId, payload);
+        await documentacionService.updateRegistrarProcesos(editingId, payload);
       } else {
-        await api.createRegistrarProcesos(payload);
+        await documentacionService.createRegistrarProcesos(payload);
       }
       setModalOpen(false);
       await loadRegistros();
@@ -135,7 +135,7 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este registro?')) return;
     try {
-      await api.deleteRegistrarProcesos(id);
+      await documentacionService.deleteRegistrarProcesos(id);
       await loadRegistros();
       onChanged?.();
     } catch (e) {
