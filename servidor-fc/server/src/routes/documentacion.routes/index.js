@@ -9,7 +9,6 @@ const procesoRoutes = require('./proceso.route');
 const docNormativaRoutes = require('./doc_normativa.route');
 const indicadorRoutes = require('./indicador.route');
 const institucionRoutes = require('./institucion.route');
-const historiasClinicasRoutes = require('./historias_clinicas.route');
 const registrarProcesosRoutes = require('./registrar_procesos.route');
 
 function setupDocumentacionRoutes(router) {
@@ -24,7 +23,6 @@ function setupDocumentacionRoutes(router) {
     router.use('/doc-normativa', docNormativaRoutes);
     router.use('/indicador', indicadorRoutes);
     router.use('/institucion', institucionRoutes);
-    router.use('/historias-clinicas', historiasClinicasRoutes);
     router.use('/registrar-procesos', registrarProcesosRoutes);
 }
 

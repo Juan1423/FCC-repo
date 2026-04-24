@@ -9,7 +9,6 @@ const { DocNormativa, DocNormativaSchema } = require('./normativa.model');
 const { Indicador, IndicadorSchema } = require('./indicador.model');
 const { Institucion, InstitucionSchema } = require('./institucion.model');
 const { Documento, DocumentoSchema } = require('./documento.model');
-const { HistoriasClinicas, HistoriasClinicasSchema } = require('./historias_clinicas.model');
 const { RegistrarProcesos, RegistrarProcesosSchema } = require('./registrar_procesos.model');
 
 const { Paciente } = require('../historiaclinica.models/paciente.model');
@@ -26,7 +25,6 @@ function setupDocumentacionModels(sequelize) {
     Indicador.init(IndicadorSchema, Indicador.config(sequelize));
     Institucion.init(InstitucionSchema, Institucion.config(sequelize));
     Documento.init(DocumentoSchema, Documento.config(sequelize));
-    HistoriasClinicas.init(HistoriasClinicasSchema, HistoriasClinicas.config(sequelize));
     RegistrarProcesos.init(RegistrarProcesosSchema, RegistrarProcesos.config(sequelize));
 
     TipoDocumento.associate({ Documento });
@@ -40,13 +38,7 @@ function setupDocumentacionModels(sequelize) {
     Indicador.associate({ TipoIndicador, RegistrarProcesos });
     Institucion.associate({ TipoInstitucion });
     Documento.associate({ TipoDocumento, Modulo, Proceso });
-    HistoriasClinicas.associate({ Paciente });
     RegistrarProcesos.associate({ Proceso, Indicador, DocNormativa });
-
-    Paciente.hasMany(HistoriasClinicas, {
-        foreignKey: 'id_paciente',
-        as: 'historias_clinicas_registro',
-    });
 }
 
 module.exports = setupDocumentacionModels;
