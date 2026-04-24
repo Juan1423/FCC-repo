@@ -1,36 +1,51 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, CircularProgress, Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import normativaServices from '../../../../services/normativasService';
 import axios from 'axios';
 import { API_URL } from '../../../../services/apiConfig';
 
+const emptyForm = () => ({
+  id_tipo_normativa: '',
+  nombre_normativa: '',
+  descripcion_normativa: '',
+  padre_normativa: '',
+  nivel_normativa: '',
+  jerarquia_normativa: '',
+  archivo_normativa: '',
+  fecha_normativa: '',
+  fecha_modificacion_normativa: '',
+  fecha_vigencia_normativa: '',
+  tipo_registro_normativa: '',
+  observaciones_normativa: '',
+});
+
 const NormativaList = ({ onView }) => {
-  const navigate = useNavigate();
   const [items, setItems] = useState([]);
+  const [tipos, setTipos] = useState([]);
+  const [tiposMap, setTiposMap] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [tiposMap, setTiposMap] = useState({});
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ id_tipo_normativa: '', tipo_permiso: '', nmro_resolucion_registro: '', entidad_reguladora: '', estado_cumplimiento: false, categoria_riesgo: '' });
+  const [formData, setFormData] = useState(emptyForm());
 
-  const fetchTipos = async () => {
+  const fetchTipos = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/tipo_normativa`);
+      const res = await axios.get(`${API_URL}/doc-tipo-normativa`);
+      setTipos(res.data || []);
       const map = {};
       (res.data || []).forEach(t => { map[t.id_tipo_normativa] = t.nombre_tipo_normativa; });
       setTiposMap(map);
     } catch (err) {
+      setTipos([]);
       setTiposMap({});
     }
-  };
+  }, []);
 
-  const fetch = async () => {
+  const fetch = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await normativaServices.getNormativas();
+      const res = await axios.get(`${API_URL}/doc-normativa`);
       setItems(res.data || []);
     } catch (err) {
       setItems([]);
@@ -38,14 +53,14 @@ const NormativaList = ({ onView }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchTipos(); fetch(); }, []);
+  useEffect(() => { fetchTipos(); fetch(); }, [fetchTipos, fetch]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar normativa?')) return;
     try {
-      await normativaServices.deleteNormativa(id);
+      await axios.delete(`${API_URL}/doc-normativa/${id}`);
       fetch();
     } catch (err) {
       setError('Error al eliminar normativa');
@@ -54,13 +69,26 @@ const NormativaList = ({ onView }) => {
 
   const handleOpenModal = () => {
     setEditingId(null);
-    setFormData({ id_tipo_normativa: '', tipo_permiso: '', nmro_resolucion_registro: '', entidad_reguladora: '', estado_cumplimiento: false, categoria_riesgo: '' });
+    setFormData(emptyForm());
     setOpenModal(true);
   };
 
   const handleEditModal = (item) => {
     setEditingId(item.id_normativa);
-    setFormData({ id_tipo_normativa: item.id_tipo_normativa, tipo_permiso: item.tipo_permiso, nmro_resolucion_registro: item.nmro_resolucion_registro, entidad_reguladora: item.entidad_reguladora, estado_cumplimiento: item.estado_cumplimiento, categoria_riesgo: item.categoria_riesgo });
+    setFormData({
+      id_tipo_normativa: item.id_tipo_normativa ?? '',
+      nombre_normativa: item.nombre_normativa || '',
+      descripcion_normativa: item.descripcion_normativa || '',
+      padre_normativa: item.padre_normativa ?? '',
+      nivel_normativa: item.nivel_normativa != null ? String(item.nivel_normativa) : '',
+      jerarquia_normativa: item.jerarquia_normativa || '',
+      archivo_normativa: item.archivo_normativa || '',
+      fecha_normativa: item.fecha_normativa || '',
+      fecha_modificacion_normativa: item.fecha_modificacion_normativa || '',
+      fecha_vigencia_normativa: item.fecha_vigencia_normativa || '',
+      tipo_registro_normativa: item.tipo_registro_normativa || '',
+      observaciones_normativa: item.observaciones_normativa || '',
+    });
     setOpenModal(true);
   };
 
@@ -72,94 +100,154 @@ const NormativaList = ({ onView }) => {
     setFormData({ ...formData, [field]: e.target.value });
   };
 
-  const handleCreateSubmit = async () => {
-    if (!formData.id_tipo_normativa) {
-      alert('Selecciona un tipo de normativa');
+  const buildPayload = () => {
+    const payload = { ...formData };
+    if (payload.id_tipo_normativa === "" || payload.id_tipo_normativa == null) {
+      payload.id_tipo_normativa = null;
+    } else {
+      payload.id_tipo_normativa = Number(payload.id_tipo_normativa);
+    }
+    if (payload.padre_normativa === "" || payload.padre_normativa == null) {
+      payload.padre_normativa = null;
+    } else {
+      payload.padre_normativa = Number(payload.padre_normativa);
+    }
+    if (payload.nivel_normativa === "" || payload.nivel_normativa == null) {
+      payload.nivel_normativa = null;
+    } else {
+      payload.nivel_normativa = Number(payload.nivel_normativa);
+    }
+    Object.keys(payload).forEach((k) => {
+      if (payload[k] === "") payload[k] = null;
+    });
+    return payload;
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.nombre_normativa) {
+      alert("El nombre de la normativa es requerido");
       return;
     }
-    // Normalizar payload: asegurar tipos correctos
-    const payload = {
-      ...formData,
-      id_tipo_normativa: Number(formData.id_tipo_normativa) || null,
-      estado_cumplimiento: Boolean(formData.estado_cumplimiento),
-    };
+    const payload = buildPayload();
     try {
       if (editingId) {
-        await normativaServices.updateNormativa(editingId, payload);
+        await axios.put(`${API_URL}/doc-normativa/${editingId}`, payload);
       } else {
-        await normativaServices.createNormativa(payload);
+        await axios.post(`${API_URL}/doc-normativa`, payload);
       }
-      fetch();
       setOpenModal(false);
-      setError(null);
+      fetch();
     } catch (err) {
-      console.error('Create/Update normativa error:', err);
-      const serverMessage = err?.response?.data?.message || err.message || 'Error desconocido';
-      setError(editingId ? `Error al actualizar normativa: ${serverMessage}` : `Error al crear normativa: ${serverMessage}`);
+      setError("Error al guardar normativa");
     }
   };
 
+  const field = (key, label, props = {}) => (
+    <TextField
+      key={key}
+      fullWidth
+      label={label}
+      value={formData[key] ?? ""}
+      onChange={handleChange(key)}
+      sx={{ mb: 2 }}
+      {...props}
+    />
+  );
+
   return (
     <>
-    <TableContainer component={Paper}>
-      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Normativas</Typography>
-        <div>
-          <Button variant="contained" size="small" onClick={handleOpenModal} sx={{ mr: 1 }}>Crear</Button>
-        </div>
-      </Box>
-      {loading ? (
-        <Box display="flex" justifyContent="center" p={2}><CircularProgress size={24} /></Box>
-      ) : error ? (
-        <Box p={2}><Typography color="error">{error}</Typography></Box>
-      ) : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Tipo</TableCell>
-              <TableCell>Resolución / Registro</TableCell>
-              <TableCell>Entidad</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((n) => (
-              <TableRow key={n.id_normativa}>
-                <TableCell>{tiposMap[n.id_tipo_normativa] || n.tipo_permiso}</TableCell>
-                <TableCell>{n.nmro_resolucion_registro}</TableCell>
-                <TableCell>{n.entidad_reguladora}</TableCell>
-                <TableCell>
-                  <Button size="small" variant="contained" color="secondary" onClick={() => handleEditModal(n)} sx={{ mr: 0.5 }}>Editar</Button>
-                  <Button size="small" variant="contained" color="error" onClick={() => handleDelete(n.id_normativa)}>Eliminar</Button>
-                </TableCell>
+      <TableContainer component={Paper}>
+        <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6">Normativas</Typography>
+          <Button variant="contained" size="small" onClick={handleOpenModal}>
+            Nueva Normativa
+          </Button>
+        </Box>
+        {loading ? (
+          <Box display="flex" justifyContent="center" p={2}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : error ? (
+          <Box p={2}>
+            <Typography color="error">{error}</Typography>
+          </Box>
+        ) : (
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Nombre</TableCell>
+                <TableCell>Tipo</TableCell>
+                <TableCell>Nivel</TableCell>
+                <TableCell>Fecha</TableCell>
+                <TableCell>Fecha Vigencia</TableCell>
+                <TableCell>Acciones</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
-    </TableContainer>
+            </TableHead>
+            <TableBody>
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <Typography color="text.secondary">No hay normativas registradas.</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((n) => (
+                  <TableRow key={n.id_normativa}>
+                    <TableCell>{n.nombre_normativa}</TableCell>
+                    <TableCell>{tiposMap[n.id_tipo_normativa] || "—"}</TableCell>
+                    <TableCell>{n.nivel_normativa}</TableCell>
+                    <TableCell>{n.fecha_normativa}</TableCell>
+                    <TableCell>{n.fecha_vigencia_normativa}</TableCell>
+                    <TableCell>
+                      <Button size="small" onClick={() => handleEditModal(n)} sx={{ mr: 0.5 }}>
+                        Editar
+                      </Button>
+                      <Button size="small" color="error" onClick={() => handleDelete(n.id_normativa)}>
+                        Eliminar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </TableContainer>
 
-    <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-      <DialogTitle>{editingId ? 'Editar Normativa' : 'Crear Nueva Normativa'}</DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel>Tipo Normativa</InputLabel>
-          <Select value={formData.id_tipo_normativa} label="Tipo Normativa" onChange={handleChange('id_tipo_normativa')}>
-            {Object.entries(tiposMap).map(([id, nombre]) => (
-              <MenuItem key={id} value={id}>{nombre}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField fullWidth label="Tipo Permiso" value={formData.tipo_permiso} onChange={handleChange('tipo_permiso')} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Número Resolución/Registro" value={formData.nmro_resolucion_registro} onChange={handleChange('nmro_resolucion_registro')} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Entidad Reguladora" value={formData.entidad_reguladora} onChange={handleChange('entidad_reguladora')} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Categoría Riesgo" value={formData.categoria_riesgo} onChange={handleChange('categoria_riesgo')} sx={{ mb: 2 }} />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleCloseModal}>Cancelar</Button>
-        <Button onClick={handleCreateSubmit} variant="contained">Guardar</Button>
-      </DialogActions>
-    </Dialog>
+      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth scroll="paper">
+        <DialogTitle>{editingId ? "Editar Normativa" : "Nueva Normativa"}</DialogTitle>
+        <DialogContent dividers sx={{ pt: 2 }}>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Tipo de Normativa</InputLabel>
+            <Select
+              label="Tipo de Normativa"
+              value={formData.id_tipo_normativa === "" ? "" : formData.id_tipo_normativa}
+              onChange={handleChange("id_tipo_normativa")}
+            >
+              <MenuItem value=""><em>Sin tipo</em></MenuItem>
+              {tipos.map((t) => (
+                <MenuItem key={t.id_tipo_normativa} value={t.id_tipo_normativa}>
+                  {t.nombre_tipo_normativa}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {field("nombre_normativa", "Nombre")}
+          {field("descripcion_normativa", "Descripción", { multiline: true, rows: 2 })}
+          {field("nivel_normativa", "Nivel", { type: "number" })}
+          {field("jerarquia_normativa", "Jerarquía")}
+          {field("archivo_normativa", "Archivo (URL o ruta)")}
+          {field("fecha_normativa", "Fecha", { type: "date", InputLabelProps: { shrink: true } })}
+          {field("fecha_modificacion_normativa", "Fecha Modificación", { type: "date", InputLabelProps: { shrink: true } })}
+          {field("fecha_vigencia_normativa", "Fecha Vigencia", { type: "date", InputLabelProps: { shrink: true } })}
+          {field("tipo_registro_normativa", "Tipo de Registro")}
+          {field("observaciones_normativa", "Observaciones", { multiline: true, rows: 2 })}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModal}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSubmit}>Guardar</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
