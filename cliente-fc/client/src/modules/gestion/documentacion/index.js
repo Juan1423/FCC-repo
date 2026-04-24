@@ -1,13 +1,12 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import DocumentacionView from './views/DocumentacionView';
 import IndicadoresDocumentacionView from './views/IndicadoresDocumentacionView';
 
-/**
- * Rutas internas bajo /fcc-documentacion/*
- */
 const DocumentacionModule = () => (
   <Routes>
-    <Route path="/" element={<Navigate to="indicadores" replace />} />
+    <Route path="/" element={<Navigate to="documentos" replace />} />
+    <Route path="documentos" element={<DocumentacionView />} />
     <Route path="indicadores" element={<IndicadoresDocumentacionView />} />
   </Routes>
 );
