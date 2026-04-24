@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, CircularProgress, Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
-import axios from 'axios';
-import { API_URL } from '../../../../services/apiConfig';
+import * as docService from '../../../../services/documentacionService';
 
 const emptyForm = () => ({ nombre_tipo_proceso: '', descripcion_tipo_proceso: '' });
 
@@ -13,12 +12,12 @@ const TipoProcesoList = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm());
 
-  const fetch = useCallback(async () => {
+  const fetchTipoProcesos = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_URL}/doc-tipo-proceso`);
-      setItems(res.data || []);
+      const data = await docService.getTipoProcesos();
+      setItems(Array.isArray(data) ? data : []);
     } catch (err) {
       setItems([]);
       setError('Error al cargar tipos de proceso');
@@ -27,13 +26,13 @@ const TipoProcesoList = () => {
     }
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { fetchTipoProcesos(); }, [fetchTipoProcesos]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar tipo de proceso?')) return;
     try {
-      await axios.delete(`${API_URL}/doc-tipo-proceso/${id}`);
-      fetch();
+      await docService.deleteTipoProceso(id);
+      fetchTipoProcesos();
     } catch (err) {
       setError('Error al eliminar tipo de proceso');
     }
@@ -66,11 +65,11 @@ const TipoProcesoList = () => {
     }
     try {
       if (editingId) {
-        await axios.put(`${API_URL}/doc-tipo-proceso/${editingId}`, formData);
+        await docService.updateTipoProceso(editingId, formData);
       } else {
-        await axios.post(`${API_URL}/doc-tipo-proceso`, formData);
+        await docService.createTipoProceso(formData);
       }
-      fetch();
+      fetchTipoProcesos();
       setOpenModal(false);
     } catch (err) {
       setError(editingId ? 'Error al actualizar tipo de proceso' : 'Error al crear tipo de proceso');

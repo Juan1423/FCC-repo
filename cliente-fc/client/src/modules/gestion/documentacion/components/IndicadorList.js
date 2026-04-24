@@ -22,7 +22,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
-import * as api from '../../../../services/documentacionIndicadorService';
+import * as documentacionService from '../../../../services/documentacionService';
 import RegistrarProcesosPorIndicador from './RegistrarProcesosPorIndicador';
 
 const emptyForm = () => ({
@@ -58,7 +58,7 @@ const IndicadorList = () => {
 
   const loadTipos = useCallback(async () => {
     try {
-      const data = await api.getTipoIndicadores();
+      const data = await documentacionService.getTipoIndicadores();
       const list = Array.isArray(data) ? data : [];
       setTipos(list);
       const map = {};
@@ -76,7 +76,7 @@ const IndicadorList = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.getIndicadores();
+      const data = await documentacionService.getIndicadores();
       setItems(Array.isArray(data) ? data : []);
     } catch {
       setItems([]);
@@ -142,9 +142,9 @@ const IndicadorList = () => {
     try {
       const payload = buildPayload();
       if (editingId) {
-        await api.updateIndicador(editingId, payload);
+        await documentacionService.updateIndicador(editingId, payload);
       } else {
-        await api.createIndicador(payload);
+        await documentacionService.createIndicador(payload);
       }
       setOpenModal(false);
       await loadIndicadores();
@@ -158,7 +158,7 @@ const IndicadorList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este indicador? Se pueden perder vínculos en registrar_procesos.')) return;
     try {
-      await api.deleteIndicador(id);
+      await documentacionService.deleteIndicador(id);
       await loadIndicadores();
     } catch (e) {
       const msg = e?.response?.data?.message || e.message;

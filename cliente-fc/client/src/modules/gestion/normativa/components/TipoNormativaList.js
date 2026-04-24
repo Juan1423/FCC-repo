@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, CircularProgress, Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
-import axios from 'axios';
-import { API_URL } from '../../../../services/apiConfig';
+import * as docService from '../../../../services/documentacionService';
 
 const emptyForm = () => ({ nombre_tipo_normativa: '', descripcion_tipo_normativa: '' });
 
@@ -13,12 +12,12 @@ const TipoNormativaList = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm());
 
-  const fetch = useCallback(async () => {
+  const fetchTipoNormativas = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_URL}/doc-tipo-normativa`);
-      setItems(res.data || []);
+      const data = await docService.getTipoNormativas();
+      setItems(Array.isArray(data) ? data : []);
     } catch (err) {
       setItems([]);
       setError('Error al cargar tipos de normativa');
@@ -27,13 +26,13 @@ const TipoNormativaList = () => {
     }
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { fetchTipoNormativas(); }, [fetchTipoNormativas]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('¿Eliminar tipo de normativa?')) return;
+    if (!window.confirm('¿Eliminar tipo de normativas?')) return;
     try {
-      await axios.delete(`${API_URL}/doc-tipo-normativa/${id}`);
-      fetch();
+      await docService.deleteTipoNormativa(id);
+      fetchTipoNormativas();
     } catch (err) {
       setError('Error al eliminar tipo de normativa');
     }
@@ -66,11 +65,11 @@ const TipoNormativaList = () => {
     }
     try {
       if (editingId) {
-        await axios.put(`${API_URL}/doc-tipo-normativa/${editingId}`, formData);
+        await docService.updateTipoNormativa(editingId, formData);
       } else {
-        await axios.post(`${API_URL}/doc-tipo-normativa`, formData);
+        await docService.createTipoNormativa(formData);
       }
-      fetch();
+      fetchTipoNormativas();
       setOpenModal(false);
     } catch (err) {
       setError(editingId ? 'Error al actualizar tipo de normativa' : 'Error al crear tipo de normativa');

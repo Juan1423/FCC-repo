@@ -21,7 +21,7 @@ import {
   MenuItem,
   CircularProgress,
 } from '@mui/material';
-import * as documentacionService from '../../../../services/documentacionIndicadorService';
+import * as documentacionService from '../../../../services/documentacionService';
 
 /**
  * CRUD de filas `registrar_procesos` filtradas por id_indicador.
@@ -43,7 +43,7 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
 
   const loadCatalogos = useCallback(async () => {
     try {
-      const [p, n] = await Promise.all([documentacionService.getProcesosDoc(), documentacionService.getDocNormativas()]);
+      const [p, n] = await Promise.all([documentacionService.getProcesos(), documentacionService.getNormativas()]);
       setProcesos(Array.isArray(p) ? p : []);
       setNormativas(Array.isArray(n) ? n : []);
     } catch {
@@ -119,9 +119,9 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
     };
     try {
       if (editingId) {
-        await documentacionService.updateRegistrarProcesos(editingId, payload);
+        await documentacionService.updateRegistrarProceso(editingId, payload);
       } else {
-        await documentacionService.createRegistrarProcesos(payload);
+        await documentacionService.createRegistrarProceso(payload);
       }
       setModalOpen(false);
       await loadRegistros();
@@ -135,7 +135,7 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este registro?')) return;
     try {
-      await documentacionService.deleteRegistrarProcesos(id);
+      await documentacionService.deleteRegistrarProceso(id);
       await loadRegistros();
       onChanged?.();
     } catch (e) {

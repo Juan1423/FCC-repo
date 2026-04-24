@@ -21,8 +21,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { API_URL } from "../../../../services/apiConfig";
-import axios from "axios";
+import * as docService from "../../../../services/documentacionService";
 
 const emptyForm = () => ({
   id_tipo_proceso: "",
@@ -47,14 +46,13 @@ const ProcesoList = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm());
 
-  const fetchTipos = useCallback(async () => {
+  const fetchTipoProcesos = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/doc-tipo-proceso`);
-      setTipos(res.data || []);
+      const data = await docService.getTipoProcesos();
+      const list = Array.isArray(data) ? data : [];
+      setTipos(list);
       const map = {};
-      (res.data || []).forEach((t) => {
-        map[t.id_tipo_proceso] = t.nombre_tipo_proceso;
-      });
+      list.forEach((t) => { map[t.id_tipo_proceso] = t.nombre_tipo_proceso; });
       setTiposMap(map);
     } catch (err) {
       setTipos([]);
@@ -62,12 +60,12 @@ const ProcesoList = () => {
     }
   }, []);
 
-  const fetch = useCallback(async () => {
+  const fetchProcesos = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_URL}/proceso`);
-      setItems(res.data || []);
+      const data = await docService.getProcesos();
+      setItems(Array.isArray(data) ? data : []);
     } catch (err) {
       setItems([]);
       setError("Error al cargar procesos");
@@ -77,15 +75,15 @@ const ProcesoList = () => {
   }, []);
 
   useEffect(() => {
-    fetchTipos();
-    fetch();
-  }, [fetchTipos, fetch]);
+    fetchTipoProcesos();
+    fetchProcesos();
+  }, [fetchTipoProcesos, fetchProcesos]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("¿Eliminar proceso?")) return;
     try {
-      await axios.delete(`${API_URL}/proceso/${id}`);
-      fetch();
+      await docService.deleteProceso(id);
+      fetchProcesos();
     } catch (err) {
       setError("Error al eliminar proceso");
     }
@@ -153,12 +151,12 @@ const ProcesoList = () => {
     const payload = buildPayload();
     try {
       if (editingId) {
-        await axios.put(`${API_URL}/proceso/${editingId}`, payload);
+        await docService.updateProceso(editingId, payload);
       } else {
-        await axios.post(`${API_URL}/proceso`, payload);
+        await docService.createProceso(payload);
       }
       setOpenModal(false);
-      fetch();
+      fetchProcesos();
     } catch (err) {
       setError("Error al guardar proceso");
     }
@@ -205,13 +203,14 @@ const ProcesoList = () => {
                 <TableCell>Responsable</TableCell>
                 <TableCell>Nivel</TableCell>
                 <TableCell>Estado</TableCell>
+                <TableCell>Jerarquía</TableCell>
                 <TableCell>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={8}>
                     <Typography color="text.secondary">No hay procesos registrados.</Typography>
                   </TableCell>
                 </TableRow>
@@ -224,6 +223,7 @@ const ProcesoList = () => {
                     <TableCell>{p.responsable_proceso}</TableCell>
                     <TableCell>{p.nivel_proceso}</TableCell>
                     <TableCell>{p.estado_proceso}</TableCell>
+                    <TableCell>{p.jerarquia_proceso}</TableCell>
                     <TableCell>
                       <Button size="small" onClick={() => handleEditModal(p)} sx={{ mr: 0.5 }}>
                         Editar

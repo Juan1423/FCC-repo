@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, CircularProgress, Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import axios from 'axios';
-import { API_URL } from '../../../../services/apiConfig';
+import * as docService from '../../../../services/documentacionService';
 
 const emptyForm = () => ({
   id_tipo_normativa: '',
@@ -28,12 +27,13 @@ const NormativaList = ({ onView }) => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm());
 
-  const fetchTipos = useCallback(async () => {
+  const fetchTipoNormativas = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/doc-tipo-normativa`);
-      setTipos(res.data || []);
+      const data = await docService.getTipoNormativas();
+      const list = Array.isArray(data) ? data : [];
+      setTipos(list);
       const map = {};
-      (res.data || []).forEach(t => { map[t.id_tipo_normativa] = t.nombre_tipo_normativa; });
+      list.forEach((t) => { map[t.id_tipo_normativa] = t.nombre_tipo_normativa; });
       setTiposMap(map);
     } catch (err) {
       setTipos([]);
@@ -41,12 +41,12 @@ const NormativaList = ({ onView }) => {
     }
   }, []);
 
-  const fetch = useCallback(async () => {
+  const fetchNormativas = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_URL}/doc-normativa`);
-      setItems(res.data || []);
+      const data = await docService.getNormativas();
+      setItems(Array.isArray(data) ? data : []);
     } catch (err) {
       setItems([]);
       setError('Error al cargar normativas');
@@ -55,13 +55,13 @@ const NormativaList = ({ onView }) => {
     }
   }, []);
 
-  useEffect(() => { fetchTipos(); fetch(); }, [fetchTipos, fetch]);
+  useEffect(() => { fetchTipoNormativas(); fetchNormativas(); }, [fetchTipoNormativas, fetchNormativas]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar normativa?')) return;
     try {
-      await axios.delete(`${API_URL}/doc-normativa/${id}`);
-      fetch();
+      await docService.deleteNormativa(id);
+      fetchNormativas();
     } catch (err) {
       setError('Error al eliminar normativa');
     }
@@ -131,12 +131,12 @@ const NormativaList = ({ onView }) => {
     const payload = buildPayload();
     try {
       if (editingId) {
-        await axios.put(`${API_URL}/doc-normativa/${editingId}`, payload);
+        await docService.updateNormativa(editingId, payload);
       } else {
-        await axios.post(`${API_URL}/doc-normativa`, payload);
+        await docService.createNormativa(payload);
       }
       setOpenModal(false);
-      fetch();
+      fetchNormativas();
     } catch (err) {
       setError("Error al guardar normativa");
     }
@@ -178,15 +178,17 @@ const NormativaList = ({ onView }) => {
                 <TableCell>Nombre</TableCell>
                 <TableCell>Tipo</TableCell>
                 <TableCell>Nivel</TableCell>
+                <TableCell>Jerarquía</TableCell>
                 <TableCell>Fecha</TableCell>
                 <TableCell>Fecha Vigencia</TableCell>
+                <TableCell>Tipo Registro</TableCell>
                 <TableCell>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6}>
+                  <TableCell colSpan={8}>
                     <Typography color="text.secondary">No hay normativas registradas.</Typography>
                   </TableCell>
                 </TableRow>
@@ -196,8 +198,10 @@ const NormativaList = ({ onView }) => {
                     <TableCell>{n.nombre_normativa}</TableCell>
                     <TableCell>{tiposMap[n.id_tipo_normativa] || "—"}</TableCell>
                     <TableCell>{n.nivel_normativa}</TableCell>
+                    <TableCell>{n.jerarquia_normativa}</TableCell>
                     <TableCell>{n.fecha_normativa}</TableCell>
                     <TableCell>{n.fecha_vigencia_normativa}</TableCell>
+                    <TableCell>{n.tipo_registro_normativa}</TableCell>
                     <TableCell>
                       <Button size="small" onClick={() => handleEditModal(n)} sx={{ mr: 0.5 }}>
                         Editar
