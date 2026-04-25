@@ -255,7 +255,7 @@ function App() {
             />    
              <Route
               path="/fcc-salud"              
-              element={<PrivateRoute element={SaludDashboard} allowedRoles={['admin']} />}
+              element={<PrivateRoute element={SaludDashboard} allowedRoles={['admin',"doctor", "personal_salud"]} />}
             />
             <Route
               path="/fcc-chat"              
