@@ -22,6 +22,7 @@ const fileUpload = async (req, res, next) => {
 
 const create = async (req, res) => {
   try {
+    console.log('REQ.BODY en create:', req.body);
     if (req.files) {
       if (req.files.imagen) {
         req.body.foto_paciente = `/uploads/pacientes/perfil/fotos/${req.files.imagen[0].filename}`;

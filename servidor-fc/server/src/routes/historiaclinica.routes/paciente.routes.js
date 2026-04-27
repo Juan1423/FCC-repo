@@ -6,8 +6,8 @@ const pacienteController = require('../../controllers/historiaclinica.controller
 router
     .get('/', pacienteController.get)
     .get('/:id', pacienteController.getById)
-    .post('/',pacienteController.create)
-    .put('/:id',  pacienteController.update)
+    .post('/',pacienteController.fileUpload, pacienteController.create)
+    .put('/:id',  pacienteController.fileUpload, pacienteController.update)
     .delete('/:id', pacienteController._delete)
     .put('/estado/:id', pacienteController.logicalDelete);
 
