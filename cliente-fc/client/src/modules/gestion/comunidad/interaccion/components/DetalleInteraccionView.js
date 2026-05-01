@@ -153,12 +153,7 @@ const DetalleInteraccion = () => {
                 Detalle de Interacción
               </Typography>
             </Box>
-            <Typography
-              variant="subtitle1"
-              sx={{ color: "text.secondary", mb: 4, ml: 7 }}
-            >
-              {interaccion.descripcion_interaccion}
-            </Typography>
+          
           </Box>
         </Fade>
 
