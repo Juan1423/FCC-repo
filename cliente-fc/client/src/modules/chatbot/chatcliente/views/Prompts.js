@@ -31,6 +31,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import { Edit, Delete, Add, PlayArrow, Search, Download, Close, Security, Block } from '@mui/icons-material';
+import { getPrompts, createPrompt, updatePrompt, deletePrompt, clearPromptMemory, checkPdfAvailable, activatePrompt, executeSelectedPrompts, executeAllPrompts, downloadPdf } from '../../../../services/chatbotServices';
 
 const Prompts = () => {
   const [prompts, setPrompts] = useState([]);
@@ -60,36 +61,17 @@ const Prompts = () => {
 
   useEffect(() => { fetchPrompts(); loadSearchHistory(); }, []);
 
-  // Verificar disponibilidad de PDFs
-  const checkPdfAvailable = async (pdfName) => {
-    if (!pdfName) return false;
-    
-    try {
-      const token = localStorage.getItem('token') || localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/prompt/check/${encodeURIComponent(pdfName)}`, {
-        headers: { 'token': token }
-      });
-      return response.data?.exists === true;
-    } catch (error) {
-      console.error('Error verificando PDF:', pdfName, error);
-      return false;
-    }
-  };
-
   const fetchPrompts = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/prompt`, { headers: { 'token': token } });
-      setPrompts(response.data);
+      const data = await getPrompts();
+      setPrompts(data);
       setError(null);
       
-      // Verificar disponibilidad de PDFs en paralelo (máximo 5 simultáneamente)
-      if (response.data && response.data.length > 0) {
+      if (data && data.length > 0) {
         const availability = {};
-        const promptsWithPdf = response.data.filter(p => p.archivo_pdf);
+        const promptsWithPdf = data.filter(p => p.archivo_pdf);
         
-        // Procesar de 5 en 5 para no saturar
         for (let i = 0; i < promptsWithPdf.length; i += 5) {
           const batch = promptsWithPdf.slice(i, i + 5);
           const results = await Promise.allSettled(
@@ -141,13 +123,7 @@ const Prompts = () => {
   };
   const handleClose = () => { setOpen(false); setEditing(null); setError(null); };
 
-  const handleSave = async () => {
-    // Validar que tipo_prompt esté seleccionado
-    console.log('📋 [PROMPTS] Form state antes de guardar:', form);
-    console.log('📋 [PROMPTS] tipo_prompt value:', form.tipo_prompt);
-    console.log('📋 [PROMPTS] tipo_prompt type:', typeof form.tipo_prompt);
-    console.log('📋 [PROMPTS] tipo_prompt isEmpty:', !form.tipo_prompt);
-    
+const handleSave = async () => {
     const tiposValidos = ['instrucciones', 'contexto_pdf', 'global', 'otro'];
     if (!form.tipo_prompt || !tiposValidos.includes(form.tipo_prompt)) {
       setError('El tipo de prompt es requerido - Por favor selecciona un tipo válido');
@@ -157,41 +133,12 @@ const Prompts = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      let data, config;
       const isEditing = editing !== null;
-      if (file) {
-        data = new FormData();
-        data.append('tipo_prompt', form.tipo_prompt);
-        data.append('titulo', form.titulo);
-        data.append('descripcion', form.descripcion);
-        data.append('instrucciones', form.instrucciones);
-        data.append('pdf', file);
-        // No especificar Content-Type - axios lo hace automáticamente con FormData
-        config = { headers: { 'token': token } };
-        console.log('📋 [PROMPTS] FormData contenido:');
-        console.log('  - tipo_prompt:', form.tipo_prompt);
-        console.log('  - titulo:', form.titulo);
-        console.log('  - descripcion:', form.descripcion);
-        console.log('  - instrucciones:', form.instrucciones);
-        console.log('  - pdf file:', file.name, '(' + file.size + ' bytes)');
-        console.log('📋 [PROMPTS] Enviando FormData con archivo');
-      } else { 
-        data = form; 
-        config = { headers: { 'token': token } }; 
-        console.log('📋 [PROMPTS] Enviando JSON sin archivo:', form);
-      }
-      const url = isEditing ? `${API_URL}/prompt/${editing.id_prompt}` : `${API_URL}/chatcliente/prompt`;
-      const method = isEditing ? 'put' : 'post';
       
-      console.log(`📋 [PROMPTS] Enviando ${method.toUpperCase()} a:`, url);
-      console.log('📋 [PROMPTS] Datos completos:', data);
-      
-      if (method === 'put') { 
-        await axios.put(url, data, config); 
-      } else { 
-        const response = await axios.post(url, data, config);
-        console.log('📋 [PROMPTS] Respuesta exitosa:', response.data);
+      if (isEditing) {
+        await updatePrompt(editing.id_prompt, form, file || undefined);
+      } else {
+        await createPrompt(form, file || undefined);
       }
       
       fetchPrompts(); 
@@ -201,9 +148,7 @@ const Prompts = () => {
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) { 
       console.error('❌ [PROMPTS] Error saving prompt:', error);
-      console.error('❌ [PROMPTS] Error response:', error.response?.data);
-      console.error('❌ [PROMPTS] Error status:', error.response?.status);
-      const errorMsg = error.response?.data?.error || error.message || 'Error al guardar el prompt'; 
+      const errorMsg = error.message || 'Error al guardar el prompt'; 
       setError(errorMsg); 
       setSuccess(''); 
     } finally { 
@@ -211,9 +156,43 @@ const Prompts = () => {
     }
   };
 
-  const handleDelete = async (id) => { if (window.confirm('¿Estás seguro de que quieres eliminar este prompt?')) { setLoading(true); try { const token = localStorage.getItem('token'); await axios.delete(`${API_URL}/chatcliente/prompt/${id}`, { headers: { 'token': token } }); fetchPrompts(); setError(null); setSuccess('✓ Prompt eliminado exitosamente'); setTimeout(() => setSuccess(''), 3000); } catch (error) { console.error('Error deleting prompt:', error); const errorMsg = error.response?.data?.error || 'Error al eliminar el prompt'; setError(errorMsg); setSuccess(''); } finally { setLoading(false); } } };
+  const handleDelete = async (id) => { 
+    if (window.confirm('¿Estás seguro de que quieres eliminar este prompt?')) { 
+      setLoading(true); 
+      try { 
+        await deletePrompt(id); 
+        fetchPrompts(); 
+        setError(null); 
+        setSuccess('✓ Prompt eliminado exitosamente'); 
+        setTimeout(() => setSuccess(''), 3000); 
+      } catch (error) { 
+        console.error('Error deleting prompt:', error); 
+        const errorMsg = error.message || 'Error al eliminar el prompt'; 
+        setError(errorMsg); 
+        setSuccess(''); 
+      } finally { 
+        setLoading(false); 
+      } 
+    } 
+  };
 
-  const handleActivate = async (id) => { setLoading(true); try { const token = localStorage.getItem('token'); await axios.post(`${API_URL}/chatcliente/prompt/${id}/activate`, {}, { headers: { 'token': token } }); setSnackbarMessage('✓ Prompt activado exitosamente. El chatbot ahora usará este contenido.'); setSnackbarSeverity('success'); setSnackbarOpen(true); setError(null); } catch (error) { console.error('Error activating prompt:', error); setSnackbarMessage('✗ Error al activar el prompt'); setSnackbarSeverity('error'); setSnackbarOpen(true); } finally { setLoading(false); } };
+  const handleActivate = async (id) => { 
+    setLoading(true); 
+    try { 
+      await activatePrompt(id); 
+      setSnackbarMessage('✓ Prompt activado exitosamente. El chatbot ahora usará este contenido.'); 
+      setSnackbarSeverity('success'); 
+      setSnackbarOpen(true); 
+      setError(null); 
+    } catch (error) { 
+      console.error('Error activating prompt:', error); 
+      setSnackbarMessage('✗ Error al activar el prompt'); 
+      setSnackbarSeverity('error'); 
+      setSnackbarOpen(true); 
+    } finally { 
+      setLoading(false); 
+    } 
+  };
 
   const handleDownloadPdf = async (pdfName) => {
     if (!pdfName || pdfName.trim() === '') {
@@ -297,7 +276,23 @@ const Prompts = () => {
     }
   };
 
-  const handleClearMemory = async () => { setLoading(true); try { const token = localStorage.getItem('token'); await axios.post(`${API_URL}/chatcliente/conversacion/clear-memory`, {}, { headers: { 'token': token } }); setSnackbarMessage('✓ Memoria del chatbot limpiada exitosamente.'); setSnackbarSeverity('success'); setSnackbarOpen(true); setError(null); } catch (error) { console.error('Error clearing memory:', error); setSnackbarMessage('✗ Error al limpiar la memoria'); setSnackbarSeverity('error'); setSnackbarOpen(true); } finally { setLoading(false); } };
+  const handleClearMemory = async () => { 
+    setLoading(true); 
+    try { 
+      await clearPromptMemory(); 
+      setSnackbarMessage('✓ Memoria del chatbot limpiada exitosamente.'); 
+      setSnackbarSeverity('success'); 
+      setSnackbarOpen(true); 
+      setError(null); 
+    } catch (error) { 
+      console.error('Error clearing memory:', error); 
+      setSnackbarMessage('✗ Error al limpiar la memoria'); 
+      setSnackbarSeverity('error'); 
+      setSnackbarOpen(true); 
+    } finally { 
+      setLoading(false); 
+    } 
+  };
 
   // Manejar selección de checkboxes
   const handleSelectPrompt = (id_prompt) => {
@@ -330,9 +325,8 @@ const Prompts = () => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const promptIds = Array.from(selectedPrompts);
-      await axios.post(`${API_URL}/prompt/execute-selected`, { prompt_ids: promptIds }, { headers: { 'token': token } });
+      await executeSelectedPrompts(promptIds);
       setSnackbarMessage(`✓ ${selectedPrompts.size} prompt(s) ejecutados exitosamente en la memoria del chatbot`);
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -352,8 +346,7 @@ const Prompts = () => {
   const handleExecuteAllPrompts = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/conocimiento/regenerar-memoria`, {}, { headers: { 'token': token } });
+      await executeAllPrompts();
       setSnackbarMessage('✓ Todos los prompts ejecutados correctamente - Memoria del chatbot regenerada exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   getConversacionesAnonimas,
-  createConocimiento
+  createConocimiento,
+  blockIP,
+  unblockIP
 } from '../../../../services/chatbotAdminServices';
-import axios from 'axios';
-import { API_URL } from '../../../../services/apiConfig';
 import './PreguntasAnonimasTable.css';
 
 const PreguntasAnonimasTable = () => {
@@ -145,8 +145,7 @@ const PreguntasAnonimasTable = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('auth_token');
-      await axios.post(`${API_URL}/chatcliente/seguridad/block-ip`, { ip }, { headers: { 'token': token } });
+      await blockIP(ip);
       setSnackbarMessage('✓ IP bloqueada exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -167,8 +166,7 @@ const PreguntasAnonimasTable = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('auth_token');
-      await axios.post(`${API_URL}/chatcliente/seguridad/unblock-ip`, { ip }, { headers: { 'token': token } });
+      await unblockIP(ip);
       setSnackbarMessage('✓ IP desbloqueada exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);

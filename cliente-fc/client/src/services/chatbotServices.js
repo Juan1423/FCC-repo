@@ -149,7 +149,7 @@ export const getConversacionesByUser = async () => {
 
 export const clearPromptMemory = async () => {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/conversacion/clear-memory`, {
+  const response = await fetch(`${API_URL}/chatcliente/conversacion/clear-memory`, {
     method: 'POST',
     headers: { 'token': token }
   });
@@ -159,4 +159,68 @@ export const clearPromptMemory = async () => {
     throw new Error(msg);
   }
   return body;
+};
+
+export const checkPdfAvailable = async (pdfName) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/prompt/check/${encodeURIComponent(pdfName)}`, {
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  return body?.exists === true;
+};
+
+export const activatePrompt = async (id) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/chatcliente/prompt/${id}/activate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'token': token
+    },
+    body: JSON.stringify({})
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.error) ? body.error : (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body;
+};
+
+export const executeSelectedPrompts = async (promptIds) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/prompt/execute-selected`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'token': token
+    },
+    body: JSON.stringify({ prompt_ids: promptIds })
+  });
+  return response.json();
+};
+
+export const executeAllPrompts = async () => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conocimiento/regenerar-memoria`, {
+    method: 'POST',
+    headers: { 'token': token }
+  });
+  return response.json();
+};
+
+export const downloadPdf = async (pdfName) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/prompt/download/${encodeURIComponent(pdfName)}`, {
+    headers: { 
+      'token': token,
+      'Authorization': `Bearer ${token}`
+    },
+    responseType: 'blob'
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.blob();
 };
