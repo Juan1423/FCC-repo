@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-// Ajusta esta URL base si tu backend corre en otro puerto/ip
-const API_BASE = 'http://localhost:5000/api/fcc/asistente'; 
+import iaService from '../../../services/iaService'; 
 
 const AsistenteInterno = () => {
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' o 'upload'
@@ -37,17 +35,9 @@ const AsistenteInterno = () => {
     setLoadingChat(true);
 
     try {
-      // 2. Consultar al Backend
-      const response = await fetch(`${API_BASE}/consultar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensaje: userText, sessionId: 'admin-session-01' })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setMessages(prev => [...prev, { sender: 'bot', text: data.data.respuesta }]);
+      const res = await iaService.getChatConsultar(userText, 'admin-session-01');
+      if (res.data.success) {
+        setMessages(prev => [...prev, { sender: 'bot', text: res.data.data.respuesta }]);
       } else {
         setMessages(prev => [...prev, { sender: 'bot', text: 'Error: No pude consultar la base de datos.' }]);
       }
@@ -71,19 +61,14 @@ const AsistenteInterno = () => {
     formData.append('titulo', docTitle || file.name);
 
     try {
-      const response = await fetch(`${API_BASE}/upload-conocimiento`, {
-        method: 'POST',
-        body: formData, // No poner Content-Type header manualmente con FormData
-      });
+      const res = await iaService.postUploadConocimiento(formData);
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        setUploadStatus({ type: 'success', msg: `¡Documento aprendido! Se generaron ${result.data.chunks} fragmentos de conocimiento.` });
+      if (res.data.success) {
+        setUploadStatus({ type: 'success', msg: `¡Documento aprendido! Se generaron ${res.data.data.chunks} fragmentos de conocimiento.` });
         setFile(null);
         setDocTitle('');
       } else {
-        setUploadStatus({ type: 'error', msg: result.message || 'Error al procesar el documento.' });
+        setUploadStatus({ type: 'error', msg: res.data.message || 'Error al procesar el documento.' });
       }
     } catch (error) {
       setUploadStatus({ type: 'error', msg: 'Error de red al subir el archivo.' });

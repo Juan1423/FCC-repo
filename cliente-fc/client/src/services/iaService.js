@@ -26,11 +26,24 @@ const getHistorialReporte = async (params) => {
   });
 };
 
+const getChatConsultar = async (mensaje, sessionId = 'admin-session-01') => {
+  return await axios.post(`${IA_API_URL}/consultar`, {
+    mensaje,
+    sessionId
+  });
+};
+
+const postUploadConocimiento = async (formData) => {
+  return await axios.post(`${IA_API_URL}/upload-conocimiento`, formData);
+};
+
 const iaService = {
   consultarAsistente,
   subirConocimiento,
   getHistorial,
   getHistorialReporte,
+  getChatConsultar,
+  postUploadConocimiento,
 };
 
 export default iaService;
