@@ -153,18 +153,7 @@ const DetalleInteraccion = () => {
                 Detalle de Interacción
               </Typography>
             </Box>
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#64748b",
-                mb: 4,
-                ml: 7,
-                fontWeight: 500,
-                letterSpacing: '0.5px'
-              }}
-            >
-              {interaccion.tipo_interaccion} • {new Date(interaccion.fecha_inicio_interaccion).toLocaleDateString()}
-            </Typography>
+          
           </Box>
         </Fade>
 
