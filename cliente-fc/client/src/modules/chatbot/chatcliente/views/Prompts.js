@@ -1,7 +1,5 @@
 // Prompts.js (moved to modules/chatcliente/views)
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_URL } from '../../../../services/apiConfig';
 import {
   Table,
   TableBody,
@@ -31,7 +29,27 @@ import {
   MenuItem,
 } from '@mui/material';
 import { Edit, Delete, Add, PlayArrow, Search, Download, Close, Security, Block } from '@mui/icons-material';
-import { getPrompts, createPrompt, updatePrompt, deletePrompt, clearPromptMemory, checkPdfAvailable, activatePrompt, executeSelectedPrompts, executeAllPrompts, downloadPdf } from '../../../../services/chatbotServices';
+import { 
+  getPrompts, 
+  createPrompt, 
+  updatePrompt, 
+  deletePrompt, 
+  clearPromptMemory, 
+  checkPdfAvailable, 
+  activatePrompt, 
+  executeSelectedPrompts, 
+  executeAllPrompts, 
+  downloadPdf,
+  getSecurityData,
+  getUserById,
+  getConversacionesByUserId,
+  getAnonUserById,
+  getConversacionesAnonimasByUser,
+  blockUser,
+  unblockUser,
+  blockAnonUser,
+  unblockAnonUser
+} from '../../../../services/chatbotServices';
 
 const Prompts = () => {
   const [prompts, setPrompts] = useState([]);
@@ -206,34 +224,12 @@ const handleSave = async () => {
       setLoading(true);
       console.log('📥 Iniciando descarga de PDF:', pdfName);
       
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setSnackbarMessage('❌ Token de autenticación no encontrado');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-        return;
-      }
+      const blob = await downloadPdf(pdfName);
       
-      // Usar el endpoint correcto
-      const downloadUrl = `${API_URL}/prompt/download/${encodeURIComponent(pdfName)}`;
-      console.log('📥 URL de descarga:', downloadUrl);
-      
-      const response = await axios.get(downloadUrl, {
-        headers: { 
-          'token': token,
-          'Authorization': `Bearer ${token}`
-        },
-        responseType: 'blob',
-        timeout: 30000
-      });
-      
-      // Verificar que es una respuesta válida
-      if (!response.data || response.data.size === 0) {
+      if (!blob || blob.size === 0) {
         throw new Error('El servidor devolvió un archivo vacío');
       }
       
-      // Crear blob y descargar
-      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -241,7 +237,6 @@ const handleSave = async () => {
       document.body.appendChild(link);
       link.click();
       
-      // Limpiar
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
@@ -254,17 +249,15 @@ const handleSave = async () => {
       
     } catch (error) {
       console.error('❌ Error descargando PDF:', error);
-      console.error('Status:', error.response?.status);
-      console.error('Data:', error.response?.data);
       
       let mensaje = 'Error al descargar el archivo PDF';
-      if (error.response?.status === 404) {
+      if (error.message?.includes('404')) {
         mensaje = '❌ El archivo PDF no existe en el servidor. Intenta cargar uno nuevo.';
-      } else if (error.response?.status === 401) {
+      } else if (error.message?.includes('401')) {
         mensaje = '❌ No tienes permisos para descargar este archivo';
-      } else if (error.message === 'timeout of 30000ms exceeded') {
+      } else if (error.message?.includes('timeout')) {
         mensaje = '❌ El servidor tardó demasiado en responder';
-      } else if (!error.response) {
+      } else if (error.message?.includes('Failed to fetch') || error.message?.includes('Network')) {
         mensaje = '❌ Error de conexión con el servidor';
       }
       
@@ -368,13 +361,8 @@ const handleSave = async () => {
     setSecurityLoading(true);
     setSecurityFilter(userId || '');
     try {
-      const token = localStorage.getItem('token');
-      const isNumericId = (id) => typeof id === 'string' && /^[0-9]+$/.test(id);
-      const url = userId && isNumericId(userId)
-        ? `${API_URL}/seguridad?user_id=${userId}&limit=100`
-        : `${API_URL}/seguridad?limit=100`;
-      const response = await axios.get(url, { headers: { 'token': token } });
-      setSecurityData(response.data.data || response.data);
+      const data = await getSecurityData(userId, 100);
+      setSecurityData(data || []);
     } catch (error) {
       console.error('Error fetching security data:', error);
       setSnackbarMessage('✗ Error al cargar información de seguridad');
@@ -393,19 +381,15 @@ const handleSave = async () => {
     setUserReportLoading(true);
     setSelectedUser(userId);
     try {
-      const token = localStorage.getItem('token');
-      // Obtener datos del usuario
-      const userResponse = await axios.get(`${API_URL}/users/${userId}`, { headers: { 'token': token } });
-      // Obtener conversaciones del usuario
-      const convResponse = await axios.get(`${API_URL}/conversacion/usuario/${userId}`, { headers: { 'token': token } });
-      // Obtener registros de seguridad del usuario
-      const securityResponse = await axios.get(`${API_URL}/seguridad?user_id=${userId}&limit=50`, { headers: { 'token': token } });
+      const userData = await getUserById(userId);
+      const conversations = await getConversacionesByUserId(userId);
+      const security = await getSecurityData(userId, 50);
 
       setUserReportData({
         type: 'registered',
-        user: userResponse.data,
-        conversations: convResponse.data,
-        security: securityResponse.data.data || securityResponse.data
+        user: userData,
+        conversations: conversations || [],
+        security: security || []
       });
     } catch (error) {
       console.error('Error fetching user report:', error);
@@ -425,22 +409,15 @@ const handleSave = async () => {
     setUserReportLoading(true);
     setSelectedUser(anonUserId);
     try {
-      const token = localStorage.getItem('token');
-      // Obtener datos del usuario anónimo
-      const userResponse = await axios.get(`${API_URL}/usuario-anonimo/${anonUserId}`, { headers: { 'token': token } });
-      // Obtener conversaciones del usuario anónimo
-      const convResponse = await axios.get(`${API_URL}/conversacion-anonima/usuario/${anonUserId}`, { headers: { 'token': token } });
-      // Obtener registros de seguridad asociados a la conversación anónima (si se provee)
-      const securityUrl = conversationId
-        ? `${API_URL}/seguridad?id_conversacion_anonima=${conversationId}&limit=50`
-        : `${API_URL}/seguridad?limit=50`;
-      const securityResponse = await axios.get(securityUrl, { headers: { 'token': token } });
+      const userData = await getAnonUserById(anonUserId);
+      const conversations = await getConversacionesAnonimasByUser(anonUserId);
+      const security = await getSecurityData(null, 50);
 
       setUserReportData({
         type: 'anonymous',
-        user: userResponse.data.data || userResponse.data,
-        conversations: convResponse.data.data || convResponse.data,
-        security: securityResponse.data.data || securityResponse.data
+        user: userData,
+        conversations: conversations || [],
+        security: security || []
       });
     } catch (error) {
       console.error('Error fetching anonymous user report:', error);
@@ -459,12 +436,10 @@ const handleSave = async () => {
     if (!window.confirm(`¿Estás seguro de bloquear al usuario ${userId}?`)) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/users/${userId}/block`, {}, { headers: { 'token': token } });
+      await blockUser(userId);
       setSnackbarMessage('✓ Usuario bloqueado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-      // Recargar datos de seguridad
       handleOpenSecurity(securityFilter);
     } catch (error) {
       console.error('Error blocking user:', error);
@@ -481,12 +456,10 @@ const handleSave = async () => {
     if (!window.confirm(`¿Estás seguro de desbloquear al usuario ${userId}?`)) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/users/${userId}/unblock`, {}, { headers: { 'token': token } });
+      await unblockUser(userId);
       setSnackbarMessage('✓ Usuario desbloqueado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-      // Recargar datos de seguridad
       handleOpenSecurity(securityFilter);
     } catch (error) {
       console.error('Error unblocking user:', error);
@@ -503,8 +476,7 @@ const handleSave = async () => {
     if (!window.confirm(`¿Estás seguro de bloquear al usuario anónimo ${anonUserId}?`)) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/usuario-anonimo/${anonUserId}/block`, {}, { headers: { 'token': token } });
+      await blockAnonUser(anonUserId);
       setSnackbarMessage('✓ Usuario anónimo bloqueado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -524,8 +496,7 @@ const handleSave = async () => {
     if (!window.confirm(`¿Estás seguro de desbloquear al usuario anónimo ${anonUserId}?`)) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/usuario-anonimo/${anonUserId}/unblock`, {}, { headers: { 'token': token } });
+      await unblockAnonUser(anonUserId);
       setSnackbarMessage('✓ Usuario anónimo desbloqueado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
