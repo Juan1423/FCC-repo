@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '../../../../services/apiConfig';
-import { getConocimiento, createConocimiento, updateConocimiento, deleteConocimiento, usarConocimientoEspecifico } from '../../../../services/chatbotAdminServices';
+import { getConocimiento, createConocimiento, updateConocimiento, deleteConocimiento, usarConocimientoEspecifico, toggleBloqueoConocimiento, bloquearTodosConocimiento, desbloquearTodosConocimiento, ejecutarBloqueadasConocimiento, regenerarMemoriaConocimiento } from '../../../../services/chatbotAdminServices';
 import './ConocimientoTable.css';
 
 const ConocimientoTable = () => {
@@ -140,32 +139,11 @@ const ConocimientoTable = () => {
   };
 
   const handleToggleBloqueo = async (id) => {
-    const token = localStorage.getItem('auth_token');
-    console.log('Token:', token);
-    console.log('ID:', id);
-
     try {
-      const response = await fetch(`${API_URL}/conocimiento/${id}/toggle-bloqueo`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'token': token
-        }
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Error response:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
+      const result = await toggleBloqueoConocimiento(id);
       console.log('Success result:', result);
       loadConocimientos();
-      alert(`Pregunta ${result.data.bloqueado ? 'bloqueada' : 'desbloqueada'} exitosamente`);
+      alert(`Pregunta ${result.bloqueado ? 'bloqueada' : 'desbloqueada'} exitosamente`);
     } catch (err) {
       console.error('Error completo:', err);
       alert('Error al cambiar estado de bloqueo: ' + err.message);
@@ -198,32 +176,11 @@ const ConocimientoTable = () => {
       return;
     }
 
-    const token = localStorage.getItem('auth_token');
-    console.log('Token para bloquear todos:', token);
-    console.log('IDs a bloquear:', selectedItems);
-
     try {
       setBloquearLoading(true);
-      const response = await fetch(`${API_URL}/conocimiento/bloquear-todos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'token': token
-        },
-        body: JSON.stringify({ ids: selectedItems })
-      });
-
-      console.log('Response status bloquear-todos:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Error response bloquear-todos:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
+      const result = await bloquearTodosConocimiento();
       console.log('Success result bloquear-todos:', result);
-      alert(result.message);
+      alert(result.message || 'Preguntas bloqueadas');
       setSelectedItems([]);
       loadConocimientos();
     } catch (err) {
@@ -246,21 +203,8 @@ const ConocimientoTable = () => {
 
     try {
       setBloquearLoading(true);
-      const response = await fetch(`${API_URL}/conocimiento/desbloquear-todos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'token': localStorage.getItem('auth_token')
-        },
-        body: JSON.stringify({ ids: selectedItems })
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al desbloquear preguntas');
-      }
-
-      const result = await response.json();
-      alert(result.message);
+      const result = await desbloquearTodosConocimiento();
+      alert(result.message || 'Preguntas desbloqueadas');
       setSelectedItems([]);
       loadConocimientos();
     } catch (err) {
@@ -272,8 +216,6 @@ const ConocimientoTable = () => {
   };
 
   const handleEjecutarBloqueadas = async () => {
-    const idsToExecute = selectedItems.length > 0 ? selectedItems : null;
-
     if (selectedItems.length > 0 && !window.confirm(`¿Ejecutar solo las ${selectedItems.length} preguntas seleccionadas?`)) {
       return;
     } else if (selectedItems.length === 0 && !window.confirm('¿Ejecutar todas las preguntas bloqueadas?')) {
@@ -282,27 +224,14 @@ const ConocimientoTable = () => {
 
     try {
       setEjecutarLoading(true);
-      const response = await fetch(`${API_URL}/conocimiento/ejecutar-bloqueadas`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'token': localStorage.getItem('auth_token')
-        },
-        body: JSON.stringify({ ids: idsToExecute })
-      });
+      const result = await ejecutarBloqueadasConocimiento();
 
-      if (!response.ok) {
-        throw new Error('Error al ejecutar preguntas bloqueadas');
-      }
-
-      const result = await response.json();
-
-      const mensaje = `Se procesaron ${result.data.total} preguntas bloqueadas.
-      Exitosas: ${result.data.exitosas}
-      Fallidas: ${result.data.fallidas}`;
+      const mensaje = `Se procesaron ${result.data?.total || result.total || 0} preguntas bloqueadas.
+Exitosas: ${result.data?.exitosas || result.exitosas || 0}
+Fallidas: ${result.data?.fallidas || result.fallidas || 0}`;
 
       alert(mensaje);
-      console.log('Resultados detallados:', result.data.resultados);
+      console.log('Resultados detallados:', result.data?.resultados || result.resultados);
 
     } catch (err) {
       alert('Error al ejecutar preguntas bloqueadas');
@@ -319,21 +248,8 @@ const ConocimientoTable = () => {
 
     try {
       setEjecutarLoading(true);
-      const response = await fetch(`${API_URL}/chatcliente/conocimiento/regenerar-memoria`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'token': localStorage.getItem('auth_token')
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al regenerar memoria');
-      }
-
-      const result = await response.json();
-      alert(result.message);
-
+      const result = await regenerarMemoriaConocimiento();
+      alert(result.message || 'Memoria regenerada');
     } catch (err) {
       alert('Error al regenerar memoria del chatbot');
       console.error(err);

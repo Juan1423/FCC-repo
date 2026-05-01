@@ -253,3 +253,63 @@ export const unblockIP = async (ip) => {
   });
   return handleResponse(response);
 };
+
+export const toggleBloqueoConocimiento = async (id) => {
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conocimiento/${id}/toggle-bloqueo`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    }
+  });
+  return handleResponse(response);
+};
+
+export const bloquearTodosConocimiento = async () => {
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conocimiento/bloquear-todos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    }
+  });
+  return handleResponse(response);
+};
+
+export const desbloquearTodosConocimiento = async () => {
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conocimiento/desbloquear-todos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    }
+  });
+  return handleResponse(response);
+};
+
+export const ejecutarBloqueadasConocimiento = async () => {
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conocimiento/ejecutar-bloqueadas`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    }
+  });
+  return handleResponse(response);
+};
+
+export const regenerarMemoriaConocimiento = async () => {
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/chatcliente/conocimiento/regenerar-memoria`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    }
+  });
+  return handleResponse(response);
+};
