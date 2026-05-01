@@ -3,8 +3,8 @@
 ## Project Overview
 
 This is a monorepo containing:
-- **Client** (`cliente-fc/client/`): React 18 + Material-UI application
-- **Server** (`servidor-fc/server/`): Express.js + Sequelize + PostgreSQL API
+- **Client** (`E:\Herramientas Clases Espe\clases espe\Practicas\Proyectos a unificar\FCC-monorepo\cliente-fc\client\`): React 18 + Material-UI application
+- **Server** (`E:\Herramientas Clases Espe\clases espe\Practicas\Proyectos a unificar\FCC-monorepo\servidor-fc\server\`): Express.js + Sequelize + PostgreSQL API
 
 ## Build Commands
 
