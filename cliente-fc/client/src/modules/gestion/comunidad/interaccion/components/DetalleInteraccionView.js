@@ -157,7 +157,7 @@ const DetalleInteraccion = () => {
               variant="subtitle1"
               sx={{ color: "text.secondary", mb: 4, ml: 7 }}
             >
-              Información detallada de la interacción comunitaria
+              {interaccion.tipo_interaccion} • {new Date(interaccion.fecha_inicio_interaccion).toLocaleDateString()}
             </Typography>
           </Box>
         </Fade>
