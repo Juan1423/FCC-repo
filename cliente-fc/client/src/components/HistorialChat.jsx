@@ -78,7 +78,7 @@ const HistorialChat = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/chatcliente/conversacion`, {
+      const response = await axios.get(`${API_URL}/conversacion/`, {
         headers: { 'token': token }
       });
       
@@ -197,7 +197,7 @@ const HistorialChat = () => {
 
       // Procesar cada conversación
       for (const conv of convsToSend) {
-        await axios.post(`${API_URL}/chatcliente/conocimiento`, {
+        await axios.post(`${API_URL}/conocimiento/`, {
           tema_principal: 'historial_conversaciones',
           pregunta_frecuente: conv.mensaje_usuario,
           respuesta_oficial: conv.respuesta_bot,
@@ -213,7 +213,7 @@ const HistorialChat = () => {
       alert(`¡Éxito! ${convsToSend.length} conversaciones enviadas a la base de conocimiento. La IA se entrenará automáticamente con esta información.`);
 
       // Después de enviar, generar embeddings para las nuevas entradas
-      await axios.post(`${API_URL}/chatcliente/conocimiento/generate-embeddings`, {}, {
+      await axios.post(`${API_URL}/conocimiento/generate-embeddings/`, {}, {
         headers: { 'token': token }
       });
 
@@ -261,7 +261,7 @@ const HistorialChat = () => {
         : conversaciones.filter(conv => selectedConversaciones.includes(conv.id_conversacion));
 
       for (const conv of conversacionesSeleccionadas) {
-        await axios.post(`${API_URL}/chatcliente/conocimiento`, {
+        await axios.post(`${API_URL}/conocimiento/`, {
           tema_principal: 'historial_conversaciones',
           pregunta_frecuente: conv.mensaje_usuario,
           respuesta_oficial: conv.respuesta_bot,
@@ -277,7 +277,7 @@ const HistorialChat = () => {
       alert(`¡Éxito! ${selectedConversaciones.length} conversaciones enviadas a la base de conocimiento.`);
 
       // Generar embeddings
-      await axios.post(`${API_URL}/chatcliente/conocimiento/generate-embeddings`, {}, {
+      await axios.post(`${API_URL}/conocimiento/generate-embeddings/`, {}, {
         headers: { 'token': token }
       });
 
@@ -305,7 +305,7 @@ const HistorialChat = () => {
       const token = localStorage.getItem('token');
 
       for (const id of idsToDelete) {
-        await axios.delete(`${API_URL}/chatcliente/conversacion/${id}`, {
+        await axios.delete(`${API_URL}/conversacion/${id}`, {
           headers: { 'token': token }
         });
       }
@@ -332,7 +332,7 @@ const HistorialChat = () => {
     try {
       const token = localStorage.getItem('token');
 
-      await axios.put(`${API_URL}/chatcliente/conversacion/${editDialog.conversacion.id_conversacion}`, {
+      await axios.put(`${API_URL}/conversacion/${editDialog.conversacion.id_conversacion}`, {
         mensaje_usuario: editForm.mensaje_usuario,
         respuesta_bot: editForm.respuesta_bot
       }, {
@@ -353,7 +353,7 @@ const HistorialChat = () => {
   const handleBlockUser = async (userId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/chatcliente/seguridad/block-user`, { userId }, { headers: { 'token': token } });
+      await axios.post(`${API_URL}/seguridad/block-user`, { userId }, { headers: { 'token': token } });
       setSnackbarMessage('✓ Usuario bloqueado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -369,7 +369,7 @@ const HistorialChat = () => {
   const handleUnblockUser = async (userId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/chatcliente/seguridad/unblock-user`, { userId }, { headers: { 'token': token } });
+      await axios.post(`${API_URL}/seguridad/unblock-user`, { userId }, { headers: { 'token': token } });
       setSnackbarMessage('✓ Usuario desbloqueado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -391,7 +391,7 @@ const HistorialChat = () => {
     }
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/chatcliente/seguridad/block-ip`, { ip }, { headers: { 'token': token } });
+      await axios.post(`${API_URL}/seguridad/block-ip`, { ip }, { headers: { 'token': token } });
       setSnackbarMessage('✓ IP bloqueada exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -413,7 +413,7 @@ const HistorialChat = () => {
     }
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/chatcliente/seguridad/unblock-ip`, { ip }, { headers: { 'token': token } });
+      await axios.post(`${API_URL}/seguridad/unblock-ip`, { ip }, { headers: { 'token': token } });
       setSnackbarMessage('✓ IP desbloqueada exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -434,7 +434,7 @@ const HistorialChat = () => {
     try {
       const token = localStorage.getItem('token');
 
-      await axios.post(`${API_URL}/chatcliente/conocimiento`, {
+      await axios.post(`${API_URL}/conocimiento/`, {
         tema_principal: 'historial_conversaciones',
         pregunta_frecuente: conversacion.mensaje_usuario,
         respuesta_oficial: conversacion.respuesta_bot,
@@ -449,7 +449,7 @@ const HistorialChat = () => {
       alert('Conversación enviada a la base de conocimiento.');
 
       // Generar embeddings
-      await axios.post(`${API_URL}/chatcliente/conocimiento/generate-embeddings`, {}, {
+      await axios.post(`${API_URL}/conocimiento/generate-embeddings/`, {}, {
         headers: { 'token': token }
       });
 
@@ -633,7 +633,7 @@ const HistorialChat = () => {
                         <span>{conv.respuesta_bot}</span>
                       </Tooltip>
                     </TableCell>
-                    <TableCell>{new Date(conv.createdAt).toLocaleString()}</TableCell>
+                    <TableCell>{new Date(conv.fecha_conversacion).toLocaleString()}</TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <Tooltip title="Enviar a IA">
@@ -710,7 +710,7 @@ const HistorialChat = () => {
                       )}
                     </TableCell>
                     <TableCell>{userData.conversations.length}</TableCell>
-                    <TableCell>{new Date(lastConv.createdAt).toLocaleString()}</TableCell>
+                    <TableCell>{new Date(lastConv.fecha_conversacion).toLocaleString()}</TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         <Button
@@ -773,12 +773,14 @@ const HistorialChat = () => {
                           </>
                         ) : (
                           <Tooltip title="No hay IP disponible para este usuario">
-                            <IconButton
-                              size="small"
-                              disabled
-                            >
-                              <Block fontSize="small" />
-                            </IconButton>
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled
+                              >
+                                <Block fontSize="small" />
+                              </IconButton>
+                            </span>
                           </Tooltip>
                         )}
                       </Box>
@@ -979,20 +981,20 @@ const HistorialChat = () => {
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary">Primera Conversación</Typography>
                       <Typography variant="body2">
-                        {new Date(securityDialog.userData.conversations[securityDialog.userData.conversations.length - 1]?.createdAt).toLocaleString()}
+                        {new Date(securityDialog.userData.conversations[securityDialog.userData.conversations.length - 1]?.fecha_conversacion).toLocaleString()}
                       </Typography>
                     </Box>
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary">Última Conversación</Typography>
                       <Typography variant="body2">
-                        {new Date(securityDialog.userData.conversations[0]?.createdAt).toLocaleString()}
+                        {new Date(securityDialog.userData.conversations[0]?.fecha_conversacion).toLocaleString()}
                       </Typography>
                     </Box>
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary">Conversaciones en las últimas 24h</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                         {securityDialog.userData.conversations.filter(conv => {
-                          const convDate = new Date(conv.createdAt);
+                          const convDate = new Date(conv.fecha_conversacion);
                           const yesterday = new Date();
                           yesterday.setDate(yesterday.getDate() - 1);
                           return convDate > yesterday;

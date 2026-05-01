@@ -51,7 +51,6 @@ export const createUsuarioAnonimo = async (data) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
-
   return handleResponse(response);
 };
 
@@ -105,7 +104,7 @@ export const getConocimiento = async (page = 1, limit = 10) => {
 
 export const createConocimiento = async (data) => {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/conocimiento`, {
+  const response = await fetch(`${API_URL}/conocimiento/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -160,6 +159,97 @@ export const usarConversacionEspecifico = async (id, mensaje) => {
       token
     },
     body: JSON.stringify({ mensaje })
+  });
+  return handleResponse(response);
+};
+
+export const getAllConversaciones = async () => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conversacion/`, {
+    headers: { token }
+  });
+  return handleResponse(response);
+};
+
+export const updateConversacion = async (id, data) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conversacion/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    },
+    body: JSON.stringify(data)
+  });
+  return handleResponse(response);
+};
+
+export const deleteConversacion = async (id) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conversacion/${id}`, {
+    method: 'DELETE',
+    headers: { token }
+  });
+  return handleResponse(response);
+};
+
+export const generateEmbeddings = async () => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conocimiento/generate-embeddings/`, {
+    method: 'POST',
+    headers: { token }
+  });
+  return handleResponse(response);
+};
+
+export const blockUser = async (userId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/seguridad/block-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    },
+    body: JSON.stringify({ userId })
+  });
+  return handleResponse(response);
+};
+
+export const unblockUser = async (userId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/seguridad/unblock-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    },
+    body: JSON.stringify({ userId })
+  });
+  return handleResponse(response);
+};
+
+export const blockIP = async (ip) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/seguridad/block-ip`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    },
+    body: JSON.stringify({ ip })
+  });
+  return handleResponse(response);
+};
+
+export const unblockIP = async (ip) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/seguridad/unblock-ip`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      token
+    },
+    body: JSON.stringify({ ip })
   });
   return handleResponse(response);
 };

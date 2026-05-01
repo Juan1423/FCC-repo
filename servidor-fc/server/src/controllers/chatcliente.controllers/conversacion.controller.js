@@ -5,13 +5,11 @@ const openaiService = require('../../services/openaiService');
 const getAll = async (req, res) => {
   try {
     const conversaciones = await models.Conversacion.findAll({
-      include: [
-        { model: models.Usuario, as: 'usuario' }
-      ],
-      order: [['createdAt', 'DESC']]
+      order: [['fecha_conversacion', 'DESC']]
     });
     res.json(conversaciones);
   } catch (error) {
+    console.error('Error fetching conversaciones:', error);
     res.status(500).send({ success: false, message: error.message });
   }
 };
