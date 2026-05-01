@@ -252,20 +252,43 @@ const Personas = () => {
                       >
                         <Box sx={{ p: 3 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                            <Avatar
+                            <Box
                               sx={{
                                 width: 48,
                                 height: 48,
-                                bgcolor: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                                background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
-                                color: 'white',
-                                fontWeight: 700,
-                                fontSize: '1rem',
-                                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+                                borderRadius: '50%',
+                                border: '2px solid #e2e8f0',
+                                overflow: 'hidden',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                position: 'relative',
                               }}
                             >
-                              {getInitials(persona.nombre_persona, persona.apellido_persona)}
-                            </Avatar>
+                              {persona.foto_persona ? (
+                                <img
+                                  src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/personas/${persona.foto_persona}`}
+                                  alt="Foto"
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <Avatar
+                                sx={{
+                                  width: 48,
+                                  height: 48,
+                                  bgcolor: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                                  background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+                                  color: 'white',
+                                  fontWeight: 700,
+                                  fontSize: '1rem',
+                                  display: persona.foto_persona ? 'none' : 'flex',
+                                }}
+                              >
+                                {getInitials(persona.nombre_persona, persona.apellido_persona)}
+                              </Avatar>
+                            </Box>
 
                             <Box sx={{ flex: 1, minWidth: 200 }}>
                               <Typography sx={{ fontWeight: 600, fontSize: '1.1rem', color: '#0f172a' }}>
