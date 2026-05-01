@@ -154,8 +154,14 @@ const DetalleInteraccion = () => {
               </Typography>
             </Box>
             <Typography
-              variant="subtitle1"
-              sx={{ color: "text.secondary", mb: 4, ml: 7 }}
+              variant="h6"
+              sx={{
+                color: "#64748b",
+                mb: 4,
+                ml: 7,
+                fontWeight: 500,
+                letterSpacing: '0.5px'
+              }}
             >
               {interaccion.tipo_interaccion} • {new Date(interaccion.fecha_inicio_interaccion).toLocaleDateString()}
             </Typography>
