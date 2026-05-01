@@ -149,7 +149,7 @@ export const getConversacionesByUser = async () => {
 
 export const clearPromptMemory = async () => {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/chatcliente/conversacion/clear-memory`, {
+  const response = await fetch(`${API_URL}/conversacion/clear-memory`, {
     method: 'POST',
     headers: { 'token': token }
   });
@@ -172,7 +172,7 @@ export const checkPdfAvailable = async (pdfName) => {
 
 export const activatePrompt = async (id) => {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/chatcliente/prompt/${id}/activate`, {
+  const response = await fetch(`${API_URL}/prompt/${id}/activate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -223,4 +223,129 @@ export const downloadPdf = async (pdfName) => {
     throw new Error(`HTTP ${response.status}`);
   }
   return response.blob();
+};
+
+export const getSecurityData = async (userId = null, limit = 100) => {
+  const token = localStorage.getItem('token');
+  let url = `${API_URL}/seguridad?limit=${limit}`;
+  if (userId && /^[0-9]+$/.test(userId)) {
+    url += `&user_id=${userId}`;
+  }
+  const response = await fetch(url, {
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body?.data || body;
+};
+
+export const getUserById = async (userId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/users/${userId}`, {
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body;
+};
+
+export const getConversacionesByUserId = async (userId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conversacion/usuario/${userId}`, {
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body?.data || body;
+};
+
+export const getAnonUserById = async (anonUserId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/usuario-anonimo/${anonUserId}`, {
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body?.data || body;
+};
+
+export const getConversacionesAnonimasByUser = async (anonUserId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/conversacion-anonima/usuario/${anonUserId}`, {
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body?.data || body;
+};
+
+export const blockUser = async (userId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/users/${userId}/block`, {
+    method: 'POST',
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body;
+};
+
+export const unblockUser = async (userId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/users/${userId}/unblock`, {
+    method: 'POST',
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body;
+};
+
+export const blockAnonUser = async (anonUserId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/usuario-anonimo/${anonUserId}/block`, {
+    method: 'POST',
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body;
+};
+
+export const unblockAnonUser = async (anonUserId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/usuario-anonimo/${anonUserId}/unblock`, {
+    method: 'POST',
+    headers: { 'token': token }
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const msg = (body && body.message) ? body.message : `HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+  return body;
 };

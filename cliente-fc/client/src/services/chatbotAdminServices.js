@@ -304,7 +304,7 @@ export const ejecutarBloqueadasConocimiento = async () => {
 
 export const regenerarMemoriaConocimiento = async () => {
   const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/chatcliente/conocimiento/regenerar-memoria`, {
+  const response = await fetch(`${API_URL}/conocimiento/regenerar-memoria`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
