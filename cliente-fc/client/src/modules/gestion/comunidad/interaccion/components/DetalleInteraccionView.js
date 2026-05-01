@@ -157,7 +157,7 @@ const DetalleInteraccion = () => {
               variant="subtitle1"
               sx={{ color: "text.secondary", mb: 4, ml: 7 }}
             >
-              {interaccion.descripcion_interaccion}
+              Información detallada de la interacción comunitaria
             </Typography>
           </Box>
         </Fade>
