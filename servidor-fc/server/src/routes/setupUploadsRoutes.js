@@ -36,6 +36,11 @@ function setupUploadsRoutes(app) {
       res.sendFile(path.join(uploadsPath, 'personal', 'hdv', req.params.file));
     });
 
+    // Ruta para fotos de personas (comunidad)
+    app.get('/uploads/personas/:img', function(req, res){
+      res.sendFile(path.join(uploadsPath, 'comunidad', 'personas', req.params.img));
+    });
+
     app.get('/uploads/examenes/:id_historia/:file', function(req, res){
       res.sendFile(path.join(uploadsPath, 'examenes', req.params.id_historia, req.params.file));
     });

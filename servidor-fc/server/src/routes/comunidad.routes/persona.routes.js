@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const personaController = require('../../controllers/comunidad.controllers/persona.controller');
+const multer = require('multer');
+const multerConfigPersona = require('../../utils/multerConfigPersona');
+
+const upload = multer(multerConfigPersona);
 
 /**
  * @swagger
@@ -26,6 +30,7 @@ const personaController = require('../../controllers/comunidad.controllers/perso
  *                 $ref: '#/components/schemas/Persona'
  */
 router.get('/', personaController.get);
+router.post('/upload-foto', upload.single('foto_persona'), personaController.uploadPhoto);
 
 /**
  * @swagger

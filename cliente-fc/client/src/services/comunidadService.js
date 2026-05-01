@@ -77,6 +77,18 @@ const updatePersona = (id, persona) => {
   return axios.put(`${API_URL}/persona/${id}`, persona);
 };
 
+const uploadPersonaPhoto = async (file) => {
+  const formData = new FormData();
+  formData.append('foto_persona', file);
+  
+  const response = await axios.post(`${API_URL}/persona/upload-foto`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 const deleteInteraccion = (id) => {
   logAuditAction('ELIMINAR_INTERACCION', { interaccionId: id });
   return axios.delete(`${API_URL}/interaccion/${id}`);
@@ -99,6 +111,7 @@ const comunidadService = {
   getPersonaById,
   updatePersona,
   deleteInteraccion,
+  uploadPersonaPhoto,
 };
 
 export default comunidadService;
