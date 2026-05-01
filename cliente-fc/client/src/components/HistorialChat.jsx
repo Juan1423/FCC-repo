@@ -1,7 +1,6 @@
 // HistorialChat.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL } from '../services/apiConfig';
 import {
   Table,
   TableBody,
@@ -43,7 +42,7 @@ import {
   Security,
 } from '@mui/icons-material';
 import { getCurrentUserId } from '../utils/userUtils';
-import { usarConversacionEspecifico } from '../services/chatbotAdminServices';
+import { getAllConversaciones, createConocimiento, updateConversacion, deleteConversacion, generateEmbeddings, blockUser, unblockUser, blockIP, unblockIP, usarConversacionEspecifico } from '../services/chatbotAdminServices';
 
 const HistorialChat = () => {
   const [conversaciones, setConversaciones] = useState([]);
@@ -74,18 +73,13 @@ const HistorialChat = () => {
     loadSearchHistory();
   }, []);
 
-  const fetchConversaciones = async () => {
+const fetchConversaciones = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/conversacion/`, {
-        headers: { 'token': token }
-      });
+      const response = await getAllConversaciones();
+      const conversationsData = Array.isArray(response) ? response : [];
       
-      console.log('Datos de conversaciones:', response.data.slice(0, 3)); // Ver primeros 3 registros
-      
-      // Agrupar conversaciones por usuario
-      const grouped = response.data.reduce((acc, conv) => {
+      const grouped = conversationsData.reduce((acc, conv) => {
         const userId = conv.id_usuario || 'visitante';
         const userName = conv.usuario ? `${conv.usuario.nombre_usuario} ${conv.usuario.apellido_usuario}` : 'Usuario Visitante';
         const userKey = `${userId}-${userName}`;
@@ -102,9 +96,18 @@ const HistorialChat = () => {
         return acc;
       }, {});
       
+      console.log('Datos de conversaciones:', conversationsData.slice(0, 3));
+      console.log('Grupo keys:', Object.keys(grouped));
+      console.log('Grupo values:', grouped);
+      
       // Obtener una IP válida para cada usuario (buscar la IP más reciente)
       Object.keys(grouped).forEach((userKey) => {
-        for (let conv of grouped[userKey].conversations) {
+        const userConvs = grouped[userKey]?.conversations;
+        if (!userConvs || !Array.isArray(userConvs)) {
+          console.log(`No conversations array for ${userKey}:`, grouped[userKey]);
+          return;
+        }
+        for (let conv of userConvs) {
           if (conv.ip_usuario) {
             grouped[userKey].ip = conv.ip_usuario;
             console.log(`IP encontrada para ${userKey}: ${conv.ip_usuario}`);
@@ -122,20 +125,20 @@ const HistorialChat = () => {
         conversations: grouped[key].conversations.length
       })));
       
-      setConversaciones(response.data);
+      setConversaciones(conversationsData);
       setGroupedConversations(grouped);
       setError(null);
       
       // Cargar ubicaciones para todas las IPs disponibles
       const uniqueIPs = [...new Set(Object.values(grouped).map(user => user.ip).filter(ip => ip))];
       uniqueIPs.forEach(ip => getLocationFromIP(ip));
-    } catch (error) {
-      console.error('Error fetching conversaciones:', error);
-      setError('Error al cargar el historial de conversaciones');
-    } finally {
-      setLoading(false);
-    }
-  };
+} catch (error) {
+    console.error('Error fetching conversaciones:', error);
+    setError('Error al cargar el historial de conversaciones');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const loadSearchHistory = () => {
     const history = JSON.parse(localStorage.getItem('chatSearchHistory') || '[]');
@@ -193,29 +196,24 @@ const HistorialChat = () => {
 
     try {
       setSendingToIA(true);
-      const token = localStorage.getItem('token');
 
       // Procesar cada conversación
       for (const conv of convsToSend) {
-        await axios.post(`${API_URL}/conocimiento/`, {
+        await createConocimiento({
           tema_principal: 'historial_conversaciones',
           pregunta_frecuente: conv.mensaje_usuario,
           respuesta_oficial: conv.respuesta_bot,
           fuente_verificacion: 'historial_chat_usuario',
-          nivel_prioridad: 2, // Prioridad media
+          nivel_prioridad: 2,
           estado_vigencia: true,
           id_conversacion: conv.id_conversacion
-        }, {
-          headers: { 'token': token }
         });
       }
 
       alert(`¡Éxito! ${convsToSend.length} conversaciones enviadas a la base de conocimiento. La IA se entrenará automáticamente con esta información.`);
 
       // Después de enviar, generar embeddings para las nuevas entradas
-      await axios.post(`${API_URL}/conocimiento/generate-embeddings/`, {}, {
-        headers: { 'token': token }
-      });
+      await generateEmbeddings();
 
     } catch (error) {
       console.error('Error enviando conversaciones a IA:', error);
@@ -254,14 +252,13 @@ const HistorialChat = () => {
 
     try {
       setSendingToIA(true);
-      const token = localStorage.getItem('token');
 
       const conversacionesSeleccionadas = selectedUser 
         ? userConversaciones.filter(conv => selectedConversaciones.includes(conv.id_conversacion))
         : conversaciones.filter(conv => selectedConversaciones.includes(conv.id_conversacion));
 
       for (const conv of conversacionesSeleccionadas) {
-        await axios.post(`${API_URL}/conocimiento/`, {
+        await createConocimiento({
           tema_principal: 'historial_conversaciones',
           pregunta_frecuente: conv.mensaje_usuario,
           respuesta_oficial: conv.respuesta_bot,
@@ -269,17 +266,13 @@ const HistorialChat = () => {
           nivel_prioridad: 2,
           estado_vigencia: true,
           id_conversacion: conv.id_conversacion
-        }, {
-          headers: { 'token': token }
         });
       }
 
       alert(`¡Éxito! ${selectedConversaciones.length} conversaciones enviadas a la base de conocimiento.`);
 
       // Generar embeddings
-      await axios.post(`${API_URL}/conocimiento/generate-embeddings/`, {}, {
-        headers: { 'token': token }
-      });
+      await generateEmbeddings();
 
       setSelectedConversaciones([]);
 
@@ -302,12 +295,8 @@ const HistorialChat = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-
       for (const id of idsToDelete) {
-        await axios.delete(`${API_URL}/conversacion/${id}`, {
-          headers: { 'token': token }
-        });
+        await deleteConversacion(id);
       }
 
       alert(`¡Éxito! ${idsToDelete.length} conversaciones eliminadas.`);
@@ -330,13 +319,9 @@ const HistorialChat = () => {
 
   const handleGuardarEdicion = async () => {
     try {
-      const token = localStorage.getItem('token');
-
-      await axios.put(`${API_URL}/conversacion/${editDialog.conversacion.id_conversacion}`, {
+      await updateConversacion(editDialog.conversacion.id_conversacion, {
         mensaje_usuario: editForm.mensaje_usuario,
         respuesta_bot: editForm.respuesta_bot
-      }, {
-        headers: { 'token': token }
       });
 
       alert('Conversación actualizada exitosamente.');
@@ -352,8 +337,7 @@ const HistorialChat = () => {
   // Funciones de bloqueo
   const handleBlockUser = async (userId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/seguridad/block-user`, { userId }, { headers: { 'token': token } });
+      await blockUser(userId);
       setSnackbarMessage('✓ Usuario bloqueado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -368,8 +352,7 @@ const HistorialChat = () => {
 
   const handleUnblockUser = async (userId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/seguridad/unblock-user`, { userId }, { headers: { 'token': token } });
+      await unblockUser(userId);
       setSnackbarMessage('✓ Usuario desbloqueado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -390,8 +373,7 @@ const HistorialChat = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/seguridad/block-ip`, { ip }, { headers: { 'token': token } });
+      await blockIP(ip);
       setSnackbarMessage('✓ IP bloqueada exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -412,8 +394,7 @@ const HistorialChat = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/seguridad/unblock-ip`, { ip }, { headers: { 'token': token } });
+      await unblockIP(ip);
       setSnackbarMessage('✓ IP desbloqueada exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -432,9 +413,7 @@ const HistorialChat = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-
-      await axios.post(`${API_URL}/conocimiento/`, {
+      await createConocimiento({
         tema_principal: 'historial_conversaciones',
         pregunta_frecuente: conversacion.mensaje_usuario,
         respuesta_oficial: conversacion.respuesta_bot,
@@ -442,16 +421,12 @@ const HistorialChat = () => {
         nivel_prioridad: 2,
         estado_vigencia: true,
         id_conversacion: conversacion.id_conversacion
-      }, {
-        headers: { 'token': token }
       });
 
       alert('Conversación enviada a la base de conocimiento.');
 
       // Generar embeddings
-      await axios.post(`${API_URL}/conocimiento/generate-embeddings/`, {}, {
-        headers: { 'token': token }
-      });
+      await generateEmbeddings();
 
     } catch (error) {
       console.error('Error enviando conversación individual:', error);
@@ -468,7 +443,7 @@ const HistorialChat = () => {
     try {
       setChatLoading(true);
       const response = await usarConversacionEspecifico(chatModal.conversacion.id_conversacion, chatMensaje);
-      setChatRespuesta(response.data.respuesta);
+      setChatRespuesta(response.respuesta);
     } catch (error) {
       console.error('Error consultando con conversación específica:', error);
       alert('Error al consultar con la conversación específica: ' + error.message);
