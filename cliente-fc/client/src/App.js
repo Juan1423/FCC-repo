@@ -48,7 +48,7 @@ import AsesoramientoView from './modules/chatbot/chatservidor/views/Asesoramient
 
 // ✅ Importa los chatbots
 import { ChatBotIA } from './components/ChatBotIA';
-import { ChatBotIA as ChatIAServidor } from './components/ChatIAServidor';
+import { ChatBotIA as ChatIAServidor } from './components/ChatIAServidor.jsx';
 
 const CombinedProviders = ({ children }) => (
   <MenuProvider>
