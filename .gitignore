@@ -6,3 +6,4 @@ error.txt
 .vscode/launch.json
 a exlcluir/ejecucion servidor.txt
 a exlcluir/AGENTS1.md
+servidor-fc/server/newrelic_agent.log
