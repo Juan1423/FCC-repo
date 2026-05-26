@@ -11,6 +11,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { API_IMAGE_URL } from "../../../../services/apiConfig";
 import * as docService from "../../../../services/documentacionService";
 
 const statusColors = {
@@ -46,6 +48,7 @@ const ProcesoList = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm());
   const [search, setSearch] = useState("");
+  const [archivoFile, setArchivoFile] = useState(null);
   const [animating, setAnimating] = useState(true);
   const firstFieldRef = useRef(null);
   const errorId = "proceso-error-message";
@@ -130,6 +133,7 @@ const ProcesoList = () => {
   const handleOpenModal = () => {
     setEditingId(null);
     setFormData(emptyForm());
+    setArchivoFile(null);
     setOpenModal(true);
   };
 
@@ -147,10 +151,11 @@ const ProcesoList = () => {
       jerarquia_proceso: item.jerarquia_proceso || "",
       archivo_proceso: item.archivo_proceso || "",
     });
+    setArchivoFile(null);
     setOpenModal(true);
   };
 
-  const handleCloseModal = () => { setOpenModal(false); };
+  const handleCloseModal = () => { setOpenModal(false); setArchivoFile(null); };
 
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value });
@@ -186,14 +191,19 @@ const ProcesoList = () => {
     }
     const payload = buildPayload();
     try {
-      if (editingId) {
-        await docService.updateProceso(editingId, payload);
-        announce("Proceso actualizado correctamente");
+      if (archivoFile) {
+        const fd = new FormData();
+        Object.keys(payload).forEach(k => { if (payload[k] != null) fd.append(k, payload[k]); });
+        fd.append("archivo_proceso", archivoFile);
+        if (editingId) await docService.updateProceso(editingId, fd);
+        else await docService.createProceso(fd);
       } else {
-        await docService.createProceso(payload);
-        announce("Proceso creado correctamente");
+        if (editingId) await docService.updateProceso(editingId, payload);
+        else await docService.createProceso(payload);
       }
+      setArchivoFile(null);
       setOpenModal(false);
+      announce(editingId ? "Proceso actualizado correctamente" : "Proceso creado correctamente");
       fetchProcesos();
     } catch {
       setError("Error al guardar proceso");
@@ -569,7 +579,33 @@ const ProcesoList = () => {
             </Select>
           </FormControl>
           {field("jerarquia_proceso", "Jerarquía")}
-          {field("archivo_proceso", "Archivo (URL o ruta)")}
+          <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<CloudUploadIcon />}
+              size="small"
+              sx={{ textTransform: "none", fontWeight: 500, borderRadius: "8px" }}
+              aria-label={archivoFile ? `Archivo seleccionado: ${archivoFile.name}` : "Subir archivo"}
+            >
+              {archivoFile ? archivoFile.name : "Subir archivo"}
+              <input type="file" hidden onChange={(e) => setArchivoFile(e.target.files[0] || null)} aria-hidden="true" />
+            </Button>
+            {archivoFile && (
+              <Button size="small" color="error" onClick={() => setArchivoFile(null)} sx={{ textTransform: "none", fontWeight: 500, minWidth: 0 }}>
+                Quitar
+              </Button>
+            )}
+            {formData.archivo_proceso && !archivoFile && (
+              <Button
+                size="small"
+                onClick={() => window.open(formData.archivo_proceso.startsWith("/") ? API_IMAGE_URL + formData.archivo_proceso : formData.archivo_proceso, "_blank")}
+                sx={{ textTransform: "none", fontWeight: 500, color: "#0d9488" }}
+              >
+                Ver archivo actual
+              </Button>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid", borderColor: "#e7e5e4" }}>
           <Button
