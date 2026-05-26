@@ -335,7 +335,7 @@ const DetalleInteraccion = () => {
                           <Avatar sx={{ bgcolor: '#dbeafe', color: '#1e40af' }}>
                             {persona.foto_persona ? (
                               <img
-                                src={`${apiBaseUrl}/uploads/personas/${persona.foto_persona}`}
+                                src={`${apiBaseUrl}/uploads/comunidad/personas/${persona.foto_persona}`}
                                 alt=""
                                 style={{ width: '100%', height: '100%', borderRadius: '50%' }}
                               />

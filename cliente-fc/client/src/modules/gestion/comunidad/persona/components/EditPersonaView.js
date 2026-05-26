@@ -376,7 +376,7 @@ const EditPersona = () => {
                               />
                             ) : currentFoto ? (
                               <img
-                                src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/personas/${currentFoto}`}
+                                src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/comunidad/personas/${currentFoto}`}
                                 alt="Current"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 onError={(e) => {
