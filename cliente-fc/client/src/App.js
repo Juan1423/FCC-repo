@@ -29,7 +29,7 @@ import VerAuditorias from './modules/sistema/auditoria/componets/verAuditorias';
 import ExportarAuditorias from './modules/sistema/auditoria/componets/exportarAuditoria';
 import ComunidadModule from './modules/gestion/comunidad';
 import NormativaModule from './modules/gestion/normativa';
-import ProcesoModule from './modules/gestion/proceso';
+import ProcesoModule from './modules/gestion/documentacion/proceso';
 import ChatCliente from './modules/chatbot/chatcliente/views/ChatCliente';
 import ChatbotAdminPage from './modules/chatbot/chatcliente/views/ChatbotAdminPage';
 import SistemaDashboard from './modules/sistema/SistemaDashboard';

@@ -18,8 +18,8 @@ import TipoIndicadorList from '../components/TipoIndicadorList';
 import InstitucionList from '../components/InstitucionList';
 import TipoInstitucionList from '../components/TipoInstitucionList';
 import ModuloList from '../components/ModuloList';
-import ProcesoList from '../../proceso/components/ProcesoList';
-import TipoProcesoList from '../../proceso/components/TipoProcesoList';
+import ProcesoList from '../proceso/components/ProcesoList';
+import TipoProcesoList from '../proceso/components/TipoProcesoList';
 
 const tabs = [
   { label: 'Documentos', component: <DocumentoList />, ariaLabel: 'Gestión de documentos' },

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Typography, Card, CardContent, Tabs, Tab } from '@mui/material';
-import NavbarAdmin from '../../../../components/NavbarAdmin';
-import Drawer from '../../../../components/Drawer';
+import NavbarAdmin from '../../../../../components/NavbarAdmin';
+import Drawer from '../../../../../components/Drawer';
 import ProcesoList from '../components/ProcesoList';
 import TipoProcesoList from '../components/TipoProcesoList';
-import { useMenu } from '../../../../components/base/MenuContext';
+import { useMenu } from '../../../../../components/base/MenuContext';
 
 const ProcesoDashboard = () => {
   const [drawerOpen, setDrawerOpen] = React.useState(false);

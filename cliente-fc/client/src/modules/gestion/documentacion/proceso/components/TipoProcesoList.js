@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, CircularProgress, Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
-import * as docService from '../../../../services/documentacionService';
+import * as docService from '../../../../../services/documentacionService';
 
 const emptyForm = () => ({ nombre_tipo_proceso: '', descripcion_tipo_proceso: '' });
 

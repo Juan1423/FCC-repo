@@ -21,7 +21,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import * as docService from "../../../../services/documentacionService";
+import * as docService from "../../../../../services/documentacionService";
 
 const emptyForm = () => ({
   id_tipo_proceso: "",
