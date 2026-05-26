@@ -56,12 +56,22 @@ const AddPersona = () => {
 
   useEffect(() => {
     setCurrentMenu('Agregar Persona');
-    comunidadService.getRegiones().then((response) => {
-      setRegiones(response.data);
-    });
-    comunidadService.getTiposPersona().then((response) => {
-      setTiposPersona(response.data);
-    });
+    comunidadService.getRegiones()
+      .then((response) => {
+        setRegiones(response.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching regiones:", err);
+        setError("Error al cargar regiones");
+      });
+    comunidadService.getTiposPersona()
+      .then((response) => {
+        setTiposPersona(response.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching tipos persona:", err);
+        setError("Error al cargar tipos de persona");
+      });
   }, [setCurrentMenu]);
 
   const handleRegionChange = async (event) => {
@@ -74,8 +84,13 @@ const AddPersona = () => {
     setCantones([]);
     setParroquias([]);
     if (!regionId) return;
-    const response = await comunidadService.getGeoChildren(regionId);
-    setProvincias(response.data);
+    try {
+      const response = await comunidadService.getGeoChildren(regionId);
+      setProvincias(response.data);
+    } catch (err) {
+      console.error("Error fetching provincias:", err);
+      setError("Error al cargar provincias");
+    }
   };
 
   const handleProvinciaChange = async (event) => {
@@ -86,8 +101,13 @@ const AddPersona = () => {
     setCantones([]);
     setParroquias([]);
     if (!provinciaId) return;
-    const response = await comunidadService.getGeoChildren(provinciaId);
-    setCantones(response.data);
+    try {
+      const response = await comunidadService.getGeoChildren(provinciaId);
+      setCantones(response.data);
+    } catch (err) {
+      console.error("Error fetching cantones:", err);
+      setError("Error al cargar cantones");
+    }
   };
 
   const handleCantonChange = async (event) => {
@@ -96,8 +116,13 @@ const AddPersona = () => {
     setSelectedParroquia("");
     setParroquias([]);
     if (!cantonId) return;
-    const response = await comunidadService.getGeoChildren(cantonId);
-    setParroquias(response.data);
+    try {
+      const response = await comunidadService.getGeoChildren(cantonId);
+      setParroquias(response.data);
+    } catch (err) {
+      console.error("Error fetching parroquias:", err);
+      setError("Error al cargar parroquias");
+    }
   };
 
   const handleFileChange = (event) => {
@@ -432,6 +457,7 @@ const AddPersona = () => {
                           label="Región *"
                           sx={{ borderRadius: 2, bgcolor: 'white' }}
                         >
+                          <MenuItem value=""><em>Seleccionar región</em></MenuItem>
                           {regiones.map((region) => (
                             <MenuItem key={region.id_geo} value={region.id_geo}>
                               {region.descripcion}
@@ -449,6 +475,7 @@ const AddPersona = () => {
                           label="Provincia *"
                           sx={{ borderRadius: 2, bgcolor: 'white' }}
                         >
+                          <MenuItem value=""><em>Seleccionar provincia</em></MenuItem>
                           {provincias.map((provincia) => (
                             <MenuItem key={provincia.id_geo} value={provincia.id_geo}>
                               {provincia.descripcion}
@@ -466,6 +493,7 @@ const AddPersona = () => {
                           label="Cantón *"
                           sx={{ borderRadius: 2, bgcolor: 'white' }}
                         >
+                          <MenuItem value=""><em>Seleccionar cantón</em></MenuItem>
                           {cantones.map((canton) => (
                             <MenuItem key={canton.id_geo} value={canton.id_geo}>
                               {canton.descripcion}
@@ -483,6 +511,7 @@ const AddPersona = () => {
                           label="Parroquia *"
                           sx={{ borderRadius: 2, bgcolor: 'white' }}
                         >
+                          <MenuItem value=""><em>Seleccionar parroquia</em></MenuItem>
                           {parroquias.map((parroquia) => (
                             <MenuItem key={parroquia.id_geo} value={parroquia.id_geo}>
                               {parroquia.descripcion}
