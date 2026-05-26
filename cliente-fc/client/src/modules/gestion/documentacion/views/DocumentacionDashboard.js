@@ -18,6 +18,8 @@ import TipoIndicadorList from '../components/TipoIndicadorList';
 import InstitucionList from '../components/InstitucionList';
 import TipoInstitucionList from '../components/TipoInstitucionList';
 import ModuloList from '../components/ModuloList';
+import ProcesoList from '../../proceso/components/ProcesoList';
+import TipoProcesoList from '../../proceso/components/TipoProcesoList';
 
 const tabs = [
   { label: 'Documentos', component: <DocumentoList />, ariaLabel: 'Gestión de documentos' },
@@ -27,6 +29,8 @@ const tabs = [
   { label: 'Instituciones', component: <InstitucionList />, ariaLabel: 'Gestión de instituciones' },
   { label: 'Tipos de Institución', component: <TipoInstitucionList />, ariaLabel: 'Gestión de tipos de institución' },
   { label: 'Módulos', component: <ModuloList />, ariaLabel: 'Gestión de módulos' },
+  { label: 'Procesos', component: <ProcesoList />, ariaLabel: 'Gestión de procesos' },
+  { label: 'Tipos de Proceso', component: <TipoProcesoList />, ariaLabel: 'Gestión de tipos de proceso' },
 ];
 
 const TabPanel = ({ children, index, value, id }) => {
