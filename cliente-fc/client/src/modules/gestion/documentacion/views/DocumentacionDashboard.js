@@ -18,8 +18,8 @@ import TipoIndicadorList from '../components/TipoIndicadorList';
 import InstitucionList from '../components/InstitucionList';
 import TipoInstitucionList from '../components/TipoInstitucionList';
 import ModuloList from '../components/ModuloList';
-import ProcesoList from '../proceso/components/ProcesoList';
-import TipoProcesoList from '../proceso/components/TipoProcesoList';
+import ProcesoList from '../components/ProcesoList';
+import TipoProcesoList from '../components/TipoProcesoList';
 
 const tabs = [
   { label: 'Documentos', component: <DocumentoList />, ariaLabel: 'Gestión de documentos' },
@@ -182,8 +182,8 @@ const DocumentacionDashboard = () => {
               borderRadius: 2,
               border: '1px solid',
               borderColor: '#e7e5e4',
-              overflow: 'hidden',
               bgcolor: '#ffffff',
+              overflow: 'visible',
               boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)',
               position: 'relative',
               zIndex: 1,
@@ -201,6 +201,7 @@ const DocumentacionDashboard = () => {
                 onChange={(_, v) => setTab(v)}
                 variant="scrollable"
                 scrollButtons="auto"
+                allowScrollButtonsMobile
                 aria-label="Secciones de documentación"
                 sx={{
                   px: { xs: 0.5, md: 2 },
