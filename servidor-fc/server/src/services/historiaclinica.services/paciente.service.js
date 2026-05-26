@@ -10,9 +10,7 @@ class PacienteService  {
     }
 
     async findOne(id) {
-      const res = await models.Paciente.findByPk(id, {
-        include: ['historia']
-      });
+      const res = await models.Paciente.findByPk(id);
       return res;
     }
 

@@ -50,8 +50,8 @@ const Atencion = () => {
         console.log("Fetching data for paciente:", selectedPaciente);
         const pacienteData = await getPaciente(selectedPaciente);
         if (pacienteData && pacienteData.id_paciente) {
-          const historiaId = pacienteData.historia?.id_historia;
-
+          const atencionesData = await getAtenciones(selectedPaciente);
+          
           const loggedInUserId = getCurrentUserId();
           if (!loggedInUserId) {
             throw new Error('No user logged in');
@@ -79,21 +79,16 @@ const Atencion = () => {
 
           await logAuditAction('CONSULTAR_ATENCION', detailedDescription);
 
-          if (historiaId) {
-            const atencionesData = await getAtenciones(historiaId);
-            if (atencionesData.length === 0) {
-              setIsFirstAttention(true);
-            } else {
-              setIsFirstAttention(false);
-            }
-            setAtenciones(atencionesData);
-            const signosVitalesData = await getLastSignosVitales(historiaId);
-            setUltimosSignosVitales(signosVitalesData);
-          } else {
+          if (atencionesData.length === 0) {
             setIsFirstAttention(true);
-            setAtenciones([]);
-            setUltimosSignosVitales(null);
+          } else {
+            setIsFirstAttention(false);
           }
+          setAtenciones(atencionesData);
+          const signosVitalesData = await getLastSignosVitales(
+            pacienteData.id_paciente
+          );
+          setUltimosSignosVitales(signosVitalesData);
         } else {
           console.error("Datos de paciente no válidos");
           resetData();
