@@ -37,10 +37,14 @@ import GestionDashboard from './modules/gestion/GestionDashboard';
 import SaludDashboard from './modules/salud/SaludDashboard';
 import ChatDashboard from './modules/chatbot/ChatbotDashboard';
 
-import IndicadoresDocumentacionView from './modules/gestion/documentacion/views/IndicadoresDocumentacionView';
+
+import DocumentacionModule from './modules/gestion/documentacion';
 
 /*import AsistenteInternoView from './modules/chatservidor/views/AsistenteInternoView';*/
 import CapacitacionesModule from './modules/gestion/capacitaciones';
+import DonacionesModule from './modules/gestion/donaciones';
+import DonacionNacionalForm from './modules/public/donaciones/DonacionNacionalForm';
+import DonacionInternacionalForm from './modules/public/donaciones/DonacionInternacionalForm';
 import IADashboard from './modules/chatbot/chatservidor/views/IADashboard';
 import GestionConocimientoView from './modules/chatbot/chatservidor/views/GestionConocimientoView';
 import HistorialIAView from './modules/chatbot/chatservidor/views/HistorialIAView';
@@ -262,9 +266,13 @@ function App() {
               element={<PrivateRoute element={ChatDashboard} allowedRoles={['admin']} />}
             />   
             <Route
-              path="/fcc-indicadores"              
-              element={<PrivateRoute element={IndicadoresDocumentacionView} allowedRoles={['admin']} />}
-            />         
+              path="/fcc-documentacion/*"
+              element={<PrivateRoute element={DocumentacionModule} allowedRoles={['admin']} />}
+            />
+            <Route
+              path="/fcc-donaciones/*"
+              element={<PrivateRoute element={DonacionesModule} allowedRoles={['admin']} />}
+            />      
             <Route 
               path="/accessdenied"
               element={<AccessDenied />}

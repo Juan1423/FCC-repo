@@ -1,17 +1,12 @@
 const express = require('express'); 
 
-const provinciaRouter = require('./provincia.routes');
-const cantonRouter = require('./canton.routes');
-const parroquiaRouter = require('./parroquia.routes');
+const geoRouter = require('./geo.routes');
 const tipo_personaRouter = require('./tipo_persona.routes');
 const personaRouter = require('./persona.routes');
 const interaccionRouter = require('./interaccion.routes');
 const documentoInteraccionRouter = require('./documento_interaccion.routes');
 
 function setupComunidadRoutes(router) {
-  router.use('/provincia', provinciaRouter)
-  router.use('/canton', cantonRouter)
-  router.use('/parroquia', parroquiaRouter)
   router.use('/tipo_persona', tipo_personaRouter)
   router.use('/persona', personaRouter)
   router.use('/interaccion', interaccionRouter)

@@ -22,6 +22,8 @@ import {
   MenuItem,
 } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { API_IMAGE_URL } from '../../../../services/apiConfig';
 import * as documentacionService from '../../../../services/documentacionService';
 import RegistrarProcesosPorIndicador from './RegistrarProcesosPorIndicador';
 
@@ -53,6 +55,7 @@ const IndicadorList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm());
+  const [archivoFile, setArchivoFile] = useState(null);
   const [regOpen, setRegOpen] = useState(false);
   const [regIndicador, setRegIndicador] = useState({ id: null, nombre: '' });
 
@@ -141,11 +144,23 @@ const IndicadorList = () => {
   const handleSave = async () => {
     try {
       const payload = buildPayload();
-      if (editingId) {
-        await documentacionService.updateIndicador(editingId, payload);
+      if (archivoFile) {
+        const fd = new FormData();
+        Object.keys(payload).forEach(k => { if (payload[k] != null) fd.append(k, payload[k]); });
+        fd.append('archivo_indicador', archivoFile);
+        if (editingId) {
+          await documentacionService.updateIndicador(editingId, fd);
+        } else {
+          await documentacionService.createIndicador(fd);
+        }
       } else {
-        await documentacionService.createIndicador(payload);
+        if (editingId) {
+          await documentacionService.updateIndicador(editingId, payload);
+        } else {
+          await documentacionService.createIndicador(payload);
+        }
       }
+      setArchivoFile(null);
       setOpenModal(false);
       await loadIndicadores();
       setError(null);
@@ -219,6 +234,11 @@ const IndicadorList = () => {
                   <TableCell>{row.estado_indicador}</TableCell>
                   <TableCell>{row.valor_indicador}</TableCell>
                   <TableCell align="right">
+                    {row.archivo_indicador && (
+                      <Button size="small" onClick={() => window.open(API_IMAGE_URL + row.archivo_indicador, '_blank')} sx={{ mr: 0.5 }}>
+                        Ver archivo
+                      </Button>
+                    )}
                     <Button size="small" startIcon={<LinkIcon />} onClick={() => openRegistros(row)} sx={{ mr: 0.5 }}>
                       Vínculos
                     </Button>
@@ -269,7 +289,20 @@ const IndicadorList = () => {
           {field('medidas_indicador', 'Medidas')}
           {field('valor_indicador', 'Valor', { type: 'number' })}
           {field('objetivo_indicador', 'Objetivo')}
-          {field('archivo_indicador', 'Archivo (URL o ruta)')}
+          <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />} size="small">
+              {archivoFile ? archivoFile.name : 'Subir archivo'}
+              <input type="file" hidden onChange={(e) => setArchivoFile(e.target.files[0] || null)} />
+            </Button>
+            {archivoFile && (
+              <Button size="small" color="error" onClick={() => setArchivoFile(null)}>Quitar</Button>
+            )}
+            {form.archivo_indicador && !archivoFile && (
+              <Button size="small" onClick={() => window.open(API_IMAGE_URL + form.archivo_indicador, '_blank')}>
+                Ver archivo actual
+              </Button>
+            )}
+          </Box>
           {field('evalua_indicador', 'Evalúa')}
           {field('estado_indicador', 'Estado')}
           {field('observaciones_indicador', 'Observaciones', { multiline: true, rows: 2 })}

@@ -10,63 +10,66 @@ class Persona extends Model {
             timestamps: false,
         };
     }
-	//-----belongsTo = 1 o 1 a n  (Parroquia tiene personas)
-	//----- hasOne = 1 a 1     (Persona pertenece a 1 Parroquia)
-	//----- hasMany = 1 a n   (Persona tiene muchos cursos)
+
     static associate(models) {
-        Persona.belongsTo(models.Parroquia, {
-            foreignKey: 'id_parroquia',
-            as: 'parroquia_persona',
+        Persona.belongsTo(models.Geo, {
+            foreignKey: 'id_geo',
+            as: 'geo',
         });
-	Persona.belongsTo(models.TipoPersona, {
+
+        Persona.belongsTo(models.TipoPersona, {
             foreignKey: 'id_tipo_persona',
             as: 'tipo_persona_persona',
         });
-	Persona.belongsToMany(models.Interaccion, {
+
+        Persona.belongsToMany(models.Interaccion, {
             through: models.PersonaInteraccion,
             foreignKey: 'persona_id',
             otherKey: 'interaccion_id',
         });
     }
-
 }
 
 const PersonaSchema = {
-    id_persona:{
+    id_persona: {
         allowNull: false,
         primaryKey: true,
         type: DataTypes.BIGINT,
         autoIncrement: true,
     },
-    apellido_persona: {
-        type: DataTypes.STRING (40),
-        allowNull: true, 
+    id_geo: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        comment: 'FK hacia tabla geo (jerarquia: region/provincia/canton/parroquia)',
     },
-    nombre_persona:{
+    apellido_persona: {
         type: DataTypes.STRING(40),
         allowNull: true,
     },
-    direccion_persona:{
+    nombre_persona: {
+        type: DataTypes.STRING(40),
+        allowNull: true,
+    },
+    direccion_persona: {
         type: DataTypes.STRING(250),
         allowNull: true,
     },
-    correo_persona:{
+    correo_persona: {
         type: DataTypes.STRING(250),
         allowNull: true,
     },
-    telefono_persona:{
+    telefono_persona: {
         type: DataTypes.JSON,
         allowNull: true,
     },
-    foto_persona:{
+    foto_persona: {
         type: DataTypes.STRING(250),
         allowNull: true,
     },
-    estado_persona:{
+    estado_persona: {
         type: DataTypes.STRING(120),
         allowNull: true,
     },
-    
-}
+};
 
-module.exports = {Persona, PersonaSchema};
+module.exports = { Persona, PersonaSchema };

@@ -60,18 +60,18 @@ export const updateInstitucion = (id, data) => axios.put(`${base}/institucion/${
 export const deleteInstitucion = (id) => axios.delete(`${base}/institucion/${id}`).then((r) => r.data);
 
 /* ========== Tipo Documento ========== */
-export const getTipoumentos = () => axios.get(`${base}/tipo_umento`).then((r) => r.data);
-export const getTipoumento = (id) => axios.get(`${base}/tipo_umento/${id}`).then((r) => r.data);
-export const createTipoumento = (data) => axios.post(`${base}/tipo_umento`, data).then((r) => r.data);
-export const updateTipoumento = (id, data) => axios.put(`${base}/tipo_umento/${id}`, data).then((r) => r.data);
-export const deleteTipoumento = (id) => axios.delete(`${base}/tipo_umento/${id}`).then((r) => r.data);
+export const getTipoDocumentos = () => axios.get(`${base}/tipo_documento`).then((r) => r.data);
+export const getTipoDocumento = (id) => axios.get(`${base}/tipo_documento/${id}`).then((r) => r.data);
+export const createTipoDocumento = (data) => axios.post(`${base}/tipo_documento`, data).then((r) => r.data);
+export const updateTipoDocumento = (id, data) => axios.put(`${base}/tipo_documento/${id}`, data).then((r) => r.data);
+export const deleteTipoDocumento = (id) => axios.delete(`${base}/tipo_documento/${id}`).then((r) => r.data);
 
 /* ========== Documento ========== */
-export const getumentos = () => axios.get(`${base}/umento`).then((r) => r.data);
-export const getumento = (id) => axios.get(`${base}/umento/${id}`).then((r) => r.data);
-export const createumento = (data) => axios.post(`${base}/umento`, data).then((r) => r.data);
-export const updateumento = (id, data) => axios.put(`${base}/umento/${id}`, data).then((r) => r.data);
-export const deleteumento = (id) => axios.delete(`${base}/umento/${id}`).then((r) => r.data);
+export const getDocumentos = () => axios.get(`${base}/documento`).then((r) => r.data);
+export const getDocumento = (id) => axios.get(`${base}/documento/${id}`).then((r) => r.data);
+export const createDocumento = (data) => axios.post(`${base}/documento`, data).then((r) => r.data);
+export const updateDocumento = (id, data) => axios.put(`${base}/documento/${id}`, data).then((r) => r.data);
+export const deleteDocumento = (id) => axios.delete(`${base}/documento/${id}`).then((r) => r.data);
 
 /* ========== Modulo ========== */
 export const getModulos = () => axios.get(`${base}/modulo`).then((r) => r.data);

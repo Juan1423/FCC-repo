@@ -7,31 +7,33 @@ class Continente extends Model {
             tableName: 'continente',
             modelName: 'Continente',
             schema: 'fcc_historiaclinica',
-            timestamps: false, // no incluir fecha creacion y actualizacion
+            timestamps: false,
         };
     }
 
     static associate(models) {
-        /*Provincia.hasMany(models.Canton, {
-            foreignKey: 'id_provincia',
-            as: 'provinciacanton',
-        });*/
+        Continente.hasMany(models.Pais, {
+            foreignKey: 'id_continente',
+            as: 'paises',
+        });
+        Continente.hasMany(models.DonanteInternacional, {
+            foreignKey: 'id_continente',
+            as: 'donantes_internacionales',
+        });
     }
-
 }
 
 const ContinenteSchema = {
-    id_continente:{
+    id_continente: {
         allowNull: false,
         primaryKey: true,
         type: DataTypes.BIGINT,
         autoIncrement: true,
     },
-    nombre_continente: {
-        type: DataTypes.STRING(120),
+    nombre: {
+        type: DataTypes.STRING(100),
         allowNull: true,
     },
-    
-}
+};
 
-module.exports = {Continente, ContinenteSchema};
+module.exports = { Continente, ContinenteSchema };

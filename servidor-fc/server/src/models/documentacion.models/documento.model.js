@@ -80,6 +80,10 @@ const DocumentoSchema = {
         type: DataTypes.STRING(250),
         allowNull: true,
     },
+    palabras_documento: {
+        type: DataTypes.STRING(250),
+        allowNull: true,
+    },
     fecha_envio_documento: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -98,6 +102,14 @@ const DocumentoSchema = {
     },
     recibe_documento: {
         type: DataTypes.STRING(250),
+        allowNull: true,
+    },
+    estado_documento: {
+        type: DataTypes.STRING(250),
+        allowNull: true,
+    },
+    version_documento: {
+        type: DataTypes.STRING(50),
         allowNull: true,
     },
     observaciones_documento: {
