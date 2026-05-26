@@ -25,6 +25,7 @@ import { usePacienteContext } from "../../../../components/base/PacienteContext"
 import ExamenesTabView from "../components/ExamenesTabView";
 import { logAuditAction } from "../../../../services/auditoriaServices";
 import { getCurrentUserId } from "../../../../utils/userUtils";
+import { getHistorias } from "../../../../services/historiaServices";
 const Atencion = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { selectedPaciente } = usePacienteContext();
@@ -47,11 +48,17 @@ const Atencion = () => {
   const fetchData = useCallback(async () => {
     if (selectedPaciente) {
       try {
-        console.log("Fetching data for paciente:", selectedPaciente);
+        console.log("[DIAG] selectedPaciente:", selectedPaciente);
         const pacienteData = await getPaciente(selectedPaciente);
+        console.log("[DIAG] pacienteData:", pacienteData);
         if (pacienteData && pacienteData.id_paciente) {
-          const atencionesData = await getAtenciones(selectedPaciente);
-          
+          const historias = await getHistorias();
+          const historia = historias.find(h => String(h.id_paciente) === String(selectedPaciente));
+          const historiaId = historia?.id_historia;
+          console.log("[DIAG] historia encontrada:", historia, "→ id_historia:", historiaId);
+
+          setIsFirstAttention(!historiaId);
+
           const loggedInUserId = getCurrentUserId();
           if (!loggedInUserId) {
             throw new Error('No user logged in');
@@ -79,23 +86,23 @@ const Atencion = () => {
 
           await logAuditAction('CONSULTAR_ATENCION', detailedDescription);
 
-          if (atencionesData.length === 0) {
-            setIsFirstAttention(true);
+          if (historiaId) {
+            const atencionesData = await getAtenciones(historiaId);
+            console.log("[DIAG] atencionesData:", atencionesData);
+            setAtenciones(atencionesData);
+            const signosVitalesData = await getLastSignosVitales(historiaId);
+            setUltimosSignosVitales(signosVitalesData);
           } else {
-            setIsFirstAttention(false);
+            setAtenciones([]);
+            setUltimosSignosVitales(null);
           }
-          setAtenciones(atencionesData);
-          const signosVitalesData = await getLastSignosVitales(
-            pacienteData.id_paciente
-          );
-          setUltimosSignosVitales(signosVitalesData);
         } else {
-          console.error("Datos de paciente no válidos");
+          console.error("[DIAG] Datos de paciente no válidos");
           resetData();
         }
       } catch (error) {
         console.error(
-          "Error al obtener datos del paciente o signos vitales:",
+          "[DIAG] Error al obtener datos:",
           error
         );
         resetData();
