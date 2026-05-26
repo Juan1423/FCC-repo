@@ -32,9 +32,11 @@ import { useMenu } from '../../../../../components/base/MenuContext';
 const EditPersona = () => {
   const fileInputRef = useRef(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [regiones, setRegiones] = useState([]);
   const [provincias, setProvincias] = useState([]);
   const [cantones, setCantones] = useState([]);
   const [parroquias, setParroquias] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedProvincia, setSelectedProvincia] = useState("");
   const [selectedCanton, setSelectedCanton] = useState("");
   const [selectedParroquia, setSelectedParroquia] = useState("");
@@ -62,19 +64,13 @@ const EditPersona = () => {
     setCurrentMenu('Editar Persona');
     const fetchData = async () => {
       try {
-        const [provinciasRes, cantonesRes, parroquiasRes, tiposPersonaRes, personaRes] = await Promise.all([
-          comunidadService.getProvincias(),
-          comunidadService.getCantones(),
-          comunidadService.getParroquias(),
+        const [regionesRes, tiposPersonaRes, personaRes] = await Promise.all([
+          comunidadService.getRegiones(),
           comunidadService.getTiposPersona(),
           comunidadService.getPersonaById(id)
         ]);
 
-        const allProvincias = provinciasRes.data;
-        const allCantones = cantonesRes.data;
-        const allParroquias = parroquiasRes.data;
-
-        setProvincias(allProvincias);
+        setRegiones(regionesRes.data);
         setTiposPersona(tiposPersonaRes.data);
 
         const persona = personaRes.data;
@@ -87,20 +83,36 @@ const EditPersona = () => {
         setFoto(persona.foto_persona || "");
         setEstado(persona.estado_persona);
         setSelectedTipoPersona(persona.id_tipo_persona);
-        
-        if (persona.id_parroquia) {
-          const personaParroquia = allParroquias.find(p => p.id_parroquia === persona.id_parroquia);
-          if (personaParroquia) {
-            const personaCanton = allCantones.find(c => c.id_canton === personaParroquia.id_canton);
-            if (personaCanton) {
-              const personaProvincia = allProvincias.find(p => p.id_provincia === personaCanton.id_provincia);
-              if (personaProvincia) {
-                setSelectedProvincia(personaProvincia.id_provincia);
-                setCantones(allCantones.filter(c => c.id_provincia === personaProvincia.id_provincia));
-                setSelectedCanton(personaCanton.id_canton);
-                setParroquias(allParroquias.filter(p => p.id_canton === personaCanton.id_canton));
-                setSelectedParroquia(personaParroquia.id_parroquia);
-              }
+
+        if (persona.id_geo) {
+          const jerarquiaRes = await comunidadService.getGeoJerarquia(persona.id_geo);
+          const jerarquia = jerarquiaRes.data;
+          if (jerarquia && jerarquia.length > 0) {
+            const region = jerarquia.find(g => g.nivel === 'region');
+            const provincia = jerarquia.find(g => g.nivel === 'provincia');
+            const canton = jerarquia.find(g => g.nivel === 'canton');
+            const parroquia = jerarquia.find(g => g.nivel === 'parroquia');
+
+            if (region) {
+              setSelectedRegion(region.id_geo);
+              const hijosRegion = await comunidadService.getGeoChildren(region.id_geo);
+              setProvincias(hijosRegion.data);
+            }
+
+            if (provincia) {
+              setSelectedProvincia(provincia.id_geo);
+              const hijosProvincia = await comunidadService.getGeoChildren(provincia.id_geo);
+              setCantones(hijosProvincia.data);
+            }
+
+            if (canton) {
+              setSelectedCanton(canton.id_geo);
+              const hijosCanton = await comunidadService.getGeoChildren(canton.id_geo);
+              setParroquias(hijosCanton.data);
+            }
+
+            if (parroquia) {
+              setSelectedParroquia(parroquia.id_geo);
             }
           }
         }
@@ -115,22 +127,40 @@ const EditPersona = () => {
     fetchData();
   }, [id, setCurrentMenu]);
 
+  const handleRegionChange = async (event) => {
+    const regionId = event.target.value;
+    setSelectedRegion(regionId);
+    setSelectedProvincia("");
+    setSelectedCanton("");
+    setSelectedParroquia("");
+    setProvincias([]);
+    setCantones([]);
+    setParroquias([]);
+    if (!regionId) return;
+    const response = await comunidadService.getGeoChildren(regionId);
+    setProvincias(response.data);
+  };
+
   const handleProvinciaChange = async (event) => {
     const provinciaId = event.target.value;
     setSelectedProvincia(provinciaId);
     setSelectedCanton("");
     setSelectedParroquia("");
-    const cantonesRes = await comunidadService.getCantones();
-    setCantones(cantonesRes.data.filter((canton) => canton.id_provincia === provinciaId));
+    setCantones([]);
     setParroquias([]);
+    if (!provinciaId) return;
+    const response = await comunidadService.getGeoChildren(provinciaId);
+    setCantones(response.data);
   };
 
   const handleCantonChange = async (event) => {
     const cantonId = event.target.value;
     setSelectedCanton(cantonId);
     setSelectedParroquia("");
-    const parroquiasRes = await comunidadService.getParroquias();
-    setParroquias(parroquiasRes.data.filter((parroquia) => parroquia.id_canton === cantonId));
+    setParroquias([]);
+    if (!cantonId) return;
+    const response = await comunidadService.getGeoChildren(cantonId);
+    setParroquias(response.data);
   };
 
   const handleFileChange = (event) => {
@@ -180,7 +210,7 @@ const EditPersona = () => {
         telefono_persona: telefono,
         foto_persona: fotoPersona,
         estado_persona: estado,
-        id_parroquia: selectedParroquia,
+        id_geo: selectedParroquia,
         id_tipo_persona: selectedTipoPersona,
       };
       
@@ -492,8 +522,25 @@ const EditPersona = () => {
                       Ubicación
                     </Typography>
                     <Grid container spacing={3}>
-                      <Grid item xs={12} md={4}>
+                      <Grid item xs={12} md={6}>
                         <FormControl fullWidth variant="outlined" required>
+                          <InputLabel>Región</InputLabel>
+                          <Select
+                            value={selectedRegion}
+                            onChange={handleRegionChange}
+                            label="Región *"
+                            sx={{ borderRadius: 2, bgcolor: 'white' }}
+                          >
+                            {regiones.map((region) => (
+                              <MenuItem key={region.id_geo} value={region.id_geo}>
+                                {region.descripcion}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <FormControl fullWidth variant="outlined" required disabled={!selectedRegion}>
                           <InputLabel>Provincia</InputLabel>
                           <Select
                             value={selectedProvincia}
@@ -502,14 +549,14 @@ const EditPersona = () => {
                             sx={{ borderRadius: 2, bgcolor: 'white' }}
                           >
                             {provincias.map((provincia) => (
-                              <MenuItem key={provincia.id_provincia} value={provincia.id_provincia}>
-                                {provincia.nombre_provincia}
+                              <MenuItem key={provincia.id_geo} value={provincia.id_geo}>
+                                {provincia.descripcion}
                               </MenuItem>
                             ))}
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid item xs={12} md={4}>
+                      <Grid item xs={12} md={6}>
                         <FormControl fullWidth variant="outlined" required disabled={!selectedProvincia}>
                           <InputLabel>Cantón</InputLabel>
                           <Select
@@ -519,14 +566,14 @@ const EditPersona = () => {
                             sx={{ borderRadius: 2, bgcolor: 'white' }}
                           >
                             {cantones.map((canton) => (
-                              <MenuItem key={canton.id_canton} value={canton.id_canton}>
-                                {canton.nombre_canton}
+                              <MenuItem key={canton.id_geo} value={canton.id_geo}>
+                                {canton.descripcion}
                               </MenuItem>
                             ))}
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid item xs={12} md={4}>
+                      <Grid item xs={12} md={6}>
                         <FormControl fullWidth variant="outlined" required disabled={!selectedCanton}>
                           <InputLabel>Parroquia</InputLabel>
                           <Select
@@ -536,8 +583,8 @@ const EditPersona = () => {
                             sx={{ borderRadius: 2, bgcolor: 'white' }}
                           >
                             {parroquias.map((parroquia) => (
-                              <MenuItem key={parroquia.id_parroquia} value={parroquia.id_parroquia}>
-                                {parroquia.nombre_parroquia}
+                              <MenuItem key={parroquia.id_geo} value={parroquia.id_geo}>
+                                {parroquia.descripcion}
                               </MenuItem>
                             ))}
                           </Select>

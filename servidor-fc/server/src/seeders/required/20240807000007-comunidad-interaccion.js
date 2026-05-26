@@ -23,6 +23,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete({tableName: 'interracion', schema: 'fcc_historiaclinica' }, null, {});
+    await queryInterface.bulkDelete({tableName: 'interaccion', schema: 'fcc_historiaclinica' }, null, {});
   }
 };

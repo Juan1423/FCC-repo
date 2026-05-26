@@ -3,16 +3,16 @@ import { logAuditAction } from './auditoriaServices';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/fcc';
 
-const getCantones = () => {
-  return axios.get(`${API_URL}/canton`);
+const getRegiones = () => {
+  return axios.get(`${API_URL}/geo?nivel=region`);
 };
 
-const getParroquias = () => {
-  return axios.get(`${API_URL}/parroquia`);
+const getGeoChildren = (padreId) => {
+  return axios.get(`${API_URL}/geo?id_padre=${padreId}`);
 };
 
-const getProvincias = () => {
-  return axios.get(`${API_URL}/provincia`);
+const getGeoJerarquia = (id) => {
+  return axios.get(`${API_URL}/geo/${id}?jerarquia=true`);
 };
 
 const getPersonas = () => {
@@ -95,9 +95,9 @@ const deleteInteraccion = (id) => {
 };
 
 const comunidadService = {
-  getCantones,
-  getParroquias,
-  getProvincias,
+  getRegiones,
+  getGeoChildren,
+  getGeoJerarquia,
   getPersonas,
   getTiposPersona,
   getInteracciones,

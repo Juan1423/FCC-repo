@@ -36,17 +36,29 @@ function setupUploadsRoutes(app) {
       res.sendFile(path.join(uploadsPath, 'personal', 'hdv', req.params.file));
     });
 
-    // Ruta para fotos de personas (comunidad)
-    app.get('/uploads/personas/:img', function(req, res){
-      res.sendFile(path.join(uploadsPath, 'comunidad', 'personas', req.params.img));
-    });
-
     app.get('/uploads/examenes/:id_historia/:file', function(req, res){
       res.sendFile(path.join(uploadsPath, 'examenes', req.params.id_historia, req.params.file));
     });
 
     app.get('/uploads/terapias/:id_historia/:file', function(req, res){
       res.sendFile(path.join(uploadsPath, 'terapias', req.params.id_historia, req.params.file));
+    });
+
+    // Documentación: indicadores, instituciones, normativas, procesos
+    app.get('/uploads/documentacion/indicadores/:file', function(req, res){
+      res.sendFile(path.join(uploadsPath, 'documentacion', 'indicadores', req.params.file));
+    });
+    app.get('/uploads/documentacion/instituciones/:file', function(req, res){
+      res.sendFile(path.join(uploadsPath, 'documentacion', 'instituciones', req.params.file));
+    });
+    app.get('/uploads/documentacion/normativas/:file', function(req, res){
+      res.sendFile(path.join(uploadsPath, 'documentacion', 'normativas', req.params.file));
+    });
+    app.get('/uploads/documentacion/procesos/:file', function(req, res){
+      res.sendFile(path.join(uploadsPath, 'documentacion', 'procesos', req.params.file));
+    });
+    app.get('/uploads/documentacion/documentos/:file', function(req, res){
+      res.sendFile(path.join(uploadsPath, 'documentacion', 'documentos', req.params.file));
     });
 }
 

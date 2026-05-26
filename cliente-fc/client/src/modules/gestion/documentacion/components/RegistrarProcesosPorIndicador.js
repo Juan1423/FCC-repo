@@ -23,10 +23,6 @@ import {
 } from '@mui/material';
 import * as documentacionService from '../../../../services/documentacionService';
 
-/**
- * CRUD de filas `registrar_procesos` filtradas por id_indicador.
- * Requiere proceso (documentación) y normativa (DocNormativa) existentes.
- */
 const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onClose, onChanged }) => {
   const [rows, setRows] = useState([]);
   const [procesos, setProcesos] = useState([]);
@@ -40,6 +36,7 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
     descripcion_registrar_procesos: '',
     fecha_registrar_proceso: '',
   });
+  const innerDialogTitleId = 'registro-vinculo-dialog-title';
 
   const loadCatalogos = useCallback(async () => {
     try {
@@ -145,58 +142,61 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth scroll="paper">
-      <DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth scroll="paper" aria-labelledby="registrar-procesos-dialog-title">
+      <DialogTitle id="registrar-procesos-dialog-title" sx={{ fontWeight: 700, color: '#1c1917' }}>
         Registros vinculados — Indicador: {nombreIndicador || `#${idIndicador}`}
       </DialogTitle>
       <DialogContent dividers>
-        <Box sx={{ mb: 2 }}>
-          <Button variant="contained" size="small" onClick={openCreate} disabled={!procesos.length || !normativas.length}>
+        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={openCreate}
+            disabled={!procesos.length || !normativas.length}
+            aria-label="Crear nuevo vínculo"
+            sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#0f766e' }, textTransform: 'none', fontWeight: 600, borderRadius: 1.5 }}
+          >
             Nuevo vínculo
           </Button>
           {(!procesos.length || !normativas.length) && (
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+            <Typography variant="caption" color="text.secondary" role="status">
               Debe existir al menos un proceso y una normativa (documentación) para crear vínculos.
             </Typography>
           )}
         </Box>
         {loading ? (
-          <Box display="flex" justifyContent="center" p={3}>
-            <CircularProgress size={28} />
+          <Box display="flex" justifyContent="center" p={3} role="status" aria-live="polite" aria-label="Cargando registros">
+            <CircularProgress size={28} aria-hidden="true" />
           </Box>
         ) : (
           <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
+            <Table size="small" aria-label={`Registros vinculados al indicador ${nombreIndicador || idIndicador}`}>
               <TableHead>
                 <TableRow>
-                  <TableCell>Proceso</TableCell>
-                  <TableCell>Normativa</TableCell>
-                  <TableCell>Descripción</TableCell>
-                  <TableCell>Fecha</TableCell>
-                  <TableCell align="right">Acciones</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#57534e' }}>Proceso</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#57534e' }}>Normativa</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#57534e' }}>Descripción</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#57534e' }}>Fecha</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, color: '#57534e' }}>Acciones</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5}>
-                      <Typography color="text.secondary">Sin registros para este indicador.</Typography>
+                    <TableCell colSpan={5} sx={{ textAlign: 'center', color: '#a8a29e', py: 4 }}>
+                      Sin registros para este indicador.
                     </TableCell>
                   </TableRow>
                 ) : (
                   rows.map((r) => (
-                    <TableRow key={r.id_registrar_procesos}>
-                      <TableCell>{procesoLabel(r.id_proceso)}</TableCell>
-                      <TableCell>{normativaLabel(r.id_normativa)}</TableCell>
-                      <TableCell>{r.descripcion_registrar_procesos}</TableCell>
-                      <TableCell>{r.fecha_registrar_proceso}</TableCell>
-                      <TableCell align="right">
-                        <Button size="small" onClick={() => openEdit(r)} sx={{ mr: 0.5 }}>
-                          Editar
-                        </Button>
-                        <Button size="small" color="error" onClick={() => handleDelete(r.id_registrar_procesos)}>
-                          Eliminar
-                        </Button>
+                    <TableRow key={r.id_registrar_procesos} sx={{ '&:hover': { bgcolor: '#fafaf9' } }}>
+                      <TableCell sx={{ color: '#1c1917' }}>{procesoLabel(r.id_proceso)}</TableCell>
+                      <TableCell sx={{ color: '#1c1917' }}>{normativaLabel(r.id_normativa)}</TableCell>
+                      <TableCell sx={{ color: '#57534e' }}>{r.descripcion_registrar_procesos}</TableCell>
+                      <TableCell sx={{ color: '#57534e' }}>{r.fecha_registrar_proceso}</TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        <Button size="small" onClick={() => openEdit(r)} sx={{ mr: 0.5, textTransform: 'none', fontWeight: 500, color: '#0d9488', minWidth: 0 }} aria-label="Editar registro">Editar</Button>
+                        <Button size="small" color="error" onClick={() => handleDelete(r.id_registrar_procesos)} sx={{ textTransform: 'none', fontWeight: 500, minWidth: 0 }} aria-label="Eliminar registro">Eliminar</Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -206,38 +206,36 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
           </TableContainer>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cerrar</Button>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} sx={{ textTransform: 'none', fontWeight: 500, color: '#78716c' }}>Cerrar</Button>
       </DialogActions>
 
-      <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingId ? 'Editar vínculo' : 'Nuevo vínculo'}</DialogTitle>
+      <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth aria-labelledby={innerDialogTitleId}>
+        <DialogTitle id={innerDialogTitleId} sx={{ fontWeight: 700, color: '#1c1917' }}>{editingId ? 'Editar vínculo' : 'Nuevo vínculo'}</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Proceso</InputLabel>
+            <InputLabel id="proceso-select-label">Proceso</InputLabel>
             <Select
+              labelId="proceso-select-label"
               label="Proceso"
               value={form.id_proceso}
               onChange={(e) => setForm({ ...form, id_proceso: e.target.value })}
             >
               {procesos.map((p) => (
-                <MenuItem key={p.id_proceso} value={p.id_proceso}>
-                  {procesoLabel(p.id_proceso)}
-                </MenuItem>
+                <MenuItem key={p.id_proceso} value={p.id_proceso}>{procesoLabel(p.id_proceso)}</MenuItem>
               ))}
             </Select>
           </FormControl>
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Normativa (documentación)</InputLabel>
+            <InputLabel id="normativa-select-label">Normativa (documentación)</InputLabel>
             <Select
+              labelId="normativa-select-label"
               label="Normativa (documentación)"
               value={form.id_normativa}
               onChange={(e) => setForm({ ...form, id_normativa: e.target.value })}
             >
               {normativas.map((n) => (
-                <MenuItem key={n.id_normativa} value={n.id_normativa}>
-                  {normativaLabel(n.id_normativa)}
-                </MenuItem>
+                <MenuItem key={n.id_normativa} value={n.id_normativa}>{normativaLabel(n.id_normativa)}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -257,11 +255,9 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
             onChange={(e) => setForm({ ...form, fecha_registrar_proceso: e.target.value })}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setModalOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={handleSave}>
-            Guardar
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setModalOpen(false)} sx={{ textTransform: 'none', fontWeight: 500, color: '#78716c' }}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSave} sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#0f766e' }, textTransform: 'none', fontWeight: 600, borderRadius: 1.5, px: 3 }}>Guardar</Button>
         </DialogActions>
       </Dialog>
     </Dialog>

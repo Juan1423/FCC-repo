@@ -37,6 +37,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 const PersonaDetalleView = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [persona, setPersona] = useState(null);
+  const [geoJerarquia, setGeoJerarquia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { id } = useParams();
@@ -51,7 +52,15 @@ const PersonaDetalleView = () => {
       try {
         setLoading(true);
         const response = await comunidadService.getPersonaById(id);
-        setPersona(response.data);
+        const personaData = response.data;
+        setPersona(personaData);
+
+        if (personaData.id_geo) {
+          const jerarquiaRes = await comunidadService.getGeoJerarquia(personaData.id_geo);
+          if (jerarquiaRes.data) {
+            setGeoJerarquia(jerarquiaRes.data);
+          }
+        }
       } catch (err) {
         setError("Error al cargar los detalles de la persona.");
         console.error("Error fetching person details:", err);
@@ -299,6 +308,22 @@ const PersonaDetalleView = () => {
                               </Typography>
                             </Box>
                           </Box>
+                          {geoJerarquia.length > 0 && (
+                            <>
+                              <Divider />
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <LocationOnIcon sx={{ color: '#2563eb', fontSize: 20 }} />
+                                <Box>
+                                  <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block' }}>
+                                    Ubicación
+                                  </Typography>
+                                  <Typography sx={{ fontWeight: 600, color: '#0f172a' }}>
+                                    {geoJerarquia.map(g => g.descripcion).join(' > ')}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </>
+                          )}
                           <Divider />
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Box

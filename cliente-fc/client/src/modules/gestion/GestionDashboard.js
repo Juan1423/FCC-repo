@@ -15,8 +15,8 @@ import { useMenu } from '../../components/base/MenuContext';
 import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
+import DescriptionIcon from '@mui/icons-material/Description';
+import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 
 const dataTarjeta = [
   {
@@ -41,18 +41,18 @@ const dataTarjeta = [
     color: "#1d4ed8"
   },
   {
-    title: "Procesos",
-    icon: <AccountTreeIcon />,
-    description: "Gestión de los procesos de la comunidad",
-    path: "/fcc-proceso",
-    color: "#1e40af"
+    title: "Documentación",
+    icon: <DescriptionIcon />,
+    description: "Gestión de documentos y archivos",
+    path: "/fcc-documentacion",
+    color: "#0891b2"
   },
   {
-    title: "Indicadores",
-    icon: <AnalyticsIcon />,
-    description: "Gestión de indicadores y registros",
-    path: "/fcc-indicadores",
-    color: "#6366f1"
+    title: "Donaciones",
+    icon: <VolunteerActivismIcon />,
+    description: "Gestión de donaciones y aportes",
+    path: "/fcc-donaciones",
+    color: "#059669"
   },
 ];
 
@@ -117,7 +117,7 @@ const GestionDashboard = () => {
 
         <Grid container spacing={3} sx={{ maxWidth: 1400, mx: 'auto' }}>
           {dataTarjeta.map((item, index) => (
-            <Grid item xs={12} sm={6} md={index < 2 ? 6 : 4} key={index}>
+            <Grid item xs={12} sm={6} md={4} key={index}>
               <Fade in={true} timeout={300 + index * 100}>
                 <Card
                   elevation={2}

@@ -29,9 +29,11 @@ import { useMenu } from '../../../../../components/base/MenuContext';
 const AddPersona = () => {
   const fileInputRef = useRef(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [regiones, setRegiones] = useState([]);
   const [provincias, setProvincias] = useState([]);
   const [cantones, setCantones] = useState([]);
   const [parroquias, setParroquias] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedProvincia, setSelectedProvincia] = useState("");
   const [selectedCanton, setSelectedCanton] = useState("");
   const [selectedParroquia, setSelectedParroquia] = useState("");
@@ -54,31 +56,48 @@ const AddPersona = () => {
 
   useEffect(() => {
     setCurrentMenu('Agregar Persona');
-    comunidadService.getProvincias().then((response) => {
-      setProvincias(response.data);
+    comunidadService.getRegiones().then((response) => {
+      setRegiones(response.data);
     });
     comunidadService.getTiposPersona().then((response) => {
       setTiposPersona(response.data);
     });
   }, [setCurrentMenu]);
 
-  const handleProvinciaChange = (event) => {
+  const handleRegionChange = async (event) => {
+    const regionId = event.target.value;
+    setSelectedRegion(regionId);
+    setSelectedProvincia("");
+    setSelectedCanton("");
+    setSelectedParroquia("");
+    setProvincias([]);
+    setCantones([]);
+    setParroquias([]);
+    if (!regionId) return;
+    const response = await comunidadService.getGeoChildren(regionId);
+    setProvincias(response.data);
+  };
+
+  const handleProvinciaChange = async (event) => {
     const provinciaId = event.target.value;
     setSelectedProvincia(provinciaId);
     setSelectedCanton("");
     setSelectedParroquia("");
-    comunidadService.getCantones().then((response) => {
-      setCantones(response.data.filter((canton) => canton.id_provincia === provinciaId));
-    });
+    setCantones([]);
+    setParroquias([]);
+    if (!provinciaId) return;
+    const response = await comunidadService.getGeoChildren(provinciaId);
+    setCantones(response.data);
   };
 
-  const handleCantonChange = (event) => {
+  const handleCantonChange = async (event) => {
     const cantonId = event.target.value;
     setSelectedCanton(cantonId);
     setSelectedParroquia("");
-    comunidadService.getParroquias().then((response) => {
-      setParroquias(response.data.filter((parroquia) => parroquia.id_canton === cantonId));
-    });
+    setParroquias([]);
+    if (!cantonId) return;
+    const response = await comunidadService.getGeoChildren(cantonId);
+    setParroquias(response.data);
   };
 
   const handleFileChange = (event) => {
@@ -128,7 +147,7 @@ const AddPersona = () => {
         telefono_persona: telefono,
         foto_persona: fotoPersona,
         estado_persona: estado,
-        id_parroquia: selectedParroquia,
+        id_geo: selectedParroquia,
         id_tipo_persona: selectedTipoPersona,
       };
       
@@ -404,8 +423,25 @@ const AddPersona = () => {
                     Ubicación
                   </Typography>
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                       <FormControl fullWidth variant="outlined" required>
+                        <InputLabel>Región</InputLabel>
+                        <Select
+                          value={selectedRegion}
+                          onChange={handleRegionChange}
+                          label="Región *"
+                          sx={{ borderRadius: 2, bgcolor: 'white' }}
+                        >
+                          {regiones.map((region) => (
+                            <MenuItem key={region.id_geo} value={region.id_geo}>
+                              {region.descripcion}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth variant="outlined" required disabled={!selectedRegion}>
                         <InputLabel>Provincia</InputLabel>
                         <Select
                           value={selectedProvincia}
@@ -414,14 +450,14 @@ const AddPersona = () => {
                           sx={{ borderRadius: 2, bgcolor: 'white' }}
                         >
                           {provincias.map((provincia) => (
-                            <MenuItem key={provincia.id_provincia} value={provincia.id_provincia}>
-                              {provincia.nombre_provincia}
+                            <MenuItem key={provincia.id_geo} value={provincia.id_geo}>
+                              {provincia.descripcion}
                             </MenuItem>
                           ))}
                         </Select>
                       </FormControl>
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                       <FormControl fullWidth variant="outlined" required disabled={!selectedProvincia}>
                         <InputLabel>Cantón</InputLabel>
                         <Select
@@ -431,14 +467,14 @@ const AddPersona = () => {
                           sx={{ borderRadius: 2, bgcolor: 'white' }}
                         >
                           {cantones.map((canton) => (
-                            <MenuItem key={canton.id_canton} value={canton.id_canton}>
-                              {canton.nombre_canton}
+                            <MenuItem key={canton.id_geo} value={canton.id_geo}>
+                              {canton.descripcion}
                             </MenuItem>
                           ))}
                         </Select>
                       </FormControl>
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                       <FormControl fullWidth variant="outlined" required disabled={!selectedCanton}>
                         <InputLabel>Parroquia</InputLabel>
                         <Select
@@ -448,8 +484,8 @@ const AddPersona = () => {
                           sx={{ borderRadius: 2, bgcolor: 'white' }}
                         >
                           {parroquias.map((parroquia) => (
-                            <MenuItem key={parroquia.id_parroquia} value={parroquia.id_parroquia}>
-                              {parroquia.nombre_parroquia}
+                            <MenuItem key={parroquia.id_geo} value={parroquia.id_geo}>
+                              {parroquia.descripcion}
                             </MenuItem>
                           ))}
                         </Select>

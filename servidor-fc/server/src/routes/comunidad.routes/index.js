@@ -7,6 +7,7 @@ const interaccionRouter = require('./interaccion.routes');
 const documentoInteraccionRouter = require('./documento_interaccion.routes');
 
 function setupComunidadRoutes(router) {
+  router.use('/geo', geoRouter)
   router.use('/tipo_persona', tipo_personaRouter)
   router.use('/persona', personaRouter)
   router.use('/interaccion', interaccionRouter)

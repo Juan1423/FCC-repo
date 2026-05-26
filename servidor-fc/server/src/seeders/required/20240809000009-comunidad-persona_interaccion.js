@@ -11,8 +11,7 @@ module.exports = {
 
     if (personas.length >= 10 && interacciones.length >= 2) {
       const personaInteraccionData = [];
-      
-      // Associate all 10 people with the first interaction
+
       for (let i = 0; i < 10; i++) {
         personaInteraccionData.push({
           persona_id: personas[i].id_persona,
@@ -22,7 +21,6 @@ module.exports = {
         });
       }
 
-      // Associate the first 3 people with the second interaction
       for (let i = 0; i < 3; i++) {
         personaInteraccionData.push({
           persona_id: personas[i].id_persona,

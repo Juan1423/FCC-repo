@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, CircularProgress, Box, Typography,
@@ -41,6 +41,10 @@ const DocumentoList = () => {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm());
   const [archivoFile, setArchivoFile] = useState(null);
+  const errorId = 'documento-error-message';
+  const loadingId = 'documento-loading';
+  const dialogTitleId = 'documento-dialog-title';
+  const firstFieldRef = useRef(null);
 
   const loadCatalogs = useCallback(async () => {
     try {
@@ -74,6 +78,13 @@ const DocumentoList = () => {
   }, []);
 
   useEffect(() => { loadCatalogs(); load(); }, [loadCatalogs, load]);
+
+  useEffect(() => {
+    if (openModal) {
+      const timer = setTimeout(() => { firstFieldRef.current?.focus(); }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [openModal]);
 
   const openCreate = () => { setEditingId(null); setForm(emptyForm()); setArchivoFile(null); setOpenModal(true); };
 
@@ -139,8 +150,8 @@ const DocumentoList = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('¿Eliminar este documento?')) return;
+  const handleDelete = async (id, nombre) => {
+    if (!window.confirm(`¿Eliminar el documento "${nombre || id}"?`)) return;
     try {
       await documentacionService.deleteDocumento(id);
       await load();
@@ -150,87 +161,204 @@ const DocumentoList = () => {
   };
 
   const field = (key, label, props = {}) => (
-    <TextField key={key} fullWidth label={label} value={form[key] ?? ''} onChange={(e) => setForm({ ...form, [key]: e.target.value })} sx={{ mb: 1.5 }} {...props} />
+    <TextField
+      key={key}
+      fullWidth
+      label={label}
+      value={form[key] ?? ''}
+      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+      sx={{ mb: 1.5 }}
+      inputRef={key === 'nombre_documento' ? firstFieldRef : undefined}
+      {...props}
+    />
   );
 
   return (
     <>
-      <TableContainer component={Paper}>
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-          <Typography variant="h6">Documentos</Typography>
-          <Button variant="contained" size="small" onClick={openCreate}>Nuevo documento</Button>
+      <TableContainer component={Paper} elevation={0} sx={{ border: 'none', borderRadius: 0 }}>
+        <Box
+          sx={{
+            p: { xs: 1.5, sm: 2 },
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 1,
+            borderBottom: '1px solid',
+            borderColor: '#e7e5e4',
+            bgcolor: '#fafaf9',
+          }}
+        >
+          <Typography variant="h6" component="h2" sx={{ fontWeight: 600, fontSize: '1rem', color: '#1c1917' }}>
+            Documentos
+          </Typography>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={openCreate}
+            aria-label="Crear nuevo documento"
+            sx={{
+              bgcolor: '#0d9488',
+              '&:hover': { bgcolor: '#0f766e' },
+              textTransform: 'none',
+              fontWeight: 600,
+              borderRadius: 1.5,
+              px: 2,
+            }}
+          >
+            Nuevo documento
+          </Button>
         </Box>
         {loading ? (
-          <Box display="flex" justifyContent="center" p={3}><CircularProgress size={28} /></Box>
+          <Box
+            display="flex"
+            justifyContent="center"
+            p={3}
+            id={loadingId}
+            role="status"
+            aria-live="polite"
+            aria-label="Cargando documentos"
+          >
+            <CircularProgress size={28} aria-hidden="true" />
+            <Typography variant="srOnly" sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>
+              Cargando documentos...
+            </Typography>
+          </Box>
         ) : error ? (
-          <Box p={2}><Typography color="error">{error}</Typography></Box>
+          <Box p={2} role="alert" id={errorId}>
+            <Typography color="error" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>{error}</Typography>
+          </Box>
         ) : (
-          <Table size="small">
+          <Table size="small" aria-label="Lista de documentos">
             <TableHead>
               <TableRow>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Versión</TableCell>
-                <TableCell align="right">Acciones</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#57534e' }}>Nombre</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#57534e' }}>Tipo</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#57534e' }}>Estado</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#57534e' }}>Versión</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: '#57534e' }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {items.map((row) => (
-                <TableRow key={row.id_documento}>
-                  <TableCell>{row.nombre_documento}</TableCell>
-                  <TableCell>{tiposDocMap[row.id_tipo_documento] || '—'}</TableCell>
-                  <TableCell>{row.estado_documento}</TableCell>
-                  <TableCell>{row.version_documento}</TableCell>
-                  <TableCell align="right">
-                    {row.url_documento && (
-                      <Button size="small" onClick={() => window.open(row.url_documento.startsWith('/') ? API_IMAGE_URL + row.url_documento : row.url_documento, '_blank')} sx={{ mr: 0.5 }}>Ver archivo</Button>
-                    )}
-                    <Button size="small" onClick={() => openEdit(row)} sx={{ mr: 0.5 }}>Editar</Button>
-                    <Button size="small" color="error" onClick={() => handleDelete(row.id_documento)}>Eliminar</Button>
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} sx={{ textAlign: 'center', color: '#a8a29e', py: 4 }}>
+                    No hay documentos registrados.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                items.map((row) => (
+                  <TableRow key={row.id_documento} sx={{ '&:hover': { bgcolor: '#fafaf9' } }}>
+                    <TableCell sx={{ fontWeight: 500, color: '#1c1917' }}>{row.nombre_documento}</TableCell>
+                    <TableCell sx={{ color: '#57534e' }}>{tiposDocMap[row.id_tipo_documento] || '—'}</TableCell>
+                    <TableCell sx={{ color: '#57534e' }}>{row.estado_documento}</TableCell>
+                    <TableCell sx={{ color: '#57534e' }}>{row.version_documento}</TableCell>
+                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                      {row.url_documento && (
+                        <Button
+                          size="small"
+                          onClick={() => window.open(row.url_documento.startsWith('/') ? API_IMAGE_URL + row.url_documento : row.url_documento, '_blank')}
+                          sx={{ mr: 0.5, textTransform: 'none', fontWeight: 500, color: '#0d9488', minWidth: 0 }}
+                          aria-label={`Ver archivo de ${row.nombre_documento}`}
+                        >
+                          Ver archivo
+                        </Button>
+                      )}
+                      <Button
+                        size="small"
+                        onClick={() => openEdit(row)}
+                        sx={{ mr: 0.5, textTransform: 'none', fontWeight: 500, color: '#0d9488', minWidth: 0 }}
+                        aria-label={`Editar ${row.nombre_documento}`}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={() => handleDelete(row.id_documento, row.nombre_documento)}
+                        sx={{ textTransform: 'none', fontWeight: 500, minWidth: 0 }}
+                        aria-label={`Eliminar ${row.nombre_documento}`}
+                      >
+                        Eliminar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         )}
       </TableContainer>
 
-      <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="md" fullWidth scroll="paper">
-        <DialogTitle>{editingId ? 'Editar documento' : 'Nuevo documento'}</DialogTitle>
+      <Dialog
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        maxWidth="md"
+        fullWidth
+        scroll="paper"
+        aria-labelledby={dialogTitleId}
+        aria-describedby={error ? errorId : undefined}
+      >
+        <DialogTitle id={dialogTitleId} sx={{ fontWeight: 700, color: '#1c1917' }}>
+          {editingId ? 'Editar documento' : 'Nuevo documento'}
+        </DialogTitle>
         <DialogContent dividers sx={{ pt: 2 }}>
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Tipo de documento</InputLabel>
-            <Select label="Tipo de documento" value={form.id_tipo_documento === '' ? '' : form.id_tipo_documento} onChange={(e) => setForm({ ...form, id_tipo_documento: e.target.value })}>
+            <InputLabel id="tipo-documento-label">Tipo de documento</InputLabel>
+            <Select
+              labelId="tipo-documento-label"
+              label="Tipo de documento"
+              value={form.id_tipo_documento === '' ? '' : form.id_tipo_documento}
+              onChange={(e) => setForm({ ...form, id_tipo_documento: e.target.value })}
+            >
               <MenuItem value=""><em>Sin tipo</em></MenuItem>
               {tiposDoc.map((t) => (<MenuItem key={t.id_tipo_documento} value={t.id_tipo_documento}>{t.nombre_tipo_documento}</MenuItem>))}
             </Select>
           </FormControl>
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Módulo</InputLabel>
-            <Select label="Módulo" value={form.id_modulo === '' ? '' : form.id_modulo} onChange={(e) => setForm({ ...form, id_modulo: e.target.value })}>
+            <InputLabel id="modulo-label">Módulo</InputLabel>
+            <Select
+              labelId="modulo-label"
+              label="Módulo"
+              value={form.id_modulo === '' ? '' : form.id_modulo}
+              onChange={(e) => setForm({ ...form, id_modulo: e.target.value })}
+            >
               <MenuItem value=""><em>Sin módulo</em></MenuItem>
               {modulos.map((m) => (<MenuItem key={m.id_modulo} value={m.id_modulo}>{m.nombre_modulo}</MenuItem>))}
             </Select>
           </FormControl>
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Proceso</InputLabel>
-            <Select label="Proceso" value={form.id_proceso === '' ? '' : form.id_proceso} onChange={(e) => setForm({ ...form, id_proceso: e.target.value })}>
+            <InputLabel id="proceso-label">Proceso</InputLabel>
+            <Select
+              labelId="proceso-label"
+              label="Proceso"
+              value={form.id_proceso === '' ? '' : form.id_proceso}
+              onChange={(e) => setForm({ ...form, id_proceso: e.target.value })}
+            >
               <MenuItem value=""><em>Sin proceso</em></MenuItem>
               {procesos.map((p) => (<MenuItem key={p.id_proceso} value={p.id_proceso}>{p.nombre_proceso}</MenuItem>))}
             </Select>
           </FormControl>
-          {field('nombre_documento', 'Nombre')}
-          <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />} size="small">
+          {field('nombre_documento', 'Nombre del documento')}
+          <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<CloudUploadIcon />}
+              size="small"
+              sx={{ textTransform: 'none', fontWeight: 500, borderRadius: 1.5 }}
+              aria-label={archivoFile ? `Archivo seleccionado: ${archivoFile.name}` : 'Subir archivo'}
+            >
               {archivoFile ? archivoFile.name : 'Subir archivo'}
-              <input type="file" hidden onChange={(e) => setArchivoFile(e.target.files[0] || null)} />
+              <input type="file" hidden onChange={(e) => setArchivoFile(e.target.files[0] || null)} aria-hidden="true" />
             </Button>
             {archivoFile && (
-              <Button size="small" color="error" onClick={() => setArchivoFile(null)}>Quitar</Button>
+              <Button size="small" color="error" onClick={() => setArchivoFile(null)} sx={{ textTransform: 'none', fontWeight: 500, minWidth: 0 }}>
+                Quitar
+              </Button>
             )}
             {form.url_documento && !archivoFile && (
-              <Button size="small" onClick={() => window.open(form.url_documento.startsWith('/') ? API_IMAGE_URL + form.url_documento : form.url_documento, '_blank')}>
+              <Button size="small" onClick={() => window.open(form.url_documento.startsWith('/') ? API_IMAGE_URL + form.url_documento : form.url_documento, '_blank')} sx={{ textTransform: 'none', fontWeight: 500, color: '#0d9488' }}>
                 Ver archivo actual
               </Button>
             )}
@@ -248,9 +376,24 @@ const DocumentoList = () => {
           {field('objetivo_documento', 'Objetivo')}
           {field('observaciones_documento', 'Observaciones', { multiline: true, rows: 2 })}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenModal(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={handleSave}>Guardar</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setOpenModal(false)} sx={{ textTransform: 'none', fontWeight: 500, color: '#78716c' }}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            sx={{
+              bgcolor: '#0d9488',
+              '&:hover': { bgcolor: '#0f766e' },
+              textTransform: 'none',
+              fontWeight: 600,
+              borderRadius: 1.5,
+              px: 3,
+            }}
+          >
+            Guardar
+          </Button>
         </DialogActions>
       </Dialog>
     </>
