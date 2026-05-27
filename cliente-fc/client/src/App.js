@@ -148,6 +148,8 @@ function App() {
         )}
         <Routes>
             <Route exact path="/" element={<Login />} />
+            <Route path="/donacion-nacional" element={<DonacionNacionalForm />} />
+            <Route path="/donacion-internacional" element={<DonacionInternacionalForm />} />
             <Route 
               path="/fcc-menu-principal" 
               element={<PrivateRoute element={MenuPrincipal} allowedRoles={['admin', 'personal_salud']} />} 
