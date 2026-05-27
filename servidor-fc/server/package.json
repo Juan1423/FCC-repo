@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "jest --forceExit --detectOpenHandles",
+    "test:watch": "jest --watch --forceExit --detectOpenHandles",
+    "test:coverage": "jest --coverage --forceExit --detectOpenHandles",
     "db:seed:required": "sequelize-cli db:seed --seed 20240806233857-required-seeders.js",
     "db:seed:optional": "sequelize-cli db:seed --seed 20240806233921-optional-seeders.js",
     "db:seed:all": "npm run db:seed:required && npm run db:seed:optional"
@@ -34,6 +37,8 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "sequelize-cli": "^6.6.2"
+    "jest": "^30.4.2",
+    "sequelize-cli": "^6.6.2",
+    "supertest": "^7.2.2"
   }
 }
