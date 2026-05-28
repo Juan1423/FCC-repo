@@ -1,7 +1,8 @@
 const express = require('express');
+const path = require('path');
+const securityAuditMiddleware = require('../middleware/securityAuditMiddleware');
 const setupHistoriaClinicaRoutes = require('./historiaclinica.routes');
 const setupCie11Routes = require('./cie11.routes');
-const path = require('path');
 const setupAuthRoutes = require('./auth.routes');
 const setupUploadsRoutes = require('./setupUploadsRoutes');
 
@@ -11,7 +12,7 @@ const setupChatClienteRoutes = require('./chatcliente.routes')
 const setupChatServidorRoutes = require('./chatservidor.routes')
 const setupDocumentacionRoutes = require('./documentacion.routes')
 const setupDonacionesRoutes = require('./donaciones.routes')
-const setupOpenAiRoutes = require('./openai.routes'); // Chatbot IA
+const setupOpenAiRoutes = require('./openai.routes');
 
 function routerApi(app) {
   const router = express.Router();
@@ -154,6 +155,9 @@ function routerApi(app) {
    *       200:
    *         description: Operación exitosa
    */
+  // Middleware global de seguridad y auditoría para todas las rutas /api/fcc
+  router.use(securityAuditMiddleware);
+
   app.use('/api/fcc', router);
 
   // Nota: Las siguientes funciones de configuración necesitarán sus propias anotaciones Swagger
