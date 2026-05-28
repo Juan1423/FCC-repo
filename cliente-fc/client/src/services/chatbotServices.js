@@ -1,8 +1,8 @@
 import { API_URL } from './apiConfig';
-import { getUserInfo } from './authServices';
+import { getAuthToken, getUserInfo } from './authServices';
 
 export const getPrompts = async () => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/prompt`, {
     headers: { 'token': token }
   });
@@ -10,7 +10,7 @@ export const getPrompts = async () => {
 };
 
 export const createPrompt = async (data, pdfFile = null) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   
   // Si hay PDF, usar FormData
   if (pdfFile) {
@@ -53,7 +53,7 @@ export const createPrompt = async (data, pdfFile = null) => {
 };
 
 export const updatePrompt = async (id, data, pdfFile = null) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   
   // Si hay PDF, usar FormData
   if (pdfFile) {
@@ -96,7 +96,7 @@ export const updatePrompt = async (id, data, pdfFile = null) => {
 };
 
 export const uploadPdfToOpenAI = async (pdfFile) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const formData = new FormData();
   formData.append('pdf', pdfFile);
   formData.append('tipo_prompt', 'contexto_pdf');
@@ -116,7 +116,7 @@ export const uploadPdfToOpenAI = async (pdfFile) => {
 };
 
 export const deletePrompt = async (id) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/prompt/${id}`, {
     method: 'DELETE',
     headers: { 'token': token }
@@ -125,7 +125,7 @@ export const deletePrompt = async (id) => {
 };
 
 export const getConversaciones = async () => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conversacion`, {
     headers: { 'token': token }
   });
@@ -133,7 +133,7 @@ export const getConversaciones = async () => {
 };
 
 export const getConversacionesByUser = async () => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const userInfo = getUserInfo();
   const userId = userInfo?.user;
   
@@ -148,7 +148,7 @@ export const getConversacionesByUser = async () => {
 };
 
 export const clearPromptMemory = async () => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conversacion/clear-memory`, {
     method: 'POST',
     headers: { 'token': token }
@@ -162,7 +162,7 @@ export const clearPromptMemory = async () => {
 };
 
 export const checkPdfAvailable = async (pdfName) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/prompt/check/${encodeURIComponent(pdfName)}`, {
     headers: { 'token': token }
   });
@@ -171,7 +171,7 @@ export const checkPdfAvailable = async (pdfName) => {
 };
 
 export const activatePrompt = async (id) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/prompt/${id}/activate`, {
     method: 'POST',
     headers: {
@@ -189,7 +189,7 @@ export const activatePrompt = async (id) => {
 };
 
 export const executeSelectedPrompts = async (promptIds) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/prompt/execute-selected`, {
     method: 'POST',
     headers: {
@@ -202,7 +202,7 @@ export const executeSelectedPrompts = async (promptIds) => {
 };
 
 export const executeAllPrompts = async () => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/regenerar-memoria`, {
     method: 'POST',
     headers: { 'token': token }
@@ -211,7 +211,7 @@ export const executeAllPrompts = async () => {
 };
 
 export const downloadPdf = async (pdfName) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/prompt/download/${encodeURIComponent(pdfName)}`, {
     headers: { 
       'token': token,
@@ -226,7 +226,7 @@ export const downloadPdf = async (pdfName) => {
 };
 
 export const getSecurityData = async (userId = null, limit = 100) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   let url = `${API_URL}/seguridad?limit=${limit}`;
   if (userId && /^[0-9]+$/.test(userId)) {
     url += `&user_id=${userId}`;
@@ -243,7 +243,7 @@ export const getSecurityData = async (userId = null, limit = 100) => {
 };
 
 export const getUserById = async (userId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/users/${userId}`, {
     headers: { 'token': token }
   });
@@ -256,7 +256,7 @@ export const getUserById = async (userId) => {
 };
 
 export const getConversacionesByUserId = async (userId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conversacion/usuario/${userId}`, {
     headers: { 'token': token }
   });
@@ -269,7 +269,7 @@ export const getConversacionesByUserId = async (userId) => {
 };
 
 export const getAnonUserById = async (anonUserId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/usuario-anonimo/${anonUserId}`, {
     headers: { 'token': token }
   });
@@ -282,7 +282,7 @@ export const getAnonUserById = async (anonUserId) => {
 };
 
 export const getConversacionesAnonimasByUser = async (anonUserId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conversacion-anonima/usuario/${anonUserId}`, {
     headers: { 'token': token }
   });
@@ -295,7 +295,7 @@ export const getConversacionesAnonimasByUser = async (anonUserId) => {
 };
 
 export const blockUser = async (userId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/users/${userId}/block`, {
     method: 'POST',
     headers: { 'token': token }
@@ -309,7 +309,7 @@ export const blockUser = async (userId) => {
 };
 
 export const unblockUser = async (userId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/users/${userId}/unblock`, {
     method: 'POST',
     headers: { 'token': token }
@@ -323,7 +323,7 @@ export const unblockUser = async (userId) => {
 };
 
 export const blockAnonUser = async (anonUserId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/usuario-anonimo/${anonUserId}/block`, {
     method: 'POST',
     headers: { 'token': token }
@@ -337,7 +337,7 @@ export const blockAnonUser = async (anonUserId) => {
 };
 
 export const unblockAnonUser = async (anonUserId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/usuario-anonimo/${anonUserId}/unblock`, {
     method: 'POST',
     headers: { 'token': token }

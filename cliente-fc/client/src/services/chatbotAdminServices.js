@@ -1,4 +1,5 @@
 import { API_URL } from './apiConfig';
+import { getAuthToken } from './authServices';
 
 const handleResponse = async (response) => {
   let data;
@@ -17,7 +18,7 @@ const handleResponse = async (response) => {
 };
 
 export const getPreguntasAnonimas = async (page = 1, limit = 10, cedula = '') => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const params = new URLSearchParams({ page, limit });
   if (cedula) params.append('cedula', cedula);
   const response = await fetch(`${API_URL}/pregunta-anonima?${params}`, {
@@ -36,7 +37,7 @@ export const createPreguntaAnonima = async (data) => {
 };
 
 export const getUsuariosAnonimos = async (page = 1, limit = 10, estado = '') => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const params = new URLSearchParams({ page, limit });
   if (estado) params.append('estado', estado);
   const response = await fetch(`${API_URL}/usuario-anonimo?${params}`, {
@@ -55,7 +56,7 @@ export const createUsuarioAnonimo = async (data) => {
 };
 
 export const updateUsuarioAnonimo = async (id, data) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/usuario-anonimo/${id}`, {
     method: 'PUT',
     headers: {
@@ -68,7 +69,7 @@ export const updateUsuarioAnonimo = async (id, data) => {
 };
 
 export const deleteUsuarioAnonimo = async (id) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/usuario-anonimo/${id}`, {
     method: 'DELETE',
     headers: { token }
@@ -77,7 +78,7 @@ export const deleteUsuarioAnonimo = async (id) => {
 };
 
 export const getUsuarioAnonimoByCedula = async (cedula) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/usuario-anonimo/cedula/${encodeURIComponent(cedula)}`, {
     headers: { token }
   });
@@ -85,7 +86,7 @@ export const getUsuarioAnonimoByCedula = async (cedula) => {
 };
 
 export const getConversacionesAnonimas = async (page = 1, limit = 100) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const params = new URLSearchParams({ page, limit });
   const response = await fetch(`${API_URL}/conversacion-anonima?${params}`, {
     headers: { token }
@@ -94,7 +95,7 @@ export const getConversacionesAnonimas = async (page = 1, limit = 100) => {
 };
 
 export const getConocimiento = async (page = 1, limit = 10) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const params = new URLSearchParams({ page, limit });
   const response = await fetch(`${API_URL}/conocimiento?${params}`, {
     headers: { token }
@@ -103,7 +104,7 @@ export const getConocimiento = async (page = 1, limit = 10) => {
 };
 
 export const createConocimiento = async (data) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/`, {
     method: 'POST',
     headers: {
@@ -116,7 +117,7 @@ export const createConocimiento = async (data) => {
 };
 
 export const updateConocimiento = async (id, data) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/${id}`, {
     method: 'PUT',
     headers: {
@@ -129,7 +130,7 @@ export const updateConocimiento = async (id, data) => {
 };
 
 export const deleteConocimiento = async (id) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/${id}`, {
     method: 'DELETE',
     headers: { token }
@@ -138,7 +139,7 @@ export const deleteConocimiento = async (id) => {
 };
 
 export const usarConocimientoEspecifico = async (id, mensaje) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/usar-conocimiento/${id}`, {
     method: 'POST',
     headers: {
@@ -151,7 +152,7 @@ export const usarConocimientoEspecifico = async (id, mensaje) => {
 };
 
 export const usarConversacionEspecifico = async (id, mensaje) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conversacion/usar-conversacion/${id}`, {
     method: 'POST',
     headers: {
@@ -164,7 +165,7 @@ export const usarConversacionEspecifico = async (id, mensaje) => {
 };
 
 export const getAllConversaciones = async () => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conversacion/`, {
     headers: { token }
   });
@@ -172,7 +173,7 @@ export const getAllConversaciones = async () => {
 };
 
 export const updateConversacion = async (id, data) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conversacion/${id}`, {
     method: 'PUT',
     headers: {
@@ -185,7 +186,7 @@ export const updateConversacion = async (id, data) => {
 };
 
 export const deleteConversacion = async (id) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conversacion/${id}`, {
     method: 'DELETE',
     headers: { token }
@@ -194,7 +195,7 @@ export const deleteConversacion = async (id) => {
 };
 
 export const generateEmbeddings = async () => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/generate-embeddings/`, {
     method: 'POST',
     headers: { token }
@@ -203,7 +204,7 @@ export const generateEmbeddings = async () => {
 };
 
 export const blockUser = async (userId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/seguridad/block-user`, {
     method: 'POST',
     headers: {
@@ -216,7 +217,7 @@ export const blockUser = async (userId) => {
 };
 
 export const unblockUser = async (userId) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/seguridad/unblock-user`, {
     method: 'POST',
     headers: {
@@ -229,7 +230,7 @@ export const unblockUser = async (userId) => {
 };
 
 export const blockIP = async (ip) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/seguridad/block-ip`, {
     method: 'POST',
     headers: {
@@ -242,7 +243,7 @@ export const blockIP = async (ip) => {
 };
 
 export const unblockIP = async (ip) => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/seguridad/unblock-ip`, {
     method: 'POST',
     headers: {
@@ -255,7 +256,7 @@ export const unblockIP = async (ip) => {
 };
 
 export const toggleBloqueoConocimiento = async (id) => {
-  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/${id}/toggle-bloqueo`, {
     method: 'PATCH',
     headers: {
@@ -267,7 +268,7 @@ export const toggleBloqueoConocimiento = async (id) => {
 };
 
 export const bloquearTodosConocimiento = async () => {
-  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/bloquear-todos`, {
     method: 'POST',
     headers: {
@@ -279,7 +280,7 @@ export const bloquearTodosConocimiento = async () => {
 };
 
 export const desbloquearTodosConocimiento = async () => {
-  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/desbloquear-todos`, {
     method: 'POST',
     headers: {
@@ -291,7 +292,7 @@ export const desbloquearTodosConocimiento = async () => {
 };
 
 export const ejecutarBloqueadasConocimiento = async () => {
-  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/ejecutar-bloqueadas`, {
     method: 'POST',
     headers: {
@@ -303,7 +304,7 @@ export const ejecutarBloqueadasConocimiento = async () => {
 };
 
 export const regenerarMemoriaConocimiento = async () => {
-  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const token = getAuthToken();
   const response = await fetch(`${API_URL}/conocimiento/regenerar-memoria`, {
     method: 'POST',
     headers: {

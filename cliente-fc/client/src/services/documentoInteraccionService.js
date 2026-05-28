@@ -1,21 +1,32 @@
-import { API_URL } from './apiConfig'; // O lo de axios
+import { API_URL } from './apiConfig';
+import { getAuthToken } from './authServices';
+
+const authHeaders = () => {
+  const token = getAuthToken();
+  return token ? { 'token': token } : {};
+};
 
 const getByInteraccion = async (interaccionId) => {
-  const response = await fetch(`${API_URL}/comunidad/documentos/interaccion/${interaccionId}`);
+  const response = await fetch(`${API_URL}/comunidad/documentos/interaccion/${interaccionId}`, {
+    headers: authHeaders()
+  });
   return response.json();
 };
 
 const create = async (interaccionId, formData) => {
+  const headers = authHeaders();
   const response = await fetch(`${API_URL}/comunidad/documentos/interaccion/${interaccionId}`, {
     method: 'POST',
-    body: formData, // No poner Content-Type header manualmente, fetch lo hace al ver FormData
+    headers,
+    body: formData,
   });
   return response.json();
 };
 
 const deleteDoc = async (id) => {
     const response = await fetch(`${API_URL}/comunidad/documentos/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authHeaders()
     });
     return response.json();
 };

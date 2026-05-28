@@ -5,6 +5,18 @@ import { jwtDecode } from 'jwt-decode';
 
 const TOKEN_COOKIE_NAME = 'auth_token';
 
+// Interceptor global de axios: adjunta el token de la cookie en cada request
+axios.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get(TOKEN_COOKIE_NAME);
+    if (token) {
+      config.headers['token'] = token;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export const login = async (user) => {
     try {
         const response = await axios.post(`${API_URL}/users/login`, user);
@@ -43,11 +55,9 @@ export const verifyToken = async () => {
 
 export const setAuthToken = (token) => {
     if (token) {
-        Cookies.set(TOKEN_COOKIE_NAME, token, { expires: 1 }); // expires in 1 day
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        Cookies.set(TOKEN_COOKIE_NAME, token, { expires: 1 });
     } else {
         Cookies.remove(TOKEN_COOKIE_NAME);
-        delete axios.defaults.headers.common['Authorization'];
     }
 };
 
