@@ -193,10 +193,10 @@ const Paciente = () => {
   return (
     <Box sx={{ display: 'flex' }}>
       <Tooltip title="Menú de navegación principal">
-        <NavbarAdmin onDrawerToggle={handleDrawerToggle} />
+        <span><NavbarAdmin onDrawerToggle={handleDrawerToggle} /></span>
       </Tooltip>
       <Tooltip title="Menú lateral con opciones adicionales">
-        <Drawer open={drawerOpen} onClose={handleDrawerToggle} />
+        <span><Drawer open={drawerOpen} onClose={handleDrawerToggle} /></span>
       </Tooltip>
       <Box component="main" sx={{ flexGrow: 1, bgcolor: 'background.default', p: 3, marginTop: 7, overflowX: 'auto'}}>
         <Container>
