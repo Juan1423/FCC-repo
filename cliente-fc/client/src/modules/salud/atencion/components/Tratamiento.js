@@ -295,7 +295,7 @@ const Tratamiento = ({ formData, setFormData }) => {
       />
       
       <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>Medicamentos</Typography>
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ overflow: { xs: 'auto', sm: 'visible' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -330,7 +330,7 @@ const Tratamiento = ({ formData, setFormData }) => {
       ) : error ? (
         <Typography color="error">{error}</Typography>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ overflow: { xs: 'auto', sm: 'visible' } }}>
           <Table>
             <TableHead>
               <TableRow>

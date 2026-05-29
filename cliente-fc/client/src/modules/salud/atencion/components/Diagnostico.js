@@ -143,7 +143,7 @@ const Diagnostico = ({ formData, setFormData }) => {
           </Button>
         </Grid>
         <Grid item xs={12} md={6}>
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} sx={{ overflow: { xs: 'auto', sm: 'visible' } }}>
             <Table>
               <TableHead>
                 <TableRow>

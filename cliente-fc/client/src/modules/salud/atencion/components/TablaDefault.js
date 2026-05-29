@@ -62,8 +62,8 @@ const TablaElegante = ({ data, handleCheckboxChange, isMobile }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', gap: 2 }}>
       {tableChunks.map((chunk, index) => (
-        <StyledTableContainer key={index} component={Paper}>
-          <StyledTable size="small">
+        <StyledTableContainer key={index} component={Paper} sx={{ overflow: { xs: 'auto', sm: 'hidden' } }}>
+          <StyledTable size="small" sx={{ minWidth: { xs: 'auto', sm: 650 } }}>
             <StyledTableHead>
               <TableRow>
                 <TableCell align="center">CP</TableCell>
