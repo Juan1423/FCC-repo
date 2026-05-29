@@ -262,7 +262,7 @@ const ProcesoList = () => {
             border: "1px solid",
             borderColor: "#e7e5e4",
             borderRadius: 2,
-            overflow: "visible",
+            overflow: { xs: "auto", sm: "visible" },
             bgcolor: "#ffffff",
             "&::before": {
               content: '""',
@@ -313,7 +313,7 @@ const ProcesoList = () => {
                 {search && " encontrados"}
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
               <TextField
                 size="small"
                 placeholder="Buscar procesos..."
@@ -328,6 +328,7 @@ const ProcesoList = () => {
                   },
                 }}
                 sx={{
+                  width: { xs: 1, sm: "auto" },
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "8px",
                     bgcolor: "#ffffff",
@@ -376,13 +377,14 @@ const ProcesoList = () => {
               </Box>
             </Box>
           ) : (
-            <Table size="small" aria-label="Lista de procesos" id={tableId}>
+            <Table size="small" aria-label="Lista de procesos" id={tableId} sx={{ "& .MuiTableCell-root": { wordBreak: "break-word", overflowWrap: "break-word" } }}>
               <TableHead>
                 <TableRow>
                   {["Código", "Nombre", "Tipo", "Responsable", "Nivel", "Estado", "Acciones"].map((h) => (
                     <TableCell
                       key={h}
                       sx={{
+                        display: (h === "Código" || h === "Nivel") ? { xs: "none", md: "table-cell" } : undefined,
                         fontWeight: 600,
                         color: "#57534e",
                         fontSize: "0.75rem",
@@ -437,7 +439,7 @@ const ProcesoList = () => {
                         },
                       }}
                     >
-                      <TableCell sx={{ fontWeight: 500, color: "#1c1917", fontSize: "0.85rem" }}>
+                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, fontWeight: 500, color: "#1c1917", fontSize: "0.85rem" }}>
                         {p.codigo_proceso || "—"}
                       </TableCell>
                       <TableCell sx={{ fontWeight: 600, color: "#1c1917", fontSize: "0.85rem" }}>
@@ -449,7 +451,7 @@ const ProcesoList = () => {
                       <TableCell sx={{ color: "#57534e", fontSize: "0.85rem" }}>
                         {p.responsable_proceso || "—"}
                       </TableCell>
-                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem" }}>
+                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem" }}>
                         {p.nivel_proceso != null ? p.nivel_proceso : "—"}
                       </TableCell>
                       <TableCell sx={{ fontSize: "0.85rem" }}>
