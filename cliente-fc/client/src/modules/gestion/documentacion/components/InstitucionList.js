@@ -154,7 +154,7 @@ const InstitucionList = () => {
   return (
     <>
       <Box sx={{ opacity: animating ? 0 : 1, transform: animating ? 'translateY(8px)' : 'translateY(0)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}>
-        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: '#e7e5e4', borderRadius: 2, overflow: { xs: 'auto', sm: 'visible' }, bgcolor: '#ffffff', '&::before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, height: 3, bgcolor: '#0d9488', borderTopLeftRadius: 2, borderTopRightRadius: 2, zIndex: 1 } }}>
+        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: '#e7e5e4', borderRadius: 2, overflow: 'visible', bgcolor: '#ffffff', '&::before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, height: 3, bgcolor: '#0d9488', borderTopLeftRadius: 2, borderTopRightRadius: 2, zIndex: 1 } }}>
           <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, borderBottom: '1px solid', borderColor: '#e7e5e4', bgcolor: '#fafaf9' }}>
             <Box>
               <Typography variant="h6" component="h2" sx={{ fontWeight: 700, fontSize: '1.05rem', color: '#1c1917', letterSpacing: '-0.01em' }}>Instituciones</Typography>

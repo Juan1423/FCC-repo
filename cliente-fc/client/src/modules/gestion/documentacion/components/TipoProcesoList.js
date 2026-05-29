@@ -145,7 +145,7 @@ const TipoProcesoList = () => {
             border: "1px solid",
             borderColor: "#e7e5e4",
             borderRadius: 2,
-            overflow: { xs: "auto", sm: "visible" },
+            overflow: "visible",
             bgcolor: "#ffffff",
             "&::before": {
               content: '""',
