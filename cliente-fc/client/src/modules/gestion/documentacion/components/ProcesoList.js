@@ -313,7 +313,7 @@ const ProcesoList = () => {
                 {search && " encontrados"}
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
               <TextField
                 size="small"
                 placeholder="Buscar procesos..."
@@ -328,6 +328,7 @@ const ProcesoList = () => {
                   },
                 }}
                 sx={{
+                  width: { xs: 1, sm: "auto" },
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "8px",
                     bgcolor: "#ffffff",
@@ -376,7 +377,7 @@ const ProcesoList = () => {
               </Box>
             </Box>
           ) : (
-            <Table size="small" aria-label="Lista de procesos" id={tableId}>
+            <Table size="small" aria-label="Lista de procesos" id={tableId} sx={{ "& .MuiTableCell-root": { wordBreak: "break-word", overflowWrap: "break-word" } }}>
               <TableHead>
                 <TableRow>
                   {["Código", "Nombre", "Tipo", "Responsable", "Nivel", "Estado", "Acciones"].map((h) => (
