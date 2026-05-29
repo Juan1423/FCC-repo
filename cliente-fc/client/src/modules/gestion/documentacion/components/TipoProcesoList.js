@@ -196,7 +196,7 @@ const TipoProcesoList = () => {
                 {search && " encontrados"}
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               <TextField
                 size="small"
                 placeholder="Buscar tipos..."
@@ -211,7 +211,6 @@ const TipoProcesoList = () => {
                   },
                 }}
                 sx={{
-                  width: { xs: 1, sm: "auto" },
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "8px",
                     bgcolor: "#ffffff",
@@ -260,7 +259,7 @@ const TipoProcesoList = () => {
               </Box>
             </Box>
           ) : (
-            <Table size="small" aria-label="Lista de tipos de proceso" sx={{ "& .MuiTableCell-root": { wordBreak: "break-word", overflowWrap: "break-word" } }}>
+            <Table size="small" aria-label="Lista de tipos de proceso">
               <TableHead>
                 <TableRow>
                   {["Nombre", "Descripción", "Acciones"].map((h) => (
