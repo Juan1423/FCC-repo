@@ -71,6 +71,7 @@ const SistemaDashboard = () => {
           width: { md: `calc(100% - 240px)` },
           mt: { xs: 7, sm: 8 },
           minHeight: '100vh',
+          overflowX: 'hidden',
           bgcolor: '#f8fafc',
         }}
       >
@@ -107,7 +108,7 @@ const SistemaDashboard = () => {
           </Box>
         </Fade>
 
-        <Grid container spacing={3} sx={{ maxWidth: 1200, mx: 'auto' }}>
+        <Grid container sx={{ maxWidth: 1200, mx: 'auto', gap: { xs: 2, md: 3 } }}>
           {dataTarjeta.map((item, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <Fade in={true} timeout={300 + index * 100}>
