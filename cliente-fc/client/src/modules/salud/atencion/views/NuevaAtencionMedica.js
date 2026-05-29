@@ -471,7 +471,7 @@ export default function NuevaAtencionMedica() {
   return (
     <Box sx={{ display: "flex", mt: 8, p: 1 }}>
       <NavbarAdmin />
-      <Box sx={{ flexGrow: 1, p: 3, width: "100%" }}>
+      <Box sx={{ flexGrow: 1, p: 3, overflowX: "hidden" }}>
         {patientLoaded && (
           <Grid
             container
@@ -482,8 +482,8 @@ export default function NuevaAtencionMedica() {
               alignItems: "center",
               mb: 2,
               boxShadow: 1,
-              paddingRight: 1,
-              paddingLeft: 1,
+              px: 1,
+              py: { xs: 1, sm: 0 },
             }}
           >
             <Grid item sx={8}>
@@ -539,11 +539,11 @@ export default function NuevaAtencionMedica() {
           onClose={handleDrawerToggle}
           PaperProps={{
             sx: {
-              width: "40%",
+              width: { xs: "85%", sm: "50%" },
             },
           }}
         >
-          <Box sx={{ width: "90%", p: 2 }}>
+          <Box sx={{ p: 3 }}>
             <Typography variant="h6">Revisar Antecedentes</Typography>
             <Antecedentes historia={historia} />
           </Box>
