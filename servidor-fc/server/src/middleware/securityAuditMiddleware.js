@@ -6,6 +6,8 @@ const PUBLIC_ROUTES = [
   { method: 'POST', path: '/users/login' },
 ];
 
+const SENSITIVE_FIELDS = ['token', 'password', 'newPassword', 'confirmPassword', 'oldPassword'];
+
 const MODULE_OVERRIDES = {
   'auth': 'Autenticacion',
   'change-password': 'Autenticacion',
@@ -68,7 +70,8 @@ const isIpBlocked = async (ip) => {
 
 function extractModuleSegment(path) {
   const parts = path.split('/').filter(Boolean);
-  return parts.length > 0 ? parts[0] : null;
+  if (parts.length === 0) return null;
+  return parts[0];
 }
 
 function snakeToPascal(str) {
@@ -99,6 +102,9 @@ function getOperationName(method, path, moduleName) {
   if (/\/signos_vitales\/(historia|last|aps)\/\d+$/.test(path) && m === 'GET') return `CONSULTAR_${moduleUpper}`;
   if (/\/terapias\/(paciente|last)\/\d+$/.test(path) && m === 'GET') return `CONSULTAR_${moduleUpper}`;
   if (/\/users\/\d+\/estadisticas$/.test(path) && m === 'GET') return 'CONSULTAR_ESTADISTICAS';
+  if (/\/\d+$/.test(path) && m === 'GET') return `CONSULTAR_${moduleUpper}`;
+  if (/\/\d+$/.test(path) && m === 'PUT') return `ACTUALIZAR_${moduleUpper}`;
+  if (/\/\d+$/.test(path) && m === 'DELETE') return `ELIMINAR_${moduleUpper}`;
 
   const actionMap = {
     GET: 'CONSULTAR',
@@ -114,17 +120,19 @@ function getOperationName(method, path, moduleName) {
 function sanitizeBody(body) {
   if (!body) return {};
   const sanitized = { ...body };
-  ['token', 'password', 'newPassword', 'confirmPassword', 'oldPassword'].forEach(f => delete sanitized[f]);
+  SENSITIVE_FIELDS.forEach(f => delete sanitized[f]);
   return sanitized;
 }
 
 function buildDetail(req) {
   const detail = {};
 
+  detail.endpoint = req.path;
+
   if (req.params && Object.keys(req.params).length > 0) {
     const paramKeys = Object.keys(req.params);
     if (paramKeys.length === 1 && req.params[paramKeys[0]]) {
-      detail.recurso_id = req.params[paramKeys[0]];
+      detail.id = req.params[paramKeys[0]];
     } else {
       detail.params = req.params;
     }
@@ -135,7 +143,7 @@ function buildDetail(req) {
   }
 
   if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body) {
-    const bodyKeys = Object.keys(req.body).filter(k => !['token', 'password', 'newPassword', 'confirmPassword', 'oldPassword'].includes(k));
+    const bodyKeys = Object.keys(req.body).filter(k => !SENSITIVE_FIELDS.includes(k));
     if (bodyKeys.length > 0) {
       detail.campos = bodyKeys;
     }
@@ -174,7 +182,6 @@ const securityAuditMiddleware = async (req, res, next) => {
     const data = jwt.verify(token, process.env.JWT_SECRET);
     req.user = data;
 
-    // Skip logging for client audit POSTs to avoid double-logging
     if (req.method === 'POST' && (req.path === '/auditoria' || req.path === '/auditoria/')) {
       return next();
     }
@@ -182,6 +189,7 @@ const securityAuditMiddleware = async (req, res, next) => {
     const now = new Date();
     const moduleName = getModuleFromPath(req.path);
     const operacion = getOperationName(req.method, req.path, moduleName);
+
     const detalle = buildDetail(req);
 
     models.Auditoria.create({
