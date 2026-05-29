@@ -63,7 +63,7 @@ const AsistenciaTerapias = ({ terapias, tipoTerapia, handleChangeTipoTerapia, ta
           </FormControl>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 2 }}>
+          <Paper elevation={3} sx={{ p: { xs: 0, sm: 2 }, overflowX: 'hidden' }}>
             <Typography variant="h6" gutterBottom>
               Calendario de Asistencia
             </Typography>
@@ -76,6 +76,14 @@ const AsistenciaTerapias = ({ terapias, tipoTerapia, handleChangeTipoTerapia, ta
                 renderInput={() => {}}
                 shouldDisableDate={(day) => !fechasAsistencia.some(date => date.isSame(day, 'day'))}
                 sx={{
+                  '.MuiPickersLayout-root': {
+                    width: { xs: '100%', sm: 'auto' },
+                    minWidth: { xs: 0, sm: 320 },
+                  },
+                  '.MuiDateCalendar-root': {
+                    width: { xs: '100%', sm: 'auto' },
+                    minWidth: { xs: 0, sm: 320 },
+                  },
                   '.MuiPickersDay-root': {
                     '&:not(.Mui-disabled)': {
                       backgroundColor: 'primary.main',
