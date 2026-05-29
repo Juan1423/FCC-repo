@@ -57,7 +57,14 @@ const Atencion = () => {
           const historiaId = historia?.id_historia;
           console.log("[DIAG] historia encontrada:", historia, "→ id_historia:", historiaId);
 
-          setIsFirstAttention(!historiaId);
+          const hasClinicalData = historia && (
+            historia.motivo_consulta_historia ||
+            historia.diagnostico_presuntivo ||
+            historia.observaciones ||
+            (Array.isArray(historia.alergias) && historia.alergias.length > 0) ||
+            (Array.isArray(historia.medicamentos) && historia.medicamentos.length > 0)
+          );
+          setIsFirstAttention(!historiaId || !hasClinicalData);
 
           const loggedInUserId = getCurrentUserId();
           if (!loggedInUserId) {
