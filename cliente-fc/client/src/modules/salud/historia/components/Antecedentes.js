@@ -103,9 +103,10 @@ const Antecedentes = ({ historia }) => {
   return (
     <Box sx={{ 
       maxHeight: '100%', 
-      overflowY: 'auto', 
+      overflowY: 'auto',
+      overflowX: 'hidden',
       padding: theme.spacing(2), 
-      width: '100%',
+      width: '90%',
     }}>
       <Typography variant="h4" gutterBottom color="primary" align="center" sx={{ mb: 4 }}>Antecedentes</Typography>
       <Grid container spacing={3} direction={isSmallScreen ? 'column' : 'row'}>

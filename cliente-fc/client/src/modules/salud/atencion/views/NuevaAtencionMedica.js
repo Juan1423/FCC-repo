@@ -543,9 +543,11 @@ export default function NuevaAtencionMedica() {
             },
           }}
         >
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h6">Revisar Antecedentes</Typography>
-            <Antecedentes historia={historia} />
+          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <Typography variant="h6" sx={{ px: 3, pt: 2, pb: 1 }}>Revisar Antecedentes</Typography>
+            <Box sx={{ flex: 1, overflow: 'auto', px: 1 }}>
+              <Antecedentes historia={historia} />
+            </Box>
           </Box>
         </Drawer>
 
