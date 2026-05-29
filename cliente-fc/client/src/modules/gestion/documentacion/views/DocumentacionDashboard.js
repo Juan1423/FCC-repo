@@ -96,7 +96,7 @@ const DocumentacionDashboard = () => {
           mt: { xs: 7, sm: 8 },
           minHeight: '100vh',
           position: 'relative',
-          overflow: 'hidden',
+          overflow: { xs: 'auto', sm: 'hidden' },
           bgcolor: '#fafaf9',
           '&::before': {
             content: '""',
@@ -113,15 +113,16 @@ const DocumentacionDashboard = () => {
         }}
       >
         <Fade in={true} timeout={800}>
-          <Box sx={{ position: 'relative', mb: { xs: 3, md: 5 } }}>
+          <Box sx={{ position: 'relative', mb: { xs: 2, md: 5 } }}>
             <Typography
               aria-hidden="true"
               variant="h1"
               sx={{
+                display: { xs: 'none', md: 'block' },
                 position: 'absolute',
-                top: { xs: -20, md: -40 },
-                left: { xs: -10, md: -20 },
-                fontSize: { xs: '6rem', md: '12rem' },
+                top: -40,
+                left: -20,
+                fontSize: '12rem',
                 fontWeight: 900,
                 color: '#0d9488',
                 opacity: 0.06,
@@ -141,7 +142,7 @@ const DocumentacionDashboard = () => {
                   fontWeight: 800,
                   mb: 0.5,
                   textAlign: 'center',
-                  fontSize: { xs: '1.75rem', md: '2.75rem' },
+                  fontSize: { xs: '1.25rem', md: '2.75rem' },
                   letterSpacing: '-0.02em',
                   color: '#1c1917',
                 }}
@@ -150,12 +151,12 @@ const DocumentacionDashboard = () => {
               </Typography>
               <Box
                 sx={{
-                  width: 60,
+                  width: { xs: 40, md: 60 },
                   height: 4,
                   bgcolor: '#0d9488',
                   borderRadius: 2,
                   mx: 'auto',
-                  mb: 1.5,
+                  mb: 1,
                 }}
               />
               <Typography
@@ -164,9 +165,10 @@ const DocumentacionDashboard = () => {
                   color: '#78716c',
                   textAlign: 'center',
                   fontWeight: 400,
-                  fontSize: { xs: '0.9rem', md: '1.05rem' },
+                  fontSize: { xs: '0.8rem', md: '1.05rem' },
                   maxWidth: 560,
                   mx: 'auto',
+                  px: { xs: 2, md: 0 },
                 }}
               >
                 Gestión de documentos, indicadores, instituciones y módulos del sistema.
@@ -249,7 +251,7 @@ const DocumentacionDashboard = () => {
                 ))}
               </Tabs>
             </Box>
-            <CardContent sx={{ p: { xs: 0, sm: 0 } }}>
+            <CardContent sx={{ p: { xs: 1.5, sm: 0 } }}>
               {tabs.map((t, i) => (
                 <TabPanel key={i} index={i} value={tab}>
                   {t.component}
