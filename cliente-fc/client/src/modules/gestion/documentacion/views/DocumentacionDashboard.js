@@ -91,12 +91,12 @@ const DocumentacionDashboard = () => {
         aria-label="Panel de documentación"
         sx={{
           flexGrow: 1,
-          p: { xs: 2, md: 4 },
+          p: { xs: 1.5, md: 4 },
           width: { md: `calc(100% - 240px)` },
           mt: { xs: 7, sm: 8 },
           minHeight: '100vh',
           position: 'relative',
-          overflow: 'hidden',
+          overflow: { xs: 'auto', sm: 'hidden' },
           bgcolor: '#fafaf9',
           '&::before': {
             content: '""',
