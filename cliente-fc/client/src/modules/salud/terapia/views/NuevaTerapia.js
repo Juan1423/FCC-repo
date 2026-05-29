@@ -313,10 +313,7 @@ const TreatmentSummary = ({ selectedTherapy, notasTratamiento, medicacion, onSub
         <strong>Farmacoterapia o Indicaciones:</strong> {medicacion}
       </Typography>
     </CardContent>
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 2 }}>
-      <Button startIcon={<ArrowBackIcon />} onClick={onBack}>
-        Volver
-      </Button>
+    <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
       <Button variant="contained" color="primary" onClick={onSubmit}>
         Confirmar y Guardar
       </Button>
@@ -439,7 +436,7 @@ const SistemaTerapias = () => {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Box sx={{ display: 'flex', flex: 1, mb: 4 }}>
           {!isMobile && (
             <AnimatedBox
@@ -455,10 +452,32 @@ const SistemaTerapias = () => {
           <AnimatedBox 
             style={{ 
               flex: 1, 
-              display: 'flex', 
+              display: 'flex',
+              flexDirection: 'column',
               overflowY: 'hidden'
             }}
           >
+            {step > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, flexShrink: 0 }}>
+                <Button
+                  startIcon={<ArrowBackIcon />}
+                  onClick={handleBack}
+                  variant="outlined"
+                >
+                  Anterior
+                </Button>
+                {step === 1 && (
+                  <Button
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={handleNext}
+                    variant="contained"
+                  >
+                    Siguiente
+                  </Button>
+                )}
+              </Box>
+            )}
+            <Box sx={{ flex: 1, overflow: 'auto' }}>
             <AnimatePresence mode="wait">
               {step === 0 && (
                 <motion.div
@@ -491,14 +510,7 @@ const SistemaTerapias = () => {
                       pacienteId={id}
                       setFile={setFile}
                     />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                    <IconButton onClick={handleBack}>
-                      <ArrowBackIcon />
-                    </IconButton>
-                    <IconButton onClick={handleNext} color="primary">
-                      <ArrowForwardIcon />
-                    </IconButton>
-                  </Box>
+                  <Box sx={{ mt: 2 }} />
                 </motion.div>
               )}
               {step === 2 && (
@@ -521,6 +533,7 @@ const SistemaTerapias = () => {
                 </motion.div>
               )}
             </AnimatePresence>
+            </Box>
           </AnimatedBox>
         </Box>
       </Container>
