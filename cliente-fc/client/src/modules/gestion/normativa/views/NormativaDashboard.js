@@ -119,7 +119,7 @@ const NormativaDashboard = () => {
               border: '1px solid',
               borderColor: 'grey.200',
               boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.06)',
-              overflow: 'hidden',
+              overflow: 'visible',
               bgcolor: '#ffffff',
             }}
           >
@@ -131,6 +131,9 @@ const NormativaDashboard = () => {
               sx={{
                 px: { xs: 1, sm: 2 },
                 pt: 0.5,
+                borderTopLeftRadius: 3,
+                borderTopRightRadius: 3,
+                bgcolor: '#fafaf9',
                 borderBottom: '1px solid',
                 borderColor: 'grey.200',
                 '& .MuiTab-root': {
@@ -152,7 +155,7 @@ const NormativaDashboard = () => {
               <Tab label="Tipos de Normativa" />
             </Tabs>
 
-            <Box sx={{ p: { xs: 1.5, sm: 2, md: 2.5 } }}>
+            <Box sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, overflow: 'hidden' }}>
               {tabValue === 0 && <NormativaList />}
               {tabValue === 1 && <TipoNormativaList />}
             </Box>

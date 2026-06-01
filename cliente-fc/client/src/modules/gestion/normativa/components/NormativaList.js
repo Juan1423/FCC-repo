@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  TableFooter, TablePagination,
   Paper, Button, CircularProgress, Box, Typography,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   Select, MenuItem, FormControl, InputLabel, IconButton, Tooltip,
@@ -53,6 +54,8 @@ const NormativaList = () => {
   const [formData, setFormData] = useState(emptyForm());
   const [search, setSearch] = useState("");
   const [animating, setAnimating] = useState(true);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const firstFieldRef = useRef(null);
   const liveId = "normativa-live-announce";
   const dialogTitleId = "normativa-dialog-title";
@@ -109,6 +112,18 @@ const NormativaList = () => {
       return () => clearTimeout(t);
     }
   }, [openModal]);
+
+  useEffect(() => { setPage(0); }, [search]);
+
+  const handleChangePage = (event, newPage) => { setPage(newPage); };
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedItems = rowsPerPage === -1
+    ? filtered
+    : filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const announce = (msg) => {
     const el = document.getElementById(liveId);
@@ -228,29 +243,19 @@ const NormativaList = () => {
           opacity: animating ? 0 : 1,
           transform: animating ? "translateY(8px)" : "translateY(0)",
           transition: "opacity 0.5s ease, transform 0.5s ease",
+          minWidth: 0,
+          width: '100%',
+          display: 'block',
         }}
       >
-        <TableContainer
-          component={Paper}
+        <Paper
           elevation={0}
           sx={{
             border: "1px solid",
             borderColor: "#e7e5e4",
             borderRadius: 2,
-            overflow: "auto",
             bgcolor: "#ffffff",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 3,
-              bgcolor: "#0d9488",
-              borderTopLeftRadius: 2,
-              borderTopRightRadius: 2,
-              zIndex: 1,
-            },
+            overflow: "hidden",
           }}
         >
           <Box
@@ -354,6 +359,19 @@ const NormativaList = () => {
             </Box>
           </Box>
 
+          <TableContainer
+            sx={{
+              overflowX: "auto",
+              overflowY: "auto",
+              maxHeight: { xs: "calc(100vh - 240px)", md: "none" },
+              position: "relative",
+              borderTop: "3px solid #0d9488",
+              borderRadius: 0,
+              WebkitOverflowScrolling: "touch",
+              display: "block",
+              width: "100%",
+            }}
+          >
           {loading ? (
             <Box display="flex" justifyContent="center" p={4} role="status" aria-live="polite" aria-label="Cargando normativas">
               <CircularProgress size={28} aria-hidden="true" sx={{ color: "#0d9488" }} />
@@ -368,7 +386,7 @@ const NormativaList = () => {
               </Box>
             </Box>
           ) : (
-            <Table size="small" aria-label="Lista de normativas" sx={{ minWidth: 860 }}>
+            <Table size="small" aria-label="Lista de normativas" stickyHeader sx={{ minWidth: 860 }}>
               <TableHead>
                 <TableRow>
                   {normHeaders.map((h) => (
@@ -414,7 +432,7 @@ const NormativaList = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filtered.map((n) => (
+                  paginatedItems.map((n) => (
                     <TableRow
                       key={n.id_normativa}
                       sx={{
@@ -496,9 +514,26 @@ const NormativaList = () => {
                   ))
                 )}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25, { label: "Todos", value: -1 }]}
+                    colSpan={normHeaders.length}
+                    count={filtered.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    SelectProps={{ inputProps: { "aria-label": "Filas por página" }, native: true }}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    labelRowsPerPage="Filas por página:"
+                    sx={{ "& .MuiTablePagination-toolbar": { flexWrap: "wrap", justifyContent: { xs: "center", sm: "flex-end" } } }}
+                  />
+                </TableRow>
+              </TableFooter>
             </Table>
           )}
-        </TableContainer>
+          </TableContainer>
+        </Paper>
       </Box>
 
       <Dialog
