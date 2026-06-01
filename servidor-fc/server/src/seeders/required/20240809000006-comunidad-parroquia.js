@@ -6,59 +6,74 @@ module.exports = {
       'SELECT id_canton, nombre FROM fcc_historiaclinica.canton'
     );
 
-    const findCantonId = (name) => {
-      const canton = cantones.find(c => c.nombre === name);
-      return canton ? canton.id_canton : null;
-    };
+    const [cantonesConParroquias] = await queryInterface.sequelize.query(
+      'SELECT DISTINCT id_canton FROM fcc_historiaclinica.parroquia WHERE id_canton IS NOT NULL'
+    );
+    const cantonesConParroquiasSet = new Set(cantonesConParroquias.map(c => Number(c.id_canton)));
 
-    const parroquias = [
+    const parroquiasReales = [
       // CUENCA
-      { id_canton: findCantonId('CUENCA'), nombre: 'BELLAVISTA'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'CAÑARIBAMBA'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'EL BATÁN'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'EL SAGRARIO'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'EL VECINO'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'GIL RAMÍREZ DÁVALOS'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'HUAYNACÁPAC'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'MACHANGARA'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'MONAY'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'SAN BLAS'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'SAN SEBASTIÁN'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'SUCRE'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'TOTORACOCHA'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'YANUNCAY'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'HERMANO MIGUEL'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'BAÑOS'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'CUMBE'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'CHAUCHA'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'CHECA (JIDCAY)'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'CHIQUINTAD'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'LLACAO'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'MOLLETURO'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'NULTI'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'OCTAVIO CORDERO PALACIOS (SANTA ROSA)'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'PACCHA'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'QUINGEO'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'RICAURTE'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'SAN JOAQUÍN'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'SANTA ANA'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'SAYAUSÍ'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'SIDCAY'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'SININCAY'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'TARQUI'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'TURI'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'VALLE'  },
-      { id_canton: findCantonId('CUENCA'), nombre: 'VICTORIA DEL PORTETE (IRQUIS)'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'BELLAVISTA'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'CAÑARIBAMBA'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'EL BATÁN'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'EL SAGRARIO'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'EL VECINO'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'GIL RAMÍREZ DÁVALOS'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'HUAYNACÁPAC'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'MACHANGARA'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'MONAY'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'SAN BLAS'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'SAN SEBASTIÁN'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'SUCRE'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'TOTORACOCHA'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'YANUNCAY'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'HERMANO MIGUEL'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'BAÑOS'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'CUMBE'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'CHAUCHA'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'CHECA (JIDCAY)'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'CHIQUINTAD'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'LLACAO'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'MOLLETURO'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'NULTI'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'OCTAVIO CORDERO PALACIOS (SANTA ROSA)'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'PACCHA'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'QUINGEO'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'RICAURTE'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'SAN JOAQUÍN'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'SANTA ANA'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'SAYAUSÍ'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'SIDCAY'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'SININCAY'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'TARQUI'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'TURI'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'VALLE'  },
+      { id_canton: cantones.find(c => c.nombre === 'CUENCA')?.id_canton, nombre: 'VICTORIA DEL PORTETE (IRQUIS)'  },
       // GIRÓN
-      { id_canton: findCantonId('GIRÓN'), nombre: 'GIRÓN'  },
-      { id_canton: findCantonId('GIRÓN'), nombre: 'ASUNCIÓN'  },
-      { id_canton: findCantonId('GIRÓN'), nombre: 'SAN GERARDO'  },
-    ];
+      { id_canton: cantones.find(c => c.nombre === 'GIRÓN')?.id_canton, nombre: 'GIRÓN'  },
+      { id_canton: cantones.find(c => c.nombre === 'GIRÓN')?.id_canton, nombre: 'ASUNCIÓN'  },
+      { id_canton: cantones.find(c => c.nombre === 'GIRÓN')?.id_canton, nombre: 'SAN GERARDO'  },
+    ].filter(p => p.id_canton);
 
-    const validParroquias = parroquias.filter(p => p.id_canton !== null);
+    if (parroquiasReales.length > 0) {
+      await queryInterface.bulkInsert({tableName: 'parroquia', schema: 'fcc_historiaclinica' }, parroquiasReales, {});
+    }
 
-    if (validParroquias.length > 0) {
-      await queryInterface.bulkInsert({tableName: 'parroquia', schema: 'fcc_historiaclinica' }, validParroquias, {});
+    for (const p of parroquiasReales) {
+      cantonesConParroquiasSet.add(Number(p.id_canton));
+    }
+
+    const parroquiasPlaceholder = [];
+    for (const canton of cantones) {
+      const idCanton = Number(canton.id_canton);
+      if (cantonesConParroquiasSet.has(idCanton)) continue;
+      parroquiasPlaceholder.push({ id_canton: idCanton, nombre: 'CENTRO' });
+      parroquiasPlaceholder.push({ id_canton: idCanton, nombre: 'NORTE' });
+      parroquiasPlaceholder.push({ id_canton: idCanton, nombre: 'SUR' });
+    }
+
+    if (parroquiasPlaceholder.length > 0) {
+      await queryInterface.bulkInsert({tableName: 'parroquia', schema: 'fcc_historiaclinica' }, parroquiasPlaceholder, {});
     }
   },
 
