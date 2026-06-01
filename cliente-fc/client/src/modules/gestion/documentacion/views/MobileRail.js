@@ -6,24 +6,20 @@ const MobileRail = ({ sectionId, onChange, hidden = false }) => {
   if (hidden) return null;
 
   return (
-    <Box
-      component="nav"
-      aria-label="Navegación rápida del módulo de documentación"
-      sx={{
-        display: { xs: 'block', md: 'none' },
-        position: 'sticky',
-        top: { xs: 56, sm: 64 },
-        zIndex: 5,
-        bgcolor: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'saturate(180%) blur(12px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(12px)',
-        borderBottom: '1px solid',
-        borderColor: tokens.color.border,
-        boxShadow: '0 4px 12px -4px rgba(15, 23, 42, 0.08)',
-        py: 1.25,
-        mx: { xs: -2, sm: -3 },
-        px: { xs: 2, sm: 3 },
-      }}
+      <Box
+        component="nav"
+        aria-label="Navegación rápida del módulo de documentación"
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          bgcolor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'saturate(180%) blur(12px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(12px)',
+          borderBottom: '1px solid',
+          borderColor: tokens.color.border,
+          boxShadow: '0 4px 12px -4px rgba(15, 23, 42, 0.08)',
+          py: 1.25,
+          px: { xs: 2, sm: 3 },
+        }}
     >
       <Box
         role="tablist"

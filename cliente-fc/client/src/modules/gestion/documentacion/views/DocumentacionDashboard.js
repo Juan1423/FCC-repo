@@ -63,7 +63,7 @@ const DocumentacionDashboard = () => {
   const isOverview = sectionId === OVERVIEW_ID;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'row', height: '100vh', overflow: 'hidden', bgcolor: tokens.color.paper }}>
+    <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, display: 'flex', flexDirection: 'row', overflow: 'hidden', bgcolor: tokens.color.paper }}>
       <NavbarAdmin onDrawerToggle={() => setDrawerOpen((v) => !v)} />
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
@@ -85,6 +85,8 @@ const DocumentacionDashboard = () => {
           onToggleCollapse={() => setCollapsed((v) => !v)}
         />
 
+        <MobileRail sectionId={sectionId} onChange={handleSelect} hidden={isOverview} />
+
         <Box
           component="main"
           ref={mainRef}
@@ -100,8 +102,6 @@ const DocumentacionDashboard = () => {
             overflowY: 'auto',
           }}
         >
-          <MobileRail sectionId={sectionId} onChange={handleSelect} hidden={isOverview} />
-
           <Box sx={{ mt: { xs: 2, md: 0 } }}>
             {isOverview ? (
               <Overview onSelect={handleSelect} />
