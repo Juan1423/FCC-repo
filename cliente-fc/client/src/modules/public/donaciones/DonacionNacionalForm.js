@@ -238,38 +238,51 @@ const DonacionNacionalForm = () => {
   const renderField = (field, label, props = {}) => {
     const id = `nacional-${field}`;
     const { helpText, ...rest } = props;
+    const helpButton = helpText ? (
+      <Tooltip title={helpText} arrow placement="top">
+        <IconButton
+          size="small"
+          aria-label={`Ayuda sobre ${label}`}
+          sx={{
+            color: '#0d9488',
+            bgcolor: 'rgba(13,148,136,0.08)',
+            '&:hover': { bgcolor: 'rgba(13,148,136,0.16)' },
+            p: 0.5,
+          }}
+        >
+          <HelpOutlineIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ) : null;
     return (
-      <TextField
-        id={id}
-        fullWidth
-        label={label}
-        value={form[field]}
-        onChange={handleChange(field)}
-        error={!!errors[field]}
-        helperText={errors[field]}
-        aria-required={rest.required || false}
-        slotProps={
-          helpText
-            ? {
-                input: {
-                  endAdornment: (
-                    <Tooltip title={helpText} arrow placement="top-end">
-                      <IconButton
-                        size="small"
-                        edge="end"
-                        aria-label={`Ayuda sobre ${label}`}
-                        sx={{ color: '#64748b', mr: 0.5 }}
-                      >
-                        <HelpOutlineIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  ),
-                },
-              }
-            : undefined
-        }
-        {...rest}
-      />
+      <Box sx={{ position: 'relative' }}>
+        {helpButton && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: { xs: 8, sm: 10 },
+              right: 10,
+              zIndex: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}
+          >
+            {helpButton}
+          </Box>
+        )}
+        <TextField
+          id={id}
+          fullWidth
+          label={label}
+          value={form[field]}
+          onChange={handleChange(field)}
+          error={!!errors[field]}
+          helperText={errors[field]}
+          aria-required={rest.required || false}
+          {...rest}
+        />
+      </Box>
     );
   };
 
