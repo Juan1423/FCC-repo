@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, Tooltip, IconButton } from '@mui/material';
+import { Box, Typography, Tooltip } from '@mui/material';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
@@ -20,9 +20,9 @@ const Sidebar = ({ sectionId, onChange, collapsed, onToggleCollapse }) => {
         width,
         flexShrink: 0,
         position: 'sticky',
-        top: { md: 72 },
+        top: { md: 64 },
         alignSelf: 'flex-start',
-        height: { md: 'calc(100vh - 80px)' },
+        height: { md: 'calc(100vh - 64px)' },
         display: { xs: 'none', md: 'flex' },
         flexDirection: 'column',
         borderRight: '1px solid',
@@ -33,14 +33,83 @@ const Sidebar = ({ sectionId, onChange, collapsed, onToggleCollapse }) => {
       }}
     >
       <Box
+        role="button"
+        tabIndex={0}
+        aria-label={collapsed ? 'Expandir índice de navegación' : 'Contraer índice de navegación'}
+        onClick={onToggleCollapse}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggleCollapse();
+          }
+        }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: showLabels ? 'flex-start' : 'center',
+          gap: showLabels ? 1.5 : 0,
+          px: showLabels ? 2.25 : 1.5,
+          py: 1.25,
+          cursor: 'pointer',
+          userSelect: 'none',
+          borderBottom: '1px solid',
+          borderColor: tokens.color.border,
+          bgcolor: 'transparent',
+          transition: 'background 180ms, color 180ms',
+          '&:hover': {
+            bgcolor: tokens.color.card,
+            '& .sidebar-collapse-icon': { color: tokens.color.accent },
+          },
+          '&:focus-visible': {
+            outline: `2px solid ${tokens.color.accent}`,
+            outlineOffset: -2,
+          },
+          '&:active': { transform: 'scale(0.998)' },
+        }}
+      >
+        <Box
+          className="sidebar-collapse-icon"
+          aria-hidden="true"
+          sx={{
+            width: 32,
+            height: 32,
+            display: 'grid',
+            placeItems: 'center',
+            borderRadius: tokens.radius.sm,
+            color: tokens.color.inkSoft,
+            flexShrink: 0,
+            transition: 'color 180ms',
+          }}
+        >
+          {collapsed ? (
+            <ChevronRightRoundedIcon fontSize="small" />
+          ) : (
+            <ChevronLeftRoundedIcon fontSize="small" />
+          )}
+        </Box>
+        {showLabels && (
+          <Typography
+            sx={{
+              fontFamily: tokens.font.mono,
+              fontSize: '0.65rem',
+              color: tokens.color.inkMute,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+            }}
+          >
+            {collapsed ? 'Expandir' : 'Contraer'}
+          </Typography>
+        )}
+      </Box>
+
+      <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
           gap: 1.25,
           px: showLabels ? 2.25 : 1.5,
           py: 2.5,
-          borderBottom: '1px solid',
-          borderColor: tokens.color.border,
           minHeight: 64,
         }}
       >
@@ -244,38 +313,6 @@ const Sidebar = ({ sectionId, onChange, collapsed, onToggleCollapse }) => {
             </Tooltip>
           );
         })}
-      </Box>
-
-      <Box
-        sx={{
-          borderTop: '1px solid',
-          borderColor: tokens.color.border,
-          p: 1,
-          display: 'flex',
-          justifyContent: showLabels ? 'flex-end' : 'center',
-        }}
-      >
-        <Tooltip title={collapsed ? 'Expandir índice' : 'Contraer índice'} placement="right" arrow>
-          <IconButton
-            onClick={onToggleCollapse}
-            size="small"
-            aria-label={collapsed ? 'Expandir índice de navegación' : 'Contraer índice de navegación'}
-            sx={{
-              color: tokens.color.inkSoft,
-              borderRadius: tokens.radius.md,
-              '&:hover': {
-                bgcolor: tokens.color.card,
-                color: tokens.color.accent,
-              },
-            }}
-          >
-            {collapsed ? (
-              <ChevronRightRoundedIcon fontSize="small" />
-            ) : (
-              <ChevronLeftRoundedIcon fontSize="small" />
-            )}
-          </IconButton>
-        </Tooltip>
       </Box>
     </Box>
   );

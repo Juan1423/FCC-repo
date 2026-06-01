@@ -63,7 +63,7 @@ const DocumentacionDashboard = () => {
   const isOverview = sectionId === OVERVIEW_ID;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', bgcolor: tokens.color.paper }}>
+    <Box sx={{ display: 'flex', flexDirection: 'row', height: '100vh', overflow: 'hidden', bgcolor: tokens.color.paper }}>
       <NavbarAdmin onDrawerToggle={() => setDrawerOpen((v) => !v)} />
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
