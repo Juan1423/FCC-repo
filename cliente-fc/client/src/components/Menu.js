@@ -13,7 +13,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import NavbarAdmin from "./NavbarAdmin";
 import { useNavigate } from "react-router-dom";
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import ComputerIcon from '@mui/icons-material/Computer';
@@ -102,7 +101,6 @@ const HelpModalContent = styled(Paper)(({ theme }) => ({
 }));
 
 const Dashboard = () => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [openHelp, setOpenHelp] = useState(false);
   const [helpContent, setHelpContent] = useState("");
@@ -154,10 +152,6 @@ const Dashboard = () => {
 
     fetchDashboardData();
   }, [navigate]);
-
-  const handleDrawerToggle = () => {
-    setDrawerOpen(!drawerOpen);
-  };
 
   const handleMenuClick = (url) => {
     navigate(url);
@@ -217,7 +211,6 @@ const Dashboard = () => {
         bgcolor: "#f0f2f5",
       }}
     >
-      <NavbarAdmin onDrawerToggle={handleDrawerToggle} />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Container maxWidth="xl">
           <Typography
