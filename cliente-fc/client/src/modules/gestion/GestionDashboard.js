@@ -38,14 +38,14 @@ const dataTarjeta = [
     icon: <DescriptionIcon />,
     description: 'Gestión de documentos y archivos',
     path: '/fcc-documentacion',
-    color: '#0891b2',
+    color: '#1e40af',
   },
   {
     title: 'Donaciones',
     icon: <VolunteerActivismIcon />,
     description: 'Gestión de donaciones y aportes',
     path: '/fcc-donaciones',
-    color: '#059669',
+    color: '#0ea5e9',
   },
 ];
 

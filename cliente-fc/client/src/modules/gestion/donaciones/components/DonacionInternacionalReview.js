@@ -122,7 +122,7 @@ const DonacionInternacionalReview = () => {
   if (error) return <Typography color="error" role="alert">{error}</Typography>;
 
   const renderDesktopTable = () => (
-    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, border: '1px solid rgba(45,147,108,0.1)' }}>
+    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
       <Table size="small" aria-label="Tabla de donaciones internacionales">
         <TableHead>
           <TableRow>
@@ -154,7 +154,7 @@ const DonacionInternacionalReview = () => {
             return (
               <TableRow
                 key={row.id_donacion_internacional}
-                sx={{ '&:hover': { bgcolor: 'rgba(45,147,108,0.03)' } }}
+                sx={{ '&:hover': { bgcolor: 'rgba(37,99,235,0.04)' } }}
               >
                 <TableCell>{row.id_donacion_internacional}</TableCell>
                 <TableCell>{di ? `${di.nombres} ${di.apellidos}` : '—'}</TableCell>
@@ -170,10 +170,10 @@ const DonacionInternacionalReview = () => {
                     variant="outlined"
                     onClick={() => openReview(row)}
                     sx={{
-                      borderColor: 'rgba(45,147,108,0.3)',
-                      color: '#2D936C',
+                      borderColor: 'rgba(37,99,235,0.3)',
+                      color: '#2563eb',
                       minHeight: 44,
-                      '&:hover': { borderColor: '#2D936C', bgcolor: 'rgba(45,147,108,0.04)' },
+                      '&:hover': { borderColor: '#2563eb', bgcolor: 'rgba(37,99,235,0.04)' },
                     }}
                   >
                     Revisar
@@ -205,7 +205,8 @@ const DonacionInternacionalReview = () => {
             sx={{
               p: 2,
               borderRadius: 2,
-              border: '1px solid rgba(45,147,108,0.1)',
+              border: '1px solid',
+              borderColor: 'grey.200',
             }}
           >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
@@ -229,10 +230,10 @@ const DonacionInternacionalReview = () => {
                 fullWidth
                 onClick={() => openReview(row)}
                 sx={{
-                  borderColor: 'rgba(45,147,108,0.3)',
-                  color: '#2D936C',
+                  borderColor: 'rgba(37,99,235,0.3)',
+                  color: '#2563eb',
                   minHeight: 44,
-                  '&:hover': { borderColor: '#2D936C', bgcolor: 'rgba(45,147,108,0.04)' },
+                  '&:hover': { borderColor: '#2563eb', bgcolor: 'rgba(37,99,235,0.04)' },
                 }}
               >
                 Revisar
@@ -255,13 +256,13 @@ const DonacionInternacionalReview = () => {
       fullWidth
       aria-labelledby="review-dialog-title"
     >
-      <DialogTitle id="review-dialog-title" sx={{ color: '#4A2C2A', fontWeight: 600 }}>
+      <DialogTitle id="review-dialog-title" sx={{ color: '#1e293b', fontWeight: 600 }}>
         Revisar Donación Internacional
       </DialogTitle>
       <DialogContent dividers>
         {selected && (
           <>
-            <Typography variant="subtitle2" sx={{ color: '#2D936C', fontWeight: 600, mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: '#2563eb', fontWeight: 600, mb: 1 }}>
               Información del donante
             </Typography>
             {donantes[selected.id_donante_internacional] && (
@@ -281,7 +282,7 @@ const DonacionInternacionalReview = () => {
               </Box>
             )}
             <Divider sx={{ my: 1.5 }} />
-            <Typography variant="subtitle2" sx={{ color: '#2D936C', fontWeight: 600, mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: '#2563eb', fontWeight: 600, mb: 1 }}>
               Detalle de la donación
             </Typography>
             <Box sx={{ mb: 2, pl: 1 }}>
@@ -291,7 +292,7 @@ const DonacionInternacionalReview = () => {
               <Typography variant="body2"><strong>Procedencia:</strong> {selected.procedencia || '—'}</Typography>
             </Box>
             <Divider sx={{ my: 1.5 }} />
-            <Typography variant="subtitle2" sx={{ color: '#2D936C', fontWeight: 600, mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: '#2563eb', fontWeight: 600, mb: 1 }}>
               Asignación
             </Typography>
             <FormControl fullWidth sx={{ mb: 2 }}>
@@ -335,7 +336,7 @@ const DonacionInternacionalReview = () => {
       <DialogActions sx={{ p: 2, gap: 1 }}>
         <Button
           onClick={() => setModalOpen(false)}
-          sx={{ color: '#666', minHeight: 44 }}
+          sx={{ color: '#64748b', minHeight: 44 }}
         >
           Cancelar
         </Button>
@@ -343,9 +344,9 @@ const DonacionInternacionalReview = () => {
           variant="contained"
           onClick={handleSave}
           sx={{
-            bgcolor: '#2D936C',
+            bgcolor: '#2563eb',
             minHeight: 44,
-            '&:hover': { bgcolor: '#247A58' },
+            '&:hover': { bgcolor: '#1d4ed8' },
           }}
         >
           Guardar
@@ -366,8 +367,9 @@ const DonacionInternacionalReview = () => {
           mb: 2,
           '& .MuiOutlinedInput-root': {
             borderRadius: 2,
-            '& fieldset': { borderColor: 'rgba(45,147,108,0.2)' },
-            '&:hover fieldset': { borderColor: 'rgba(45,147,108,0.4)' },
+            '& fieldset': { borderColor: 'grey.300' },
+            '&:hover fieldset': { borderColor: '#93c5fd' },
+            '&.Mui-focused fieldset': { borderColor: '#2563eb' },
           },
         }}
         inputProps={{ 'aria-label': 'Buscar donaciones internacionales' }}

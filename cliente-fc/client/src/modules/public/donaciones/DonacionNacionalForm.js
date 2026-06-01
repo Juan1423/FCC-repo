@@ -10,15 +10,12 @@ import * as donacionService from '../../../services/donacionService';
 
 const theme = createTheme({
   typography: {
-    fontFamily: '"Plus Jakarta Sans","Roboto","Helvetica","Arial",sans-serif',
-    h1: { fontFamily: '"Playfair Display",serif', fontWeight: 700 },
-    h2: { fontFamily: '"Playfair Display",serif', fontWeight: 600 },
-    h3: { fontFamily: '"Playfair Display",serif', fontWeight: 600 },
+    fontFamily: '"Inter","Roboto","Helvetica","Arial",sans-serif',
   },
   palette: {
-    primary: { main: '#C8553D' },
-    secondary: { main: '#E8A838' },
-    success: { main: '#2D936C' },
+    primary: { main: '#2563eb' },
+    secondary: { main: '#3b82f6' },
+    success: { main: '#10b981' },
   },
   shape: { borderRadius: 12 },
 });
@@ -198,10 +195,10 @@ const DonacionNacionalForm = () => {
                 mb: 0.5,
                 fontWeight: 700,
                 fontSize: { xs: '0.85rem', sm: '1rem' },
-                bgcolor: i <= step ? '#C8553D' : '#e0e0e0',
+                bgcolor: i <= step ? '#2563eb' : '#e0e0e0',
                 color: i <= step ? '#fff' : '#999',
                 transition: 'all 0.3s ease',
-                boxShadow: i === step ? '0 4px 14px rgba(200,85,61,0.35)' : 'none',
+                boxShadow: i === step ? '0 4px 14px rgba(37,99,235,0.35)' : 'none',
               }}
               aria-current={i === step ? 'step' : undefined}
             >
@@ -212,7 +209,7 @@ const DonacionNacionalForm = () => {
               sx={{
                 display: { xs: i === step ? 'block' : 'none', sm: 'block' },
                 fontWeight: i === step ? 600 : 400,
-                color: i <= step ? '#4A2C2A' : '#999',
+                color: i <= step ? '#1e293b' : '#999',
                 maxWidth: 80,
                 lineHeight: 1.2,
               }}
@@ -225,7 +222,7 @@ const DonacionNacionalForm = () => {
               sx={{
                 width: { xs: 24, sm: 48, md: 72 },
                 height: 2,
-                bgcolor: i < step ? '#C8553D' : '#e0e0e0',
+                bgcolor: i < step ? '#2563eb' : '#e0e0e0',
                 mx: 1,
                 mt: -3,
                 transition: 'background 0.3s ease',
@@ -277,8 +274,7 @@ const DonacionNacionalForm = () => {
   };
 
   return (
-    <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');`}</style>
+    <ThemeProvider theme={theme}>
       <Box
         component="a"
         href="#donacion-form-content"
@@ -291,261 +287,259 @@ const DonacionNacionalForm = () => {
           p: 1.5,
           borderRadius: 1,
           textDecoration: 'none',
-          color: '#C8553D',
+          color: '#2563eb',
           fontWeight: 600,
           '&:focus': { position: 'fixed', left: 8, top: 8 },
         }}
       >
         Saltar al contenido principal
       </Box>
-      <ThemeProvider theme={theme}>
-        <Box id="donacion-form-content" sx={{ position: 'relative', overflow: 'hidden', bgcolor: '#FFF8F0', minHeight: '100vh' }}>
+      <Box id="donacion-form-content" sx={{ position: 'relative', overflow: 'hidden', bgcolor: '#f8fafc', minHeight: '100vh' }}>
+        <Box
+          sx={{
+            background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)',
+            pt: { xs: 4, md: 6 },
+            pb: { xs: 10, md: 8 },
+            textAlign: 'center',
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+              pointerEvents: 'none',
+            },
+          }}
+        >
+          <Container maxWidth="md">
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+              <Typography variant="h1" sx={{ color: '#fff', fontSize: { xs: '2rem', md: '3rem' }, mb: 1, textShadow: '0 2px 8px rgba(0,0,0,0.15)', fontWeight: 700 }}>
+                Donación Nacional
+              </Typography>
+              <Typography variant="h2" sx={{ color: 'rgba(255,255,255,0.9)', fontSize: { xs: '1rem', md: '1.25rem' }, fontWeight: 400 }}>
+                Su generosidad transforma vidas. Complete el formulario para registrar su donación.
+              </Typography>
+            </motion.div>
+          </Container>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #C8553D 0%, #E8A838 50%, #2D936C 100%)',
-              pt: { xs: 4, md: 6 },
-              pb: { xs: 10, md: 8 },
-              textAlign: 'center',
-              position: 'relative',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)',
-                pointerEvents: 'none',
-              },
+              position: 'absolute',
+              bottom: -2,
+              left: 0,
+              right: 0,
+              height: 60,
+              background: '#f8fafc',
+              borderTopLeftRadius: { xs: '30px', md: '60px' },
+              borderTopRightRadius: { xs: '30px', md: '60px' },
+            }}
+          />
+        </Box>
+
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, mt: { xs: 0, md: -6 }, pb: 6 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, sm: 3, md: 4 },
+              borderRadius: 3,
+              bgcolor: '#ffffff',
+              boxShadow: '0 8px 32px rgba(15,23,42,0.08)',
+              border: '1px solid',
+              borderColor: 'grey.200',
             }}
           >
-            <Container maxWidth="md">
-              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-                <Typography variant="h1" sx={{ color: '#fff', fontSize: { xs: '2rem', md: '3rem' }, mb: 1, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-                  Donación Nacional
-                </Typography>
-                <Typography variant="h2" sx={{ color: 'rgba(255,255,255,0.9)', fontSize: { xs: '1rem', md: '1.25rem' }, fontWeight: 400 }}>
-                  Su generosidad transforma vidas. Complete el formulario para registrar su donación.
-                </Typography>
+            {renderStepIndicator()}
+
+            <Box ref={topRef} />
+
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'tween', duration: 0.3 }}
+              >
+                {step === 0 && (
+                  <Box role="region" aria-label="Datos del donante">
+                    <Typography variant="h2" sx={{ color: '#1e293b', mb: 3, fontSize: { xs: '1.25rem', md: '1.5rem' }, fontWeight: 600 }}>
+                      Información personal
+                    </Typography>
+                    <Grid container spacing={2.5}>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('nombres', 'Nombres', { required: true })}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('apellidos', 'Apellidos', { required: true })}
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        {renderField('identificacion', 'Cédula', { required: true })}
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        {renderField('telefono', 'Teléfono', { required: true })}
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        {renderField('email', 'Email', { type: 'email', required: true })}
+                      </Grid>
+                      <Grid item xs={12}>
+                        {renderField('direccion', 'Dirección', { multiline: true, rows: 2 })}
+                      </Grid>
+                    </Grid>
+
+                    <Typography variant="h2" sx={{ color: '#1e293b', mb: 3, mt: 4, fontSize: { xs: '1.25rem', md: '1.5rem' }, fontWeight: 600 }}>
+                      Ubicación
+                    </Typography>
+                    <Grid container spacing={2.5}>
+                      <Grid item xs={12} sm={6} md={3}>
+                        {renderSelect('id_region', 'Región', regiones, 'id_region', 'nombre')}
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        {renderSelect('id_provincia', 'Provincia', provinciasFiltradas, 'id_provincia', 'nombre', !form.id_region)}
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        {renderSelect('id_canton', 'Cantón', cantonesFiltrados, 'id_canton', 'nombre', !form.id_provincia)}
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        {renderSelect('id_parroquia', 'Parroquia', parroquiasFiltradas, 'id_parroquia', 'nombre', !form.id_canton)}
+                      </Grid>
+                    </Grid>
+
+                    <Typography variant="h2" sx={{ color: '#1e293b', mb: 3, mt: 4, fontSize: { xs: '1.25rem', md: '1.5rem' }, fontWeight: 600 }}>
+                      Información adicional
+                    </Typography>
+                    <Grid container spacing={2.5}>
+                      <Grid item xs={12} sm={6}>
+                        {renderSelect('id_tipo_donante', 'Tipo de donante', tipoDonantes, 'id_tipo_donante', 'nombre')}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('ocupacion', 'Ocupación')}
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+
+                {step === 1 && (
+                  <Box role="region" aria-label="Detalle de la donación">
+                    <Typography variant="h2" sx={{ color: '#1e293b', mb: 3, fontSize: { xs: '1.25rem', md: '1.5rem' }, fontWeight: 600 }}>
+                      Información de la donación
+                    </Typography>
+                    <Grid container spacing={2.5}>
+                      <Grid item xs={12} sm={6}>
+                        {renderSelect('id_tipo_donacion', 'Tipo de donación', tipoDonaciones, 'id_tipo_donacion', 'nombre')}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('monto', 'Monto (USD)', { type: 'number' })}
+                      </Grid>
+                      <Grid item xs={12}>
+                        {renderField('descripcion', 'Descripción', { multiline: true, rows: 3 })}
+                      </Grid>
+                      <Grid item xs={12}>
+                        {renderField('motivo', 'Motivo', { multiline: true, rows: 2 })}
+                      </Grid>
+                      <Grid item xs={12}>
+                        {renderField('procedencia', 'Procedencia', { multiline: true, rows: 2 })}
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+
+                {step === 2 && (
+                  <Box role="region" aria-label="Confirmar donación">
+                    <Typography variant="h2" sx={{ color: '#1e293b', mb: 3, fontSize: { xs: '1.25rem', md: '1.5rem' }, fontWeight: 600 }}>
+                      Resumen de su donación
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, borderColor: 'grey.200' }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">Donante</Typography>
+                          <Typography variant="body1" fontWeight={600}>{form.nombres} {form.apellidos}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">Identificación</Typography>
+                          <Typography variant="body1">{form.identificacion}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">Email</Typography>
+                          <Typography variant="body1">{form.email}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">Teléfono</Typography>
+                          <Typography variant="body1">{form.telefono}</Typography>
+                        </Grid>
+                        {form.monto && (
+                          <Grid item xs={12} sm={6}>
+                            <Typography variant="caption" color="text.secondary">Monto</Typography>
+                            <Typography variant="body1" fontWeight={600} color="success.main">${form.monto}</Typography>
+                          </Grid>
+                        )}
+                        {form.descripcion && (
+                          <Grid item xs={12}>
+                            <Typography variant="caption" color="text.secondary">Descripción</Typography>
+                            <Typography variant="body1">{form.descripcion}</Typography>
+                          </Grid>
+                        )}
+                        {form.motivo && (
+                          <Grid item xs={12}>
+                            <Typography variant="caption" color="text.secondary">Motivo</Typography>
+                            <Typography variant="body1">{form.motivo}</Typography>
+                          </Grid>
+                        )}
+                      </Grid>
+                    </Paper>
+                  </Box>
+                )}
               </motion.div>
-            </Container>
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: -2,
-                left: 0,
-                right: 0,
-                height: 60,
-                background: '#FFF8F0',
-                borderTopLeftRadius: { xs: '30px', md: '60px' },
-                borderTopRightRadius: { xs: '30px', md: '60px' },
-              }}
-            />
-          </Box>
+            </AnimatePresence>
 
-          <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, mt: { xs: 0, md: -6 }, pb: 6 }}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: { xs: 2, sm: 3, md: 4 },
-                borderRadius: 3,
-                bgcolor: 'rgba(255,255,255,0.95)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 32px rgba(74,44,42,0.08)',
-                border: '1px solid rgba(200,85,61,0.1)',
-              }}
-            >
-              {renderStepIndicator()}
-
-              <Box ref={topRef} />
-
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={step}
-                  custom={direction}
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ type: 'tween', duration: 0.3 }}
-                >
-                  {step === 0 && (
-                    <Box role="region" aria-label="Datos del donante">
-                      <Typography variant="h2" sx={{ color: '#4A2C2A', mb: 3, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-                        Información personal
-                      </Typography>
-                      <Grid container spacing={2.5}>
-                        <Grid item xs={12} sm={6}>
-                          {renderField('nombres', 'Nombres', { required: true })}
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          {renderField('apellidos', 'Apellidos', { required: true })}
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          {renderField('identificacion', 'Cédula', { required: true })}
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          {renderField('telefono', 'Teléfono', { required: true })}
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          {renderField('email', 'Email', { type: 'email', required: true })}
-                        </Grid>
-                        <Grid item xs={12}>
-                          {renderField('direccion', 'Dirección', { multiline: true, rows: 2 })}
-                        </Grid>
-                      </Grid>
-
-                      <Typography variant="h2" sx={{ color: '#4A2C2A', mb: 3, mt: 4, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-                        Ubicación
-                      </Typography>
-                      <Grid container spacing={2.5}>
-                        <Grid item xs={12} sm={6} md={3}>
-                          {renderSelect('id_region', 'Región', regiones, 'id_region', 'nombre')}
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                          {renderSelect('id_provincia', 'Provincia', provinciasFiltradas, 'id_provincia', 'nombre', !form.id_region)}
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                          {renderSelect('id_canton', 'Cantón', cantonesFiltrados, 'id_canton', 'nombre', !form.id_provincia)}
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                          {renderSelect('id_parroquia', 'Parroquia', parroquiasFiltradas, 'id_parroquia', 'nombre', !form.id_canton)}
-                        </Grid>
-                      </Grid>
-
-                      <Typography variant="h2" sx={{ color: '#4A2C2A', mb: 3, mt: 4, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-                        Información adicional
-                      </Typography>
-                      <Grid container spacing={2.5}>
-                        <Grid item xs={12} sm={6}>
-                          {renderSelect('id_tipo_donante', 'Tipo de donante', tipoDonantes, 'id_tipo_donante', 'nombre')}
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          {renderField('ocupacion', 'Ocupación')}
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  )}
-
-                  {step === 1 && (
-                    <Box role="region" aria-label="Detalle de la donación">
-                      <Typography variant="h2" sx={{ color: '#4A2C2A', mb: 3, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-                        Información de la donación
-                      </Typography>
-                      <Grid container spacing={2.5}>
-                        <Grid item xs={12} sm={6}>
-                          {renderSelect('id_tipo_donacion', 'Tipo de donación', tipoDonaciones, 'id_tipo_donacion', 'nombre')}
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          {renderField('monto', 'Monto (USD)', { type: 'number' })}
-                        </Grid>
-                        <Grid item xs={12}>
-                          {renderField('descripcion', 'Descripción', { multiline: true, rows: 3 })}
-                        </Grid>
-                        <Grid item xs={12}>
-                          {renderField('motivo', 'Motivo', { multiline: true, rows: 2 })}
-                        </Grid>
-                        <Grid item xs={12}>
-                          {renderField('procedencia', 'Procedencia', { multiline: true, rows: 2 })}
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  )}
-
-                  {step === 2 && (
-                    <Box role="region" aria-label="Confirmar donación">
-                      <Typography variant="h2" sx={{ color: '#4A2C2A', mb: 3, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-                        Resumen de su donación
-                      </Typography>
-                      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, borderColor: 'rgba(200,85,61,0.2)' }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary">Donante</Typography>
-                            <Typography variant="body1" fontWeight={600}>{form.nombres} {form.apellidos}</Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary">Identificación</Typography>
-                            <Typography variant="body1">{form.identificacion}</Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary">Email</Typography>
-                            <Typography variant="body1">{form.email}</Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary">Teléfono</Typography>
-                            <Typography variant="body1">{form.telefono}</Typography>
-                          </Grid>
-                          {form.monto && (
-                            <Grid item xs={12} sm={6}>
-                              <Typography variant="caption" color="text.secondary">Monto</Typography>
-                              <Typography variant="body1" fontWeight={600} color="success.main">${form.monto}</Typography>
-                            </Grid>
-                          )}
-                          {form.descripcion && (
-                            <Grid item xs={12}>
-                              <Typography variant="caption" color="text.secondary">Descripción</Typography>
-                              <Typography variant="body1">{form.descripcion}</Typography>
-                            </Grid>
-                          )}
-                          {form.motivo && (
-                            <Grid item xs={12}>
-                              <Typography variant="caption" color="text.secondary">Motivo</Typography>
-                              <Typography variant="body1">{form.motivo}</Typography>
-                            </Grid>
-                          )}
-                        </Grid>
-                      </Paper>
-                    </Box>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 2 }}>
+              <Button
+                disabled={step === 0}
+                onClick={handleBack}
+                variant="outlined"
+                sx={{
+                  borderColor: 'grey.300',
+                  color: '#2563eb',
+                  minHeight: 44,
+                  minWidth: 120,
+                  '&:hover': { borderColor: '#2563eb', bgcolor: 'rgba(37,99,235,0.04)' },
+                }}
+              >
+                Atrás
+              </Button>
+              {step < 2 ? (
                 <Button
-                  disabled={step === 0}
-                  onClick={handleBack}
-                  variant="outlined"
+                  variant="contained"
+                  onClick={handleNext}
+                  disabled={step === 0 && !isDonanteComplete()}
                   sx={{
-                    borderColor: 'rgba(200,85,61,0.3)',
-                    color: '#C8553D',
+                    bgcolor: '#2563eb',
                     minHeight: 44,
                     minWidth: 120,
-                    '&:hover': { borderColor: '#C8553D', bgcolor: 'rgba(200,85,61,0.04)' },
+                    '&:hover': { bgcolor: '#1d4ed8' },
+                    '&:disabled': { bgcolor: 'rgba(37,99,235,0.3)' },
                   }}
                 >
-                  Atrás
+                  Siguiente
                 </Button>
-                {step < 2 ? (
-                  <Button
-                    variant="contained"
-                    onClick={handleNext}
-                    disabled={step === 0 && !isDonanteComplete()}
-                    sx={{
-                      bgcolor: '#C8553D',
-                      minHeight: 44,
-                      minWidth: 120,
-                      '&:hover': { bgcolor: '#B04430' },
-                      '&:disabled': { bgcolor: 'rgba(200,85,61,0.3)' },
-                    }}
-                  >
-                    Siguiente
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    sx={{
-                      bgcolor: '#2D936C',
-                      minHeight: 44,
-                      minWidth: 140,
-                      '&:hover': { bgcolor: '#247A58' },
-                    }}
-                  >
-                    {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Enviar donación'}
-                  </Button>
-                )}
-              </Box>
-            </Paper>
-          </Container>
-        </Box>
+              ) : (
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  sx={{
+                    bgcolor: '#10b981',
+                    minHeight: 44,
+                    minWidth: 140,
+                    '&:hover': { bgcolor: '#059669' },
+                  }}
+                >
+                  {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Enviar donación'}
+                </Button>
+              )}
+            </Box>
+          </Paper>
+        </Container>
 
         <Snackbar
           open={snack.open}
@@ -563,8 +557,8 @@ const DonacionNacionalForm = () => {
             {snack.message}
           </Alert>
         </Snackbar>
-      </ThemeProvider>
-    </>
+      </Box>
+    </ThemeProvider>
   );
 };
 
