@@ -237,7 +237,7 @@ const NormativaList = () => {
             border: "1px solid",
             borderColor: "#e7e5e4",
             borderRadius: 2,
-            overflow: { xs: "auto", sm: "visible" },
+            overflow: "auto",
             bgcolor: "#ffffff",
             "&::before": {
               content: '""',
@@ -368,7 +368,7 @@ const NormativaList = () => {
               </Box>
             </Box>
           ) : (
-            <Table size="small" aria-label="Lista de normativas" sx={{ "& .MuiTableCell-root": { wordBreak: "break-word", overflowWrap: "break-word" } }}>
+            <Table size="small" aria-label="Lista de normativas" sx={{ minWidth: 860 }}>
               <TableHead>
                 <TableRow>
                   {normHeaders.map((h) => (
@@ -376,7 +376,6 @@ const NormativaList = () => {
                       key={h.key}
                       align={h.align || "left"}
                       sx={{
-                        display: h.mobile ? undefined : { xs: "none", md: "table-cell" },
                         fontWeight: 600,
                         color: "#57534e",
                         fontSize: "0.75rem",
@@ -424,25 +423,25 @@ const NormativaList = () => {
                         transition: "background-color 0.15s ease",
                       }}
                     >
-                      <TableCell sx={{ fontWeight: 600, color: "#1c1917", fontSize: "0.85rem" }}>
+                      <TableCell sx={{ fontWeight: 600, color: "#1c1917", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                         {n.nombre_normativa}
                       </TableCell>
-                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem" }}>
+                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                         {tiposMap[n.id_tipo_normativa] || "—"}
                       </TableCell>
-                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem" }}>
+                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                         {n.nivel_normativa != null ? n.nivel_normativa : "—"}
                       </TableCell>
-                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem" }}>
+                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                         {n.jerarquia_normativa || "—"}
                       </TableCell>
-                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
+                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                         {n.fecha_normativa || "—"}
                       </TableCell>
                       <TableCell sx={{ color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                         {n.fecha_vigencia_normativa || "—"}
                       </TableCell>
-                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem" }}>
+                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                         {n.tipo_registro_normativa || "—"}
                       </TableCell>
                       <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>

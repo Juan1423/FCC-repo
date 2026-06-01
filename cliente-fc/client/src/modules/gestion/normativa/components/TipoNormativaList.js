@@ -150,7 +150,7 @@ const TipoNormativaList = () => {
             border: "1px solid",
             borderColor: "#e7e5e4",
             borderRadius: 2,
-            overflow: { xs: "auto", sm: "visible" },
+            overflow: "auto",
             bgcolor: "#ffffff",
             "&::before": {
               content: '""',
@@ -281,7 +281,7 @@ const TipoNormativaList = () => {
               </Box>
             </Box>
           ) : (
-            <Table size="small" aria-label="Lista de tipos de normativa" sx={{ "& .MuiTableCell-root": { wordBreak: "break-word", overflowWrap: "break-word" } }}>
+            <Table size="small" aria-label="Lista de tipos de normativa" sx={{ minWidth: 560 }}>
               <TableHead>
                 <TableRow>
                   {tipoHeaders.map((h) => (
@@ -289,7 +289,6 @@ const TipoNormativaList = () => {
                       key={h.key}
                       align={h.align || "left"}
                       sx={{
-                        display: h.mobile ? undefined : { xs: "none", md: "table-cell" },
                         fontWeight: 600,
                         color: "#57534e",
                         fontSize: "0.75rem",
@@ -298,6 +297,7 @@ const TipoNormativaList = () => {
                         borderBottom: "2px solid",
                         borderColor: "#e7e5e4",
                         py: 1.5,
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {h.label}
@@ -336,13 +336,13 @@ const TipoNormativaList = () => {
                         transition: "background-color 0.15s ease",
                       }}
                     >
-                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#a8a29e", fontSize: "0.85rem", fontVariantNumeric: "tabular-nums" }}>
+                      <TableCell sx={{ color: "#a8a29e", fontSize: "0.85rem", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
                         {t.id_tipo_normativa}
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: "#1c1917", fontSize: "0.85rem" }}>
+                      <TableCell sx={{ fontWeight: 600, color: "#1c1917", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                         {t.nombre_tipo_normativa}
                       </TableCell>
-                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem", maxWidth: 480 }}>
+                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem" }}>
                         {t.descripcion_tipo_normativa || "—"}
                       </TableCell>
                       <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
