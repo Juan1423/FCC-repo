@@ -12,6 +12,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { API_IMAGE_URL } from "../../../../services/apiConfig";
 import * as docService from "../../../../services/documentacionService";
 
@@ -458,6 +459,23 @@ const ProcesoList = () => {
                         <StatusBadge estado={p.estado_proceso} />
                       </TableCell>
                       <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        {p.archivo_proceso && (
+                          <Tooltip title="Ver archivo" arrow>
+                            <IconButton
+                              size="small"
+                              onClick={() => window.open(p.archivo_proceso.startsWith("/") ? API_IMAGE_URL + p.archivo_proceso : p.archivo_proceso, "_blank")}
+                              aria-label={`Ver archivo de ${p.nombre_proceso}`}
+                              sx={{
+                                color: "#0d9488",
+                                borderRadius: "8px",
+                                mr: 0.25,
+                                "&:hover": { bgcolor: "rgba(13,148,136,0.08)" },
+                              }}
+                            >
+                              <OpenInNewIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         <Tooltip title="Editar proceso" arrow>
                           <IconButton
                             size="small"
