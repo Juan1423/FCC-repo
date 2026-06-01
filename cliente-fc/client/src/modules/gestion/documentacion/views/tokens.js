@@ -1,0 +1,50 @@
+export const tokens = {
+  color: {
+    paper: '#f8fafc',
+    paperDeep: '#eef2f7',
+    card: '#ffffff',
+    cardSoft: '#f1f5f9',
+    ink: '#1e293b',
+    inkSoft: '#475569',
+    inkMute: '#64748b',
+    inkFaint: '#94a3b8',
+    border: '#e2e8f0',
+    borderSoft: '#f1f5f9',
+    accent: '#2563eb',
+    accentHover: '#1d4ed8',
+    accentSoft: '#3b82f6',
+    accentInk: '#eff6ff',
+    accentInkSoft: '#dbeafe',
+    accentInkDeep: '#bfdbfe',
+    success: '#10b981',
+    successInk: '#d1fae5',
+    warning: '#f59e0b',
+    warningInk: '#fef3c7',
+    danger: '#ef4444',
+    dangerInk: '#fee2e2',
+    info: '#0ea5e9',
+    infoInk: '#e0f2fe',
+    gradientTitle: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+  },
+  font: {
+    display: '"Fraunces", "Playfair Display", Georgia, serif',
+    body: '"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    mono: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+  },
+  radius: {
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    xl: '24px',
+    pill: '999px',
+  },
+  shadow: {
+    card: '0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06)',
+    raised: '0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04)',
+    hover: '0 10px 25px -5px rgba(37, 99, 235, 0.12), 0 8px 10px -6px rgba(37, 99, 235, 0.08)',
+    inset: 'inset 0 0 0 1px rgba(15, 23, 42, 0.04)',
+  },
+};
+
+export const SIDEBAR_W = 248;
+export const SIDEBAR_W_MINI = 76;
