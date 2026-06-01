@@ -30,7 +30,7 @@ const dataTarjeta = [
     title: 'Normativas',
     icon: <TextSnippetIcon />,
     description: 'Gestión de las normativas de la comunidad',
-    path: '/fcc-comunidad/normativa',
+    path: '/fcc-normativa',
     color: '#1d4ed8',
   },
   {

@@ -10,7 +10,6 @@ import EditInteraccionView from './interaccion/components/EditInteraccionView';
 import DetalleInteraccionView from './interaccion/components/DetalleInteraccionView';
 import PersonaDetalleView from './persona/components/PersonaDetalleView';
 import EditPersonaView from './persona/components/EditPersonaView';
-import NormativasView from './views/NormativasView';
 
 const ComunidadModule = () => {
   return (
@@ -25,7 +24,6 @@ const ComunidadModule = () => {
       <Route path="/interacciones/nueva" element={<AddInteraccionView />} />
       <Route path="/interacciones/:id/editar" element={<EditInteraccionView />} />
       <Route path="/interacciones/:id/detalles" element={<DetalleInteraccionView />} />
-      <Route path="/normativa" element={<NormativasView />} />
     </Routes>
   );
 };
