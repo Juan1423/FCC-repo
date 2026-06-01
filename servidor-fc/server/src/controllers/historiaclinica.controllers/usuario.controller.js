@@ -1,9 +1,16 @@
 const UsuarioService = require('../../services/historiaclinica.services/usuario.service');
 const service = new UsuarioService();
 
+const ROLES_VALIDOS = ['admin', 'personal_salud', 'doctor', 'personal_administrativo'];
+
 const create = async ( req, res ) => {
-    try { 
+    try {
         console.log(req.body);
+
+        if (req.body.rol_usuario && !ROLES_VALIDOS.includes(req.body.rol_usuario)) {
+            return res.status(400).json({ success: false, message: 'Rol inválido' });
+        }
+
         req.body.password_usuario = await service.encryptPassword(req.body.password_usuario);
 
         const response = await service.create(req.body);
