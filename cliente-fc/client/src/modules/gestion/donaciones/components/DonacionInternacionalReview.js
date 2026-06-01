@@ -10,12 +10,12 @@ import * as donacionService from '../../../../services/donacionService';
 const DonacionInternacionalReview = () => {
   const [items, setItems] = useState([]);
   const [donantes, setDonantes] = useState({});
-  const [empleados, setEmpleados] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [idEmpleado, setIdEmpleado] = useState('');
+  const [idUsuario, setIdUsuario] = useState('');
   const [estado, setEstado] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,13 +28,13 @@ const DonacionInternacionalReview = () => {
     setLoading(true);
     setError(null);
     try {
-      const [d, emp] = await Promise.all([
+      const [d, usr] = await Promise.all([
         donacionService.getDonacionesInternacionales(),
-        donacionService.getEmpleados(),
+        donacionService.getUsuariosAsignables(),
       ]);
       const list = Array.isArray(d) ? d : [];
       setItems(list);
-      setEmpleados(Array.isArray(emp) ? emp : []);
+      setUsuarios(Array.isArray(usr) ? usr : []);
 
       const ids = [...new Set(list.map(i => i.id_donante_internacional).filter(Boolean))];
       if (ids.length > 0) {
@@ -55,7 +55,7 @@ const DonacionInternacionalReview = () => {
 
   const openReview = (item) => {
     setSelected(item);
-    setIdEmpleado(item.id_empleado ?? '');
+    setIdUsuario(item.id_usuario ?? '');
     setEstado(item.estado || '');
     setObservaciones(item.observaciones || '');
     setModalOpen(true);
@@ -64,7 +64,7 @@ const DonacionInternacionalReview = () => {
   const handleSave = async () => {
     try {
       await donacionService.updateDonacionInternacional(selected.id_donacion_internacional, {
-        id_empleado: idEmpleado || null,
+        id_usuario: idUsuario || null,
         estado: estado || selected.estado,
         observaciones: observaciones || null,
       });
@@ -84,10 +84,10 @@ const DonacionInternacionalReview = () => {
     }
   };
 
-  const getEmpleadoName = (id) => {
+  const getUsuarioAsignadoName = (id) => {
     if (!id) return 'Sin asignar';
-    const emp = empleados.find(e => e.id_empleado === id);
-    return emp ? `${emp.nombres} ${emp.apellidos}` : '—';
+    const usr = usuarios.find(u => u.id_usuario === id);
+    return usr ? `${usr.nombre_usuario} ${usr.apellido_usuario}` : '—';
   };
 
   const getEstadoColor = (est) => {
@@ -132,7 +132,7 @@ const DonacionInternacionalReview = () => {
               { id: 'monto', label: 'Monto' },
               { id: 'fecha_donacion', label: 'Fecha' },
               { id: 'estado', label: 'Estado' },
-              { id: 'empleado', label: 'Empleado' },
+              { id: 'id_usuario', label: 'Asignado' },
             ].map(col => (
               <TableCell key={col.id}>
                 <TableSortLabel
@@ -163,7 +163,7 @@ const DonacionInternacionalReview = () => {
                 <TableCell>
                   <Chip size="small" label={row.estado} color={getEstadoColor(row.estado)} />
                 </TableCell>
-                <TableCell>{getEmpleadoName(row.id_empleado)}</TableCell>
+                <TableCell>{getUsuarioAsignadoName(row.id_usuario)}</TableCell>
                 <TableCell align="right">
                   <Button
                     size="small"
@@ -221,7 +221,7 @@ const DonacionInternacionalReview = () => {
               <Typography variant="body2" color="text.secondary">{row.fecha_donacion || '—'}</Typography>
             </Box>
             <Typography variant="caption" color="text.secondary">
-              Empleado: {getEmpleadoName(row.id_empleado)}
+              Asignado: {getUsuarioAsignadoName(row.id_usuario)}
             </Typography>
             <Box sx={{ mt: 1 }}>
               <Button
@@ -296,16 +296,16 @@ const DonacionInternacionalReview = () => {
               Asignación
             </Typography>
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel id="empleado-label">Empleado responsable</InputLabel>
+              <InputLabel id="usuario-label">Responsable asignado</InputLabel>
               <Select
-                labelId="empleado-label"
-                label="Empleado responsable"
-                value={idEmpleado}
-                onChange={e => setIdEmpleado(e.target.value)}
+                labelId="usuario-label"
+                label="Responsable asignado"
+                value={idUsuario}
+                onChange={e => setIdUsuario(e.target.value)}
               >
                 <MenuItem value=""><em>Sin asignar</em></MenuItem>
-                {empleados.map(e => (
-                  <MenuItem key={e.id_empleado} value={e.id_empleado}>{e.nombres} {e.apellidos}</MenuItem>
+                {usuarios.map(u => (
+                  <MenuItem key={u.id_usuario} value={u.id_usuario}>{u.nombre_usuario} {u.apellido_usuario}</MenuItem>
                 ))}
               </Select>
             </FormControl>
