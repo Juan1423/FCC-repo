@@ -67,6 +67,7 @@ import { logAuditAction } from '../../../../../services/auditoriaServices';
 const sampleUsers = [
   { id_usuario: 1, nombre_usuario: 'Admin', email_usuario: 'admin@test.com', rol_usuario: 'admin', estado_usuario: true },
   { id_usuario: 2, nombre_usuario: 'Doctor', email_usuario: 'doctor@test.com', rol_usuario: 'doctor', estado_usuario: true },
+  { id_usuario: 3, nombre_usuario: 'Maria', apellido_usuario: 'Maria Lopez', correo_usuario: 'maria@test.com', rol_usuario: 'personal_administrativo', estado_usuario: true, id_personal_salud: null },
 ];
 
 const renderComponent = () =>
@@ -93,7 +94,7 @@ describe('Usuarios', () => {
       expect(screen.getByTestId('tabla-usuarios')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Users: 2')).toBeInTheDocument();
+    expect(screen.getByText('Users: 3')).toBeInTheDocument();
   });
 
   test('fetches users on mount', async () => {
@@ -227,5 +228,16 @@ describe('Usuarios', () => {
     await waitFor(() => {
       expect(logAuditAction).not.toHaveBeenCalled();
     });
+  });
+
+  test('renders users with personal_administrativo role', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('tabla-usuarios')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('user-3')).toBeInTheDocument();
+    expect(screen.getByText('Users: 3')).toBeInTheDocument();
   });
 });

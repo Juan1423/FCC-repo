@@ -65,6 +65,14 @@ const sampleUser = {
   rol_usuario: 'admin',
   id_personal_salud: 1,
 };
+const sampleAdminUser = {
+  id_usuario: 2,
+  nombre_usuario: 'maria',
+  apellido_usuario: 'Maria Lopez',
+  correo_usuario: 'admin2@test.com',
+  rol_usuario: 'personal_administrativo',
+  id_personal_salud: null,
+};
 const samplePersonalSalud = {
   id_personalsalud: 1,
   nombres_personal: 'Juan',
@@ -116,7 +124,7 @@ describe('Perfil', () => {
     });
 
     expect(screen.getAllByText('Juan Perez').length).toBeGreaterThan(0);
-    expect(screen.getByText('admin')).toBeInTheDocument();
+    expect(screen.getByText('Administrador del Sistema')).toBeInTheDocument();
     expect(screen.getByText('admin@test.com')).toBeInTheDocument();
     expect(screen.getByText('Editar Perfil')).toBeInTheDocument();
   });
@@ -256,6 +264,45 @@ describe('Perfil', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+  });
+
+  test('renders profile for personal_administrativo without personalSalud', async () => {
+    getUsuario.mockResolvedValue(sampleAdminUser);
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Perfil de Usuario')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Personal Administrativo')).toBeInTheDocument();
+    expect(screen.getByText('admin2@test.com')).toBeInTheDocument();
+    expect(screen.getAllByText('maria Maria Lopez').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Estadísticas profesionales')).not.toBeInTheDocument();
+  });
+
+  test('saves profile changes for personal_administrativo without personalSalud update', async () => {
+    getUsuario.mockResolvedValue(sampleAdminUser);
+    updateUsuario.mockResolvedValue(sampleAdminUser);
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Editar Perfil')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Editar Perfil'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Guardar')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Guardar'));
+
+    await waitFor(() => {
+      expect(updateUsuario).toHaveBeenCalledWith(2, sampleAdminUser);
+      expect(updatePersonalSalud).not.toHaveBeenCalled();
     });
   });
 });

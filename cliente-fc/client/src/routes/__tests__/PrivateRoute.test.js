@@ -76,4 +76,30 @@ describe('PrivateRoute', () => {
       expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
     });
   });
+
+  it('allows access when role is personal_administrativo and is in allowedRoles', async () => {
+    mockVerifyToken.mockResolvedValue({
+      isValid: true,
+      data: { rol: 'personal_administrativo' },
+    });
+
+    renderPrivateRoute(['admin', 'personal_administrativo']);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
+    });
+  });
+
+  it('redirects personal_administrativo when not in allowedRoles', async () => {
+    mockVerifyToken.mockResolvedValue({
+      isValid: true,
+      data: { rol: 'personal_administrativo' },
+    });
+
+    renderPrivateRoute(['admin']);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
+    });
+  });
 });
