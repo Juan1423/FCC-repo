@@ -54,6 +54,13 @@ const isUserActive = (status) => {
   return status === true || status === "true";
 };
 
+const getRolDisplay = (rol) => {
+  if (rol === 'admin') return 'Administrador del Sistema';
+  if (rol === 'personal_salud') return 'Personal de Salud';
+  if (rol === 'personal_administrativo') return 'Personal Administrativo';
+  return rol;
+};
+
 const TablaUsuario = ({
   users,
   searchTerm,
@@ -205,11 +212,12 @@ const TablaUsuario = ({
                         value={editedValues.rol_usuario}
                         onChange={(e) => handleInputChange(e, 'rol_usuario')}
                       >
-                        <MenuItem value="personal_salud">PersonalSalud</MenuItem>
-                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="personal_salud">Personal de Salud</MenuItem>
+                        <MenuItem value="admin">Administrador del Sistema</MenuItem>
+                        <MenuItem value="personal_administrativo">Personal Administrativo</MenuItem>
                       </Select>
                     ) : (
-                      user.rol_usuario === 'personal_salud' ? 'PersonalSalud' : 'Admin'
+                      getRolDisplay(user.rol_usuario)
                     )}
                   </StyledTableCell>
                   <StyledTableCell align="center">

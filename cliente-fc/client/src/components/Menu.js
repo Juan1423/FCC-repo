@@ -44,7 +44,7 @@ const menuData = [
     nombre_menu: "Gestion",
     url: "/fcc-gestion",
     icon: <Groups2Icon />,
-    roles: ["admin"],
+    roles: ["admin", "personal_administrativo"],
   },
   {
     nombre_menu: "Sistema",
@@ -62,7 +62,7 @@ const menuData = [
     nombre_menu: "Ajustes",
     url: "/fcc-configuracion",
     icon: <SettingsIcon />,
-    roles: ["admin", "personal_salud"],
+    roles: ["admin", "personal_salud", "personal_administrativo"],
   }
 ];
 

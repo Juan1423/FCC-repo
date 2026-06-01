@@ -152,7 +152,7 @@ function App() {
             <Route path="/donacion-internacional" element={<DonacionInternacionalForm />} />
             <Route 
               path="/fcc-menu-principal" 
-              element={<PrivateRoute element={MenuPrincipal} allowedRoles={['admin', 'personal_salud']} />} 
+              element={<PrivateRoute element={MenuPrincipal} allowedRoles={['admin', 'personal_salud', 'personal_administrativo']} />} 
             />
             <Route 
               path="/fcc-pacientes" 
@@ -180,7 +180,7 @@ function App() {
             />
             <Route 
               path="/fcc-configuracion" 
-              element={<PrivateRoute element={Configuracion} allowedRoles={['admin', 'personal_salud']} />} 
+              element={<PrivateRoute element={Configuracion} allowedRoles={['admin', 'personal_salud', 'personal_administrativo']} />} 
             />
             <Route 
               path="/fcc-usuarios" 
@@ -218,7 +218,7 @@ function App() {
                    
             <Route 
               path="/fcc-comunidad/*"
-              element={<PrivateRoute element={ComunidadModule} allowedRoles={['admin']} />} 
+              element={<PrivateRoute element={ComunidadModule} allowedRoles={['admin', 'personal_administrativo']} />} 
             />
             <Route 
               path="/fcc-chatbot/*"
@@ -254,7 +254,7 @@ function App() {
             />    
              <Route
               path="/fcc-gestion"              
-              element={<PrivateRoute element={GestionDashboard} allowedRoles={['admin']} />}
+              element={<PrivateRoute element={GestionDashboard} allowedRoles={['admin', 'personal_administrativo']} />}
             />    
              <Route
               path="/fcc-salud"              
@@ -266,18 +266,18 @@ function App() {
             />   
             <Route
               path="/fcc-documentacion/*"
-              element={<PrivateRoute element={DocumentacionModule} allowedRoles={['admin']} />}
+              element={<PrivateRoute element={DocumentacionModule} allowedRoles={['admin', 'personal_administrativo']} />}
             />
             <Route
               path="/fcc-donaciones/*"
-              element={<PrivateRoute element={DonacionesModule} allowedRoles={['admin']} />}
+              element={<PrivateRoute element={DonacionesModule} allowedRoles={['admin', 'personal_administrativo']} />}
             />      
             <Route 
               path="/accessdenied"
               element={<AccessDenied />}
             />
-            <Route path="/perfil" element={<PrivateRoute element={Perfil} allowedRoles={['admin', 'doctor', 'personal_salud']} />} />
-            <Route path="/configuracion" element={<PrivateRoute element={Configuracion} allowedRoles={['admin', 'doctor', 'personal_salud']} />} />
+            <Route path="/perfil" element={<PrivateRoute element={Perfil} allowedRoles={['admin', 'doctor', 'personal_salud', 'personal_administrativo']} />} />
+            <Route path="/configuracion" element={<PrivateRoute element={Configuracion} allowedRoles={['admin', 'doctor', 'personal_salud', 'personal_administrativo']} />} />
             <Route path="*" element={<Error404 />} />
           </Routes>
           </CombinedProviders>

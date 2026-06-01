@@ -44,6 +44,13 @@ import { API_IMAGE_URL } from "../../../../services/apiConfig";
 import { getCurrentUserId } from "../../../../utils/userUtils";
 import { logAuditAction } from "../../../../services/auditoriaServices";
 
+const getRolDisplay = (rol) => {
+  if (rol === 'admin') return 'Administrador del Sistema';
+  if (rol === 'personal_salud') return 'Personal de Salud';
+  if (rol === 'personal_administrativo') return 'Personal Administrativo';
+  return rol;
+};
+
 const Perfil = () => {
   const [user, setUser] = useState(null);
   const getImage = useImageCache();
@@ -87,7 +94,9 @@ const Perfil = () => {
 
   const handleEdit = () => {
     setEditedUser({ ...user });
-    setEditedPersonalSalud({ ...personalSalud });
+    if (personalSalud) {
+      setEditedPersonalSalud({ ...personalSalud });
+    }
     setIsEditing(true);
   };
 
@@ -103,7 +112,10 @@ const Perfil = () => {
       }
 
       await updateUsuario(user.id_usuario, editedUser);
-      await updatePersonalSalud(personalSalud.id_personalsalud, editedPersonalSalud);
+
+      if (personalSalud) {
+        await updatePersonalSalud(personalSalud.id_personalsalud, editedPersonalSalud);
+      }
 
       // Audit for user update
       const userAuditDescription = {
@@ -122,28 +134,33 @@ const Perfil = () => {
         fecha_modificacion: new Date().toISOString()
       };
 
-      // Audit for personal salud update
-      const personalSaludAuditDescription = {
-        accion: "EDITAR",
-        tabla: 'personal_salud',
-        id_registro: personalSalud.id_personalsalud,
-        datos_modificados: {
-          estado_anterior: personalSalud,
-          estado_nuevo: editedPersonalSalud,
-          detalles_cambios: {
-            tipo_operacion: "Actualización de Perfil Personal Salud",
-            campos_modificados: Object.keys(editedPersonalSalud).filter(key => editedPersonalSalud[key] !== personalSalud[key]),
-            fecha_modificacion: new Date().toISOString()
-          }
-        },
-        fecha_modificacion: new Date().toISOString()
-      };
-
       await logAuditAction('EDITAR_USUARIO_PERFIL', userAuditDescription);
-      await logAuditAction('EDITAR_PERSONALSALUD_PERFIL', personalSaludAuditDescription);
-      
+
+      if (personalSalud) {
+        // Audit for personal salud update
+        const personalSaludAuditDescription = {
+          accion: "EDITAR",
+          tabla: 'personal_salud',
+          id_registro: personalSalud.id_personalsalud,
+          datos_modificados: {
+            estado_anterior: personalSalud,
+            estado_nuevo: editedPersonalSalud,
+            detalles_cambios: {
+              tipo_operacion: "Actualización de Perfil Personal Salud",
+              campos_modificados: Object.keys(editedPersonalSalud).filter(key => editedPersonalSalud[key] !== personalSalud[key]),
+              fecha_modificacion: new Date().toISOString()
+            }
+          },
+          fecha_modificacion: new Date().toISOString()
+        };
+
+        await logAuditAction('EDITAR_PERSONALSALUD_PERFIL', personalSaludAuditDescription);
+      }
+
       setUser(editedUser);
-      setPersonalSalud(editedPersonalSalud);
+      if (personalSalud) {
+        setPersonalSalud(editedPersonalSalud);
+      }
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating user:", error);
@@ -179,7 +196,7 @@ const Perfil = () => {
     </Box>
   );
 
-  if (!user || !personalSalud) {
+  if (!user || (user.id_personal_salud && !personalSalud)) {
     return (
       <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f5f5f5" }}>
         <NavbarAdmin onDrawerToggle={handleDrawerToggle} />
@@ -191,15 +208,25 @@ const Perfil = () => {
     );
   }
 
-  const profileDetails = [
-    { label: 'Nombre completo', value: `${personalSalud.nombres_personal} ${personalSalud.apellidos_personal}`, field: 'nombres_personal', isPersonalSalud: true },
-    { label: 'Correo electrónico', value: user.correo_usuario, field: 'correo_usuario', icon: <EmailIcon /> },
-    { label: 'Teléfono', value: personalSalud.telefono_personal || 'No especificado', field: 'telefono_personal', icon: <PhoneIcon />, isPersonalSalud: true },
-    { label: 'Especialidad', value: personalSalud.especialidad?.nombre_especialidad || 'No especificada', field: 'id_especialidad', isPersonalSalud: true },
-    { label: 'Número de licencia', value: personalSalud.dni_personal || 'No especificado', field: 'dni_personal', isPersonalSalud: true },
-    { label: 'Nacionalidad', value: personalSalud.nacionalidad_personal || 'No especificada', field: 'nacionalidad_personal', isPersonalSalud: true },
-    { label: 'Dirección', value: personalSalud.direccion_personal || 'No especificada', field: 'direccion_personal', isPersonalSalud: true },
-  ];
+  const fullName = personalSalud
+    ? `${personalSalud.nombres_personal} ${personalSalud.apellidos_personal}`
+    : `${user.nombre_usuario || ''} ${user.apellido_usuario || ''}`.trim();
+
+  const profileDetails = personalSalud
+    ? [
+        { label: 'Nombre completo', value: fullName, field: 'nombres_personal', isPersonalSalud: true },
+        { label: 'Correo electrónico', value: user.correo_usuario, field: 'correo_usuario', icon: <EmailIcon /> },
+        { label: 'Teléfono', value: personalSalud.telefono_personal || 'No especificado', field: 'telefono_personal', icon: <PhoneIcon />, isPersonalSalud: true },
+        { label: 'Especialidad', value: personalSalud.especialidad?.nombre_especialidad || 'No especificada', field: 'id_especialidad', isPersonalSalud: true },
+        { label: 'Número de licencia', value: personalSalud.dni_personal || 'No especificado', field: 'dni_personal', isPersonalSalud: true },
+        { label: 'Nacionalidad', value: personalSalud.nacionalidad_personal || 'No especificada', field: 'nacionalidad_personal', isPersonalSalud: true },
+        { label: 'Dirección', value: personalSalud.direccion_personal || 'No especificada', field: 'direccion_personal', isPersonalSalud: true },
+      ]
+    : [
+        { label: 'Nombre completo', value: fullName, field: 'apellido_usuario' },
+        { label: 'Nombre de usuario', value: user.nombre_usuario || '', field: 'nombre_usuario' },
+        { label: 'Correo electrónico', value: user.correo_usuario, field: 'correo_usuario', icon: <EmailIcon /> },
+      ];
 
   return (
     <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f5f5f5" }}>
@@ -247,46 +274,50 @@ const Perfil = () => {
                 <Box display="flex" flexDirection="column" alignItems="center">
                   <Avatar
                     sx={{ width: 200, height: 200, mb: 2 }}
-                    alt={`${personalSalud.nombres_personal} ${personalSalud.apellidos_personal}`}
-                    src={personalSalud?.foto_personal ? getImage(`${API_IMAGE_URL}${personalSalud.foto_personal}`) : undefined} 
-                  />
+                    alt={fullName}
+                    src={personalSalud?.foto_personal ? getImage(`${API_IMAGE_URL}${personalSalud.foto_personal}`) : undefined}
+                  >
+                    {!personalSalud?.foto_personal && (user.nombre_usuario?.[0] || '') + (user.apellido_usuario?.[0] || '')}
+                  </Avatar>
                   <Typography variant="h5" fontWeight="bold">
-                    {personalSalud.nombres_personal} {personalSalud.apellidos_personal}
+                    {fullName}
                   </Typography>
-                  <Chip 
-                    label={user.rol_usuario} 
-                    color="primary" 
-                    sx={{ mt: 1, fontWeight: 'bold' }} 
+                  <Chip
+                    label={getRolDisplay(user.rol_usuario)}
+                    color="primary"
+                    sx={{ mt: 1, fontWeight: 'bold' }}
                   />
                 </Box>
-                <Card sx={{ mt: 4 }}>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>Estadísticas profesionales</Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={6} sm={4}>
-                        <Box textAlign="center">
-                          <MedicalServicesIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                          <Typography variant="h4">{estadisticas ? estadisticas.pacientes_atendidos : '0'}</Typography>
-                          <Typography variant="body2">Pacientes atendidos</Typography>
-                        </Box>
+                {personalSalud && (
+                  <Card sx={{ mt: 4 }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>Estadísticas profesionales</Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6} sm={4}>
+                          <Box textAlign="center">
+                            <MedicalServicesIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                            <Typography variant="h4">{estadisticas ? estadisticas.pacientes_atendidos : '0'}</Typography>
+                            <Typography variant="body2">Pacientes atendidos</Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={6} sm={4}>
+                          <Box textAlign="center">
+                            <CakeIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
+                            <Typography variant="h4">{estadisticas ? estadisticas.anos_experiencia : '0'}</Typography>
+                            <Typography variant="body2">Años de experiencia</Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <Box textAlign="center">
+                            <LocalHospitalIcon sx={{ fontSize: 40, color: 'success.main' }} />
+                            <Typography variant="h4">{estadisticas ? estadisticas.terapias_realizadas : '0'}</Typography>
+                            <Typography variant="body2">Terapias realizadas</Typography>
+                          </Box>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={6} sm={4}>
-                        <Box textAlign="center">
-                          <CakeIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
-                          <Typography variant="h4">{estadisticas ? estadisticas.anos_experiencia : '0'}</Typography>
-                          <Typography variant="body2">Años de experiencia</Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <Box textAlign="center">
-                          <LocalHospitalIcon sx={{ fontSize: 40, color: 'success.main' }} />
-                          <Typography variant="h4">{estadisticas ? estadisticas.terapias_realizadas : '0'}</Typography>
-                          <Typography variant="body2">Terapias realizadas</Typography>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
               </Grid>
               <Grid item xs={12} md={8}>
                 <Card>
