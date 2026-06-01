@@ -102,11 +102,10 @@ export default function Usuarios() {
 
   const handleAddUser = async (newUser) => {
     try {
-      const createdUser = await createUsuario(newUser);
-      if (createdUser) {
-        setUsers([...users, createdUser]);
+      const response = await createUsuario(newUser);
+      if (response && response.success && response.data) {
+        setUsers([...users, response.data]);
         handleCloseModal();
-        
       } else {
         setError('Error creating user');
       }
