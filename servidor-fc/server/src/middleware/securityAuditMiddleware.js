@@ -23,7 +23,6 @@ const MODULE_OVERRIDES = {
   'tipo_normativa': 'TipoNormativa',
   'tipo_proceso': 'TipoProceso',
   'tipo_donante': 'TipoDonante',
-  'tipo_empleado': 'TipoEmpleado',
   'tipo_organizacion': 'TipoOrganizacion',
   'tipo_donacion': 'TipoDonacion',
   'item_donacion': 'ItemDonacion',

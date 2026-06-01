@@ -20,9 +20,9 @@ class DonacionInternacional extends Model {
             foreignKey: 'id_tipo_donacion',
             as: 'tipo_donacion',
         });
-        DonacionInternacional.belongsTo(models.Empleado, {
-            foreignKey: 'id_empleado',
-            as: 'empleado',
+        DonacionInternacional.belongsTo(models.Usuario, {
+            foreignKey: 'id_usuario',
+            as: 'usuario_asignado',
         });
         DonacionInternacional.hasMany(models.DetalleDonacion, {
             foreignKey: 'id_donacion_internacional',
@@ -54,7 +54,7 @@ const DonacionInternacionalSchema = {
         type: DataTypes.BIGINT,
         allowNull: true,
     },
-    id_empleado: {
+    id_usuario: {
         type: DataTypes.BIGINT,
         allowNull: true,
     },
