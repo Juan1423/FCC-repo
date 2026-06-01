@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Fade,
-  Grid,
-  Card,
-  CardContent,
-  Avatar,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import NavbarAdmin from "../../components/NavbarAdmin";
-import Drawer from "../../components/Drawer";
+import { Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import NavbarAdmin from '../../components/NavbarAdmin';
+import Drawer from '../../components/Drawer';
 import { useMenu } from '../../components/base/MenuContext';
+import { DashboardGrid, DashboardHeader, DashboardCard } from '../../components/DashboardGrid';
 import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
@@ -20,39 +13,39 @@ import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 
 const dataTarjeta = [
   {
-    title: "Personas",
+    title: 'Personas',
     icon: <EmojiPeopleIcon />,
-    description: "Gestión de las personas de la comunidad",
-    path: "/fcc-comunidad/personas",
-    color: "#2563eb"
+    description: 'Gestión de las personas de la comunidad',
+    path: '/fcc-comunidad/personas',
+    color: '#2563eb',
   },
   {
-    title: "Interacciones",
+    title: 'Interacciones',
     icon: <HandshakeIcon />,
-    description: "Gestión de las interacciones de la comunidad",
-    path: "/fcc-comunidad/interacciones",
-    color: "#3b82f6"
+    description: 'Gestión de las interacciones de la comunidad',
+    path: '/fcc-comunidad/interacciones',
+    color: '#3b82f6',
   },
   {
-    title: "Normativas",
+    title: 'Normativas',
     icon: <TextSnippetIcon />,
-    description: "Gestión de las normativas de la comunidad",
-    path: "/fcc-comunidad/normativa",
-    color: "#1d4ed8"
+    description: 'Gestión de las normativas de la comunidad',
+    path: '/fcc-comunidad/normativa',
+    color: '#1d4ed8',
   },
   {
-    title: "Documentación",
+    title: 'Documentación',
     icon: <DescriptionIcon />,
-    description: "Gestión de documentos y archivos",
-    path: "/fcc-documentacion",
-    color: "#0891b2"
+    description: 'Gestión de documentos y archivos',
+    path: '/fcc-documentacion',
+    color: '#0891b2',
   },
   {
-    title: "Donaciones",
+    title: 'Donaciones',
     icon: <VolunteerActivismIcon />,
-    description: "Gestión de donaciones y aportes",
-    path: "/fcc-donaciones",
-    color: "#059669"
+    description: 'Gestión de donaciones y aportes',
+    path: '/fcc-donaciones',
+    color: '#059669',
   },
 ];
 
@@ -68,7 +61,7 @@ const GestionDashboard = () => {
   }, [setCurrentMenu]);
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: 'flex' }}>
       <NavbarAdmin onDrawerToggle={handleDrawerToggle} />
       <Drawer open={drawerOpen} onClose={handleDrawerToggle} />
       <Box
@@ -76,91 +69,26 @@ const GestionDashboard = () => {
         sx={{
           flexGrow: 1,
           p: { xs: 2, md: 4 },
-          width: { md: `calc(100% - 240px)` },
+          width: { md: 'calc(100% - 240px)' },
           mt: { xs: 7, sm: 8 },
           minHeight: '100vh',
-          overflowX: 'hidden',
           bgcolor: '#f8fafc',
         }}
       >
-        <Fade in={true} timeout={800}>
-          <Box>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{
-                fontWeight: "bold",
-                mb: 1,
-                textAlign: "center",
-                fontSize: { xs: "1.5rem", md: "2.5rem" },
-                background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Gestión Comunitaria
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#64748b",
-                mb: 4,
-                textAlign: "center",
-                fontWeight: 500,
-                letterSpacing: '0.5px'
-              }}
-            >
-              Administración de la comunidad
-            </Typography>
-          </Box>
-        </Fade>
-
-        <Grid container sx={{ maxWidth: 1400, mx: 'auto', gap: { xs: 2, md: 3 } }}>
+        <DashboardHeader
+          title="Gestión Comunitaria"
+          subtitle="Administración de la comunidad"
+        />
+        <DashboardGrid>
           {dataTarjeta.map((item, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Fade in={true} timeout={300 + index * 100}>
-                <Card
-                  elevation={2}
-                  sx={{
-                    borderRadius: 3,
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    border: '1px solid',
-                    borderColor: 'grey.200',
-                    '&:hover': {
-                      elevation: 8,
-                      borderColor: item.color,
-                      transform: 'translateY(-4px)',
-                      boxShadow: `0 8px 25px ${item.color}25`,
-                    },
-                  }}
-                  onClick={() => navigate(item.path)}
-                >
-                  <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                    <Avatar
-                      sx={{
-                        bgcolor: item.color,
-                        width: 64,
-                        height: 64,
-                        mx: 'auto',
-                        mb: 2,
-                      }}
-                    >
-                      {item.icon}
-                    </Avatar>
-                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 1, color: '#1e293b' }}>
-                      {item.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {item.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Fade>
-            </Grid>
+            <DashboardCard
+              key={index}
+              item={item}
+              index={index}
+              onClick={() => navigate(item.path)}
+            />
           ))}
-        </Grid>
+        </DashboardGrid>
       </Box>
     </Box>
   );
