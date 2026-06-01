@@ -16,13 +16,16 @@ import {
   MenuRounded as MenuRoundedIcon,
   ExpandLess,
   ExpandMore,
-  AccountCircle as AccountCircleIcon,
   AdminPanelSettings as AdminPanelSettingsIcon,
   Group as GroupIcon,
   MedicalInformation as MedicalInformationIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
-  School as SchoolIcon,
-  SmartToy as SmartToyIcon,
+  AccountTree as AccountTreeIcon,
+  VolunteerActivism as VolunteerActivismIcon,
+  Description as DescriptionIcon,
+  EmojiPeople as EmojiPeopleIcon,
+  Handshake as HandshakeIcon,
+  TextSnippet as TextSnippetIcon,
 } from '@mui/icons-material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getUserInfo } from '../services/authServices';
@@ -30,6 +33,12 @@ import { useMenu } from './base/MenuContext';
 
 const DRAWER_WIDTH = 240;
 const MINIMIZED_WIDTH = 60;
+const SUBMENU_KEYS = ['medicalHistory', 'administrativo', 'adminPanel'];
+const MINIMIZED_FALLBACK = {
+  medicalHistory: '/fcc-historias-clinicas',
+  administrativo: '/fcc-documentacion',
+  adminPanel: '/fcc-usuarios',
+};
 
 export default function ResponsiveDrawer({ open, onClose }) {
   const [showScrollArrow, setShowScrollArrow] = useState(false);
@@ -38,13 +47,17 @@ export default function ResponsiveDrawer({ open, onClose }) {
   const navigate = useNavigate();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [isAdmin, setIsAdmin] = useState(false);
+  const [canSeeGestionMenu, setCanSeeGestionMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showChip, setShowChip] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const { setCurrentMenu } = useMenu();
-  const [openStates, setOpenStates] = useState({
-    medicalHistory: JSON.parse(localStorage.getItem('medicalHistoryOpen') || 'false'),
-    adminPanel: JSON.parse(localStorage.getItem('adminPanelOpen') || 'false')
+  const [openStates, setOpenStates] = useState(() => {
+    const states = {};
+    SUBMENU_KEYS.forEach((key) => {
+      states[key] = JSON.parse(localStorage.getItem(`${key}Open`) || 'false');
+    });
+    return states;
   });
   const [isMinimized, setIsMinimized] = useState(JSON.parse(localStorage.getItem('drawerState') || 'false'));
   const listRef = useRef(null);
@@ -75,7 +88,7 @@ export default function ResponsiveDrawer({ open, onClose }) {
 
   const handleItemClick = (item) => {
     if (isMinimized) {
-      navigate(item === 'medicalHistory' ? '/fcc-historias-clinicas' : '/fcc-usuarios');
+      navigate(MINIMIZED_FALLBACK[item] || '/fcc-menu-principal');
     } else {
       setOpenStates(prev => ({ ...prev, [item]: !prev[item] }));
     }
@@ -89,7 +102,9 @@ export default function ResponsiveDrawer({ open, onClose }) {
   useEffect(() => {
     try {
       const userInfo = getUserInfo();
-      setIsAdmin(userInfo?.rol === 'admin');
+      const rol = userInfo?.rol;
+      setIsAdmin(rol === 'admin');
+      setCanSeeGestionMenu(rol === 'admin' || rol === 'personal_administrativo');
     } catch (error) {
       console.error('Error fetching user info:', error);
     } finally {
@@ -116,31 +131,41 @@ export default function ResponsiveDrawer({ open, onClose }) {
 
   const menuItems = useMemo(() => [
     { text: 'Menu Principal', path: '/fcc-menu-principal', icon: <HomeIcon /> },
-    { text: 'Paciente', path: '/fcc-pacientes', icon: <FaceIcon /> },
-    
-    { 
-      text: 'Historia Clínica', 
+    {
+      key: 'medicalHistory',
+      text: 'Historia Clínica',
       icon: <AssignmentTurnedInIcon />,
       subItems: [
         { text: 'Historia', path: '/fcc-historias-clinicas', icon: <AssignmentIcon /> },
+        { text: 'Pacientes', path: '/fcc-pacientes', icon: <FaceIcon /> },
         { text: 'Consulta Médica', path: '/fcc-atencion', icon: <MedicalServicesIcon /> },
         { text: 'Terapias', path: '/fcc-terapias', icon: <MonitorHeartIcon /> },
       ]
     },
-    { 
-      text: 'Administración', 
+    {
+      key: 'administrativo',
+      text: 'Administrativo',
+      icon: <AccountTreeIcon />,
+      isGestion: true,
+      subItems: [
+        { text: 'Donaciones', path: '/fcc-donaciones', icon: <VolunteerActivismIcon /> },
+        { text: 'Documentación', path: '/fcc-documentacion', icon: <DescriptionIcon /> },
+        { text: 'Personas', path: '/fcc-comunidad/personas', icon: <EmojiPeopleIcon /> },
+        { text: 'Interacciones', path: '/fcc-comunidad/interacciones', icon: <HandshakeIcon /> },
+        { text: 'Normativas', path: '/fcc-normativa', icon: <TextSnippetIcon /> },
+      ]
+    },
+    {
+      key: 'adminPanel',
+      text: 'Operaciones',
       icon: <AdminPanelSettingsIcon />,
       isAdmin: true,
       subItems: [
         { text: 'Usuarios', path: '/fcc-usuarios', icon: <GroupIcon /> },
         { text: 'Personal Salud', path: '/fcc-personal-salud', icon: <MedicalInformationIcon /> },
-        { text: 'Auditoría', path: '/fcc-auditoria', icon: <AssignmentTurnedInIcon/>},
-        { text: 'Comunidad', path: '/fcc-comunidad', icon: <GroupIcon /> },
-        { text: 'Capacitaciones', path: '/fcc-capacitaciones', icon: <SchoolIcon />},
-        { text: 'Asistente IA', path: '/fcc-asistente-ia', icon: <SmartToyIcon /> }
+        { text: 'Auditoría', path: '/fcc-auditoria', icon: <AssignmentTurnedInIcon /> },
       ]
     },
-    { text: 'Perfil', path: '/perfil', icon: <AccountCircleIcon /> },
     { text: 'Configuración', path: '/configuracion', icon: <SettingsIcon /> },
   ], []);
 
@@ -164,6 +189,7 @@ export default function ResponsiveDrawer({ open, onClose }) {
 
   const renderListItem = (item, index, items) => {
     if (item.isAdmin && !isAdmin) return null;
+    if (item.isGestion && !canSeeGestionMenu) return null;
 
     const isSelected = location.pathname === item.path || item.subItems?.some(subItem => location.pathname === subItem.path);
     const isLastItem = index === items.length - 1;
@@ -172,7 +198,7 @@ export default function ResponsiveDrawer({ open, onClose }) {
       <React.Fragment key={item.text}>
         <ListItem disablePadding>
           <ListItemButton
-            onClick={() => item.subItems ? handleItemClick(item.text === 'Historia Clínica' ? 'medicalHistory' : 'adminPanel') : onClose()}
+            onClick={() => item.subItems ? handleItemClick(item.key) : onClose()}
             component={item.subItems ? 'div' : Link}
             to={item.path}
             selected={isSelected}
@@ -239,17 +265,17 @@ export default function ResponsiveDrawer({ open, onClose }) {
                 />
               )}
             </Box>
-            {!isMinimized && item.subItems && (openStates[item.text === 'Historia Clínica' ? 'medicalHistory' : 'adminPanel'] ? <ExpandLess /> : <ExpandMore />)}
+            {!isMinimized && item.subItems && (openStates[item.key] ? <ExpandLess /> : <ExpandMore />)}
           </ListItemButton>
         </ListItem>
         {item.subItems && (
-          <Collapse in={openStates[item.text === 'Historia Clínica' ? 'medicalHistory' : 'adminPanel'] && !isMinimized} timeout="auto" unmountOnExit>
+          <Collapse in={openStates[item.key] && !isMinimized} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               {item.subItems.map((subItem) => renderListItem({...subItem, isSubItem: true}, index, items))}
             </List>
           </Collapse>
         )}
-        {(item.text === 'Paciente' || item.text === 'Comunidad' || item.text === 'Historia Clínica' || (item.text === 'Administración' && isAdmin)) && !isLastItem && (
+        {(item.text === 'Historia Clínica' || item.text === 'Administrativo' || (item.text === 'Operaciones' && isAdmin)) && !isLastItem && (
           <Divider sx={{ my: 1 }} />
         )}
       </React.Fragment>
