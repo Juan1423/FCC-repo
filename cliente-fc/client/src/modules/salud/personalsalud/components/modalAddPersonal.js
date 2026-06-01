@@ -181,32 +181,32 @@ const ModalAddPersonalSalud = ({ open, onClose, onPersonalSaludAdded }) => {
   };
   const handleSave = async () => {
     if (!validateFields()) return;
-  
+
     setIsSubmitting(true);
     const formData = new FormData();
-  
+
     Object.keys(personalSalud).forEach((key) => {
       if (key !== "foto_personal" && key !== "hdv_personal") {
         formData.append(key, personalSalud[key]);
       }
     });
-  
+
     if (personalSalud.foto_personal) {
       formData.append("foto_personal", personalSalud.foto_personal);
     }
     if (personalSalud.hdv_personal) {
       formData.append("hdv_personal", personalSalud.hdv_personal);
     }
-  
+
     formData.append("fecha_registro_personal", dayjs().format("YYYY-MM-DD"));
-  
+
     try {
       const response = await createPersonalSalud(formData);
-  
+
       if (response && response.success === true) {
         const loggedInUserId = getCurrentUserId();
         console.log('Current user ID:', loggedInUserId);
-        
+
         if (!loggedInUserId) {
           throw new Error('No user logged in');
         }
@@ -232,11 +232,16 @@ const ModalAddPersonalSalud = ({ open, onClose, onPersonalSaludAdded }) => {
         await logAuditAction('CREAR_PERSONAL', detailedDescription);
         onPersonalSaludAdded(true);
         onClose();
+      } else {
+        setAlertMessage("Error al guardar. Por favor, intente nuevamente.");
+        setShowAlert(true);
       }
     } catch (error) {
       console.error("Error:", error);
       setAlertMessage("Error al guardar. Por favor, intente nuevamente.");
       setShowAlert(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   const renderStepContent = (step) => {
