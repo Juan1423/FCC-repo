@@ -115,7 +115,7 @@ const SectionPage = ({ sectionId, onBack }) => {
               borderRadius: `${tokens.radius.lg} !important`,
               border: `1px solid ${tokens.color.border} !important`,
               background: `${tokens.color.card} !important`,
-              overflow: 'hidden',
+              overflow: 'auto',
             },
             '& .MuiPaper-root.MuiTableContainer-root': {
               background: `${tokens.color.card} !important`,

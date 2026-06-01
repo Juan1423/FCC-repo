@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  TableFooter, TablePagination,
   Paper, Button, CircularProgress, Box, Typography,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   IconButton, Tooltip,
@@ -25,6 +26,8 @@ const TipoDocumentoList = () => {
   const [form, setForm] = useState(emptyForm());
   const [search, setSearch] = useState("");
   const [animating, setAnimating] = useState(true);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const firstFieldRef = useRef(null);
   const dialogTitleId = "tipo-documento-dialog-title";
   const liveId = "tipo-documento-live-announce";
@@ -58,6 +61,18 @@ const TipoDocumentoList = () => {
   useEffect(() => {
     if (openModal) { const t = setTimeout(() => { firstFieldRef.current?.focus(); }, 80); return () => clearTimeout(t); }
   }, [openModal]);
+
+  useEffect(() => { setPage(0); }, [search]);
+
+  const handleChangePage = (event, newPage) => { setPage(newPage); };
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedItems = rowsPerPage === -1
+    ? filtered
+    : filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const announce = (msg) => { const el = document.getElementById(liveId); if (el) el.textContent = msg; };
 
@@ -96,7 +111,7 @@ const TipoDocumentoList = () => {
   return (
     <>
       <Box sx={{ opacity: animating ? 0 : 1, transform: animating ? "translateY(8px)" : "translateY(0)", transition: "opacity 0.5s ease, transform 0.5s ease" }}>
-        <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid", borderColor: "#e7e5e4", borderRadius: 2, overflow: { xs: "auto", sm: "visible" }, bgcolor: "#ffffff", "&::before": { content: '""', position: "absolute", top: 0, left: 0, right: 0, height: 3, bgcolor: "#0d9488", borderTopLeftRadius: 2, borderTopRightRadius: 2, zIndex: 1 } }}>
+        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "#e7e5e4", borderRadius: 2, bgcolor: "#ffffff", overflow: "hidden" }}>
           <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1.5, borderBottom: "1px solid", borderColor: "#e7e5e4", bgcolor: "#fafaf9" }}>
             <Box>
               <Typography variant="h6" component="h2" sx={{ fontWeight: 700, fontSize: "1.05rem", color: "#1c1917", letterSpacing: "-0.01em" }}>Tipos de Documento</Typography>
@@ -107,12 +122,13 @@ const TipoDocumentoList = () => {
               <Button variant="contained" size="small" onClick={openCreate} startIcon={<AddIcon />} aria-label="Crear nuevo tipo de documento" sx={{ bgcolor: "#0d9488", "&:hover": { bgcolor: "#0f766e" }, textTransform: "none", fontWeight: 600, borderRadius: "8px", px: 2, py: 0.75, fontSize: "0.85rem", boxShadow: "0 1px 3px rgba(13,148,136,0.2)", whiteSpace: "nowrap" }}>Nuevo tipo</Button>
             </Box>
           </Box>
+          <TableContainer sx={{ overflow: "auto", maxHeight: { xs: "calc(100vh - 240px)", md: "none" }, position: "relative", borderTop: "3px solid #0d9488", borderRadius: 0, border: "none !important", boxShadow: "none !important" }}>
           {loading ? (
             <Box display="flex" justifyContent="center" p={4} role="status" aria-live="polite" aria-label="Cargando tipos de documento"><CircularProgress size={28} aria-hidden="true" sx={{ color: "#0d9488" }} /><Typography variant="srOnly" sx={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)" }}>Cargando tipos de documento...</Typography></Box>
           ) : error ? (
             <Box p={3} role="alert" aria-live="assertive"><Box sx={{ display: "inline-flex", alignItems: "center", gap: 1, bgcolor: "#fef2f2", color: "#991b1b", px: 2, py: 1.25, borderRadius: "8px", border: "1px solid", borderColor: "#fecaca" }}><Typography sx={{ fontWeight: 500, fontSize: "0.875rem" }}>{error}</Typography></Box></Box>
           ) : (
-            <Table size="small" aria-label="Lista de tipos de documento" sx={{ "& .MuiTableCell-root": { wordBreak: "break-word", overflowWrap: "break-word" } }}>
+            <Table size="small" aria-label="Lista de tipos de documento" stickyHeader sx={{ minWidth: 650, "& .MuiTableCell-root": { wordBreak: "break-word", overflowWrap: "break-word" } }}>
               <TableHead>
                 <TableRow>
                   {["Nombre", "Descripción", "Acciones"].map((h) => (<TableCell key={h} sx={{ fontWeight: 600, color: "#57534e", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid", borderColor: "#e7e5e4", py: 1.5 }} align={h === "Acciones" ? "right" : "left"}>{h}</TableCell>))}
@@ -126,7 +142,7 @@ const TipoDocumentoList = () => {
                     {!search && <Button size="small" onClick={openCreate} startIcon={<AddIcon />} sx={{ mt: 1.5, textTransform: "none", fontWeight: 600, color: "#0d9488", borderRadius: "8px" }} aria-label="Crear el primer tipo de documento">Crear primer tipo</Button>}
                   </TableCell></TableRow>
                 ) : (
-                  items.filter((t) => !search || t.nombre_tipo_documento?.toLowerCase().includes(search.toLowerCase()) || t.descripcion_tipo_documento?.toLowerCase().includes(search.toLowerCase())).map((row) => (
+                  paginatedItems.map((row) => (
                     <TableRow key={row.id_tipo_documento} sx={{ "&:hover": { bgcolor: "#fafaf9" }, "&:focus-within": { bgcolor: "#f0fdfa" }, transition: "background-color 0.15s ease" }}>
                       <TableCell sx={{ fontWeight: 600, color: "#1c1917", fontSize: "0.85rem" }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><DescriptionIcon sx={{ color: "#0d9488", fontSize: 18, opacity: 0.6 }} />{row.nombre_tipo_documento}</Box>
@@ -140,9 +156,26 @@ const TipoDocumentoList = () => {
                   ))
                 )}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25, { label: "Todos", value: -1 }]}
+                    colSpan={3}
+                    count={filtered.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    SelectProps={{ inputProps: { "aria-label": "Filas por página" }, native: true }}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    labelRowsPerPage="Filas por página:"
+                    sx={{ "& .MuiTablePagination-toolbar": { flexWrap: "wrap", justifyContent: { xs: "center", sm: "flex-end" } } }}
+                  />
+                </TableRow>
+              </TableFooter>
             </Table>
           )}
-        </TableContainer>
+          </TableContainer>
+        </Paper>
       </Box>
 
       <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth aria-labelledby={dialogTitleId}
