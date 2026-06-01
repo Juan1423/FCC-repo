@@ -2,9 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
   Box, Typography, TextField, Button, Grid, MenuItem, Select,
   FormControl, InputLabel, Alert, Snackbar, CircularProgress,
-  Container, Paper,
+  Container, Paper, Tooltip, IconButton,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as donacionService from '../../../services/donacionService';
 
@@ -225,6 +226,7 @@ const DonacionInternacionalForm = () => {
 
   const renderField = (field, label, props = {}) => {
     const id = `internacional-${field}`;
+    const { helpText, ...rest } = props;
     return (
       <TextField
         id={id}
@@ -234,8 +236,28 @@ const DonacionInternacionalForm = () => {
         onChange={handleChange(field)}
         error={!!errors[field]}
         helperText={errors[field]}
-        aria-required={props.required || false}
-        {...props}
+        aria-required={rest.required || false}
+        slotProps={
+          helpText
+            ? {
+                input: {
+                  endAdornment: (
+                    <Tooltip title={helpText} arrow placement="top-end">
+                      <IconButton
+                        size="small"
+                        edge="end"
+                        aria-label={`Ayuda sobre ${label}`}
+                        sx={{ color: '#64748b', mr: 0.5 }}
+                      >
+                        <HelpOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  ),
+                },
+              }
+            : undefined
+        }
+        {...rest}
       />
     );
   };
@@ -418,13 +440,25 @@ const DonacionInternacionalForm = () => {
                         {renderField('monto', 'Monto (USD)', { type: 'number' })}
                       </Grid>
                       <Grid item xs={12}>
-                        {renderField('descripcion', 'Descripción', { multiline: true, rows: 3 })}
+                        {renderField('descripcion', 'Descripción', {
+                          multiline: true,
+                          rows: 3,
+                          helpText: 'Descripción detallada de lo que se está donando (tipo de bien, cantidad, estado). Ejemplo: "Equipos médicos por valor de USD 5.000, en buen estado, listos para envío".',
+                        })}
                       </Grid>
                       <Grid item xs={12}>
-                        {renderField('motivo', 'Motivo', { multiline: true, rows: 2 })}
+                        {renderField('motivo', 'Motivo', {
+                          multiline: true,
+                          rows: 2,
+                          helpText: 'Razón o causa que motiva la donación. Ejemplo: "Apoyo humanitario tras desastre natural" o "Cooperación internacional en salud".',
+                        })}
                       </Grid>
                       <Grid item xs={12}>
-                        {renderField('procedencia', 'Procedencia', { multiline: true, rows: 2 })}
+                        {renderField('procedencia', 'Procedencia', {
+                          multiline: true,
+                          rows: 2,
+                          helpText: 'País u organización de origen de la donación. Ejemplo: "Organización sin fines de lucro con sede en Canadá" o "Empresa matriz con sucursales en la región".',
+                        })}
                       </Grid>
                     </Grid>
                   </Box>
