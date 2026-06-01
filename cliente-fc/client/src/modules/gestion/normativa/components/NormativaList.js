@@ -1,24 +1,49 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, CircularProgress, Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import * as docService from '../../../../services/documentacionService';
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Button, CircularProgress, Box, Typography,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  Select, MenuItem, FormControl, InputLabel, IconButton, Tooltip,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
+import CloseIcon from "@mui/icons-material/Close";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import GavelIcon from "@mui/icons-material/Gavel";
+import { API_IMAGE_URL } from "../../../../services/apiConfig";
+import * as docService from "../../../../services/documentacionService";
 
 const emptyForm = () => ({
-  id_tipo_normativa: '',
-  nombre_normativa: '',
-  descripcion_normativa: '',
-  padre_normativa: '',
-  nivel_normativa: '',
-  jerarquia_normativa: '',
-  archivo_normativa: '',
-  fecha_normativa: '',
-  fecha_modificacion_normativa: '',
-  fecha_vigencia_normativa: '',
-  tipo_registro_normativa: '',
-  observaciones_normativa: '',
+  id_tipo_normativa: "",
+  nombre_normativa: "",
+  descripcion_normativa: "",
+  padre_normativa: "",
+  nivel_normativa: "",
+  jerarquia_normativa: "",
+  archivo_normativa: "",
+  fecha_normativa: "",
+  fecha_modificacion_normativa: "",
+  fecha_vigencia_normativa: "",
+  tipo_registro_normativa: "",
+  observaciones_normativa: "",
 });
 
-const NormativaList = ({ onView }) => {
+const normHeaders = [
+  { key: "nombre", label: "Nombre", mobile: true },
+  { key: "tipo", label: "Tipo", mobile: true },
+  { key: "nivel", label: "Nivel", mobile: false },
+  { key: "jerarquia", label: "Jerarquía", mobile: false },
+  { key: "fecha", label: "Fecha", mobile: false },
+  { key: "vigencia", label: "Vigencia", mobile: true },
+  { key: "registro", label: "Tipo Registro", mobile: false },
+  { key: "acciones", label: "Acciones", mobile: true, align: "right" },
+];
+
+const NormativaList = () => {
   const [items, setItems] = useState([]);
+  const [filtered, setFiltered] = useState([]);
   const [tipos, setTipos] = useState([]);
   const [tiposMap, setTiposMap] = useState({});
   const [loading, setLoading] = useState(false);
@@ -26,6 +51,11 @@ const NormativaList = ({ onView }) => {
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm());
+  const [search, setSearch] = useState("");
+  const [animating, setAnimating] = useState(true);
+  const firstFieldRef = useRef(null);
+  const liveId = "normativa-live-announce";
+  const dialogTitleId = "normativa-dialog-title";
 
   const fetchTipoNormativas = useCallback(async () => {
     try {
@@ -35,7 +65,7 @@ const NormativaList = ({ onView }) => {
       const map = {};
       list.forEach((t) => { map[t.id_tipo_normativa] = t.nombre_tipo_normativa; });
       setTiposMap(map);
-    } catch (err) {
+    } catch {
       setTipos([]);
       setTiposMap({});
     }
@@ -47,23 +77,53 @@ const NormativaList = ({ onView }) => {
     try {
       const data = await docService.getNormativas();
       setItems(Array.isArray(data) ? data : []);
-    } catch (err) {
+    } catch {
       setItems([]);
-      setError('Error al cargar normativas');
+      setError("Error al cargar normativas");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchTipoNormativas(); fetchNormativas(); }, [fetchTipoNormativas, fetchNormativas]);
+  useEffect(() => {
+    fetchTipoNormativas();
+    fetchNormativas();
+    const timer = setTimeout(() => setAnimating(false), 600);
+    return () => clearTimeout(timer);
+  }, [fetchTipoNormativas, fetchNormativas]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('¿Eliminar normativa?')) return;
+  useEffect(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) { setFiltered(items); return; }
+    setFiltered(items.filter((n) =>
+      (n.nombre_normativa && n.nombre_normativa.toLowerCase().includes(q)) ||
+      (n.descripcion_normativa && n.descripcion_normativa.toLowerCase().includes(q)) ||
+      (tiposMap[n.id_tipo_normativa] && tiposMap[n.id_tipo_normativa].toLowerCase().includes(q)) ||
+      (n.tipo_registro_normativa && n.tipo_registro_normativa.toLowerCase().includes(q))
+    ));
+  }, [search, items, tiposMap]);
+
+  useEffect(() => {
+    if (openModal) {
+      const t = setTimeout(() => firstFieldRef.current?.focus(), 80);
+      return () => clearTimeout(t);
+    }
+  }, [openModal]);
+
+  const announce = (msg) => {
+    const el = document.getElementById(liveId);
+    if (el) el.textContent = msg;
+  };
+
+  const handleDelete = async (id, nombre) => {
+    if (!window.confirm(`¿Eliminar la normativa "${nombre || id}"?`)) return;
     try {
       await docService.deleteNormativa(id);
+      announce("Normativa eliminada correctamente");
       fetchNormativas();
-    } catch (err) {
-      setError('Error al eliminar normativa');
+    } catch {
+      setError("Error al eliminar normativa");
+      announce("Error al eliminar normativa");
     }
   };
 
@@ -76,25 +136,23 @@ const NormativaList = ({ onView }) => {
   const handleEditModal = (item) => {
     setEditingId(item.id_normativa);
     setFormData({
-      id_tipo_normativa: item.id_tipo_normativa ?? '',
-      nombre_normativa: item.nombre_normativa || '',
-      descripcion_normativa: item.descripcion_normativa || '',
-      padre_normativa: item.padre_normativa ?? '',
-      nivel_normativa: item.nivel_normativa != null ? String(item.nivel_normativa) : '',
-      jerarquia_normativa: item.jerarquia_normativa || '',
-      archivo_normativa: item.archivo_normativa || '',
-      fecha_normativa: item.fecha_normativa || '',
-      fecha_modificacion_normativa: item.fecha_modificacion_normativa || '',
-      fecha_vigencia_normativa: item.fecha_vigencia_normativa || '',
-      tipo_registro_normativa: item.tipo_registro_normativa || '',
-      observaciones_normativa: item.observaciones_normativa || '',
+      id_tipo_normativa: item.id_tipo_normativa ?? "",
+      nombre_normativa: item.nombre_normativa || "",
+      descripcion_normativa: item.descripcion_normativa || "",
+      padre_normativa: item.padre_normativa ?? "",
+      nivel_normativa: item.nivel_normativa != null ? String(item.nivel_normativa) : "",
+      jerarquia_normativa: item.jerarquia_normativa || "",
+      archivo_normativa: item.archivo_normativa || "",
+      fecha_normativa: item.fecha_normativa || "",
+      fecha_modificacion_normativa: item.fecha_modificacion_normativa || "",
+      fecha_vigencia_normativa: item.fecha_vigencia_normativa || "",
+      tipo_registro_normativa: item.tipo_registro_normativa || "",
+      observaciones_normativa: item.observaciones_normativa || "",
     });
     setOpenModal(true);
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
-  };
+  const handleCloseModal = () => setOpenModal(false);
 
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value });
@@ -132,13 +190,16 @@ const NormativaList = ({ onView }) => {
     try {
       if (editingId) {
         await docService.updateNormativa(editingId, payload);
+        announce("Normativa actualizada correctamente");
       } else {
         await docService.createNormativa(payload);
+        announce("Normativa creada correctamente");
       }
       setOpenModal(false);
       fetchNormativas();
-    } catch (err) {
+    } catch {
       setError("Error al guardar normativa");
+      announce("Error al guardar normativa");
     }
   };
 
@@ -150,80 +211,339 @@ const NormativaList = ({ onView }) => {
       value={formData[key] ?? ""}
       onChange={handleChange(key)}
       sx={{ mb: 2 }}
+      inputRef={key === "nombre_normativa" ? firstFieldRef : undefined}
       {...props}
     />
   );
 
+  const openArchivo = (path) => {
+    if (!path) return;
+    window.open(path.startsWith("/") ? API_IMAGE_URL + path : path, "_blank");
+  };
+
   return (
     <>
-      <TableContainer component={Paper}>
-        <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Typography variant="h6">Normativas</Typography>
-          <Button variant="contained" size="small" onClick={handleOpenModal}>
-            Nueva Normativa
-          </Button>
-        </Box>
-        {loading ? (
-          <Box display="flex" justifyContent="center" p={2}>
-            <CircularProgress size={24} />
+      <Box
+        sx={{
+          opacity: animating ? 0 : 1,
+          transform: animating ? "translateY(8px)" : "translateY(0)",
+          transition: "opacity 0.5s ease, transform 0.5s ease",
+        }}
+      >
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            border: "1px solid",
+            borderColor: "#e7e5e4",
+            borderRadius: 2,
+            overflow: { xs: "auto", sm: "visible" },
+            bgcolor: "#ffffff",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 3,
+              bgcolor: "#0d9488",
+              borderTopLeftRadius: 2,
+              borderTopRightRadius: 2,
+              zIndex: 1,
+            },
+          }}
+        >
+          <Box
+            sx={{
+              px: { xs: 2, sm: 3 },
+              py: 2,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 1.5,
+              borderBottom: "1px solid",
+              borderColor: "#e7e5e4",
+              bgcolor: "#fafaf9",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "10px",
+                  bgcolor: "rgba(13,148,136,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                aria-hidden="true"
+              >
+                <GavelIcon sx={{ color: "#0d9488", fontSize: 22 }} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h6"
+                  component="h2"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: "1.05rem",
+                    color: "#1c1917",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  Normativas
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#a8a29e", fontSize: "0.8rem", mt: 0.25 }}
+                >
+                  {filtered.length} {filtered.length === 1 ? "normativa" : "normativas"}
+                  {search && " encontradas"}
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
+              <TextField
+                size="small"
+                placeholder="Buscar normativas..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                aria-label="Buscar normativas por nombre, descripción, tipo o registro"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <SearchIcon sx={{ color: "#a8a29e", mr: 0.5, fontSize: 18 }} />
+                    ),
+                  },
+                }}
+                sx={{
+                  width: { xs: 1, sm: "auto" },
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
+                    bgcolor: "#ffffff",
+                    fontSize: "0.85rem",
+                    "& fieldset": { borderColor: "#e7e5e4" },
+                    "&:hover fieldset": { borderColor: "#d6d3d1" },
+                    "&.Mui-focused fieldset": { borderColor: "#0d9488" },
+                  },
+                }}
+              />
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleOpenModal}
+                startIcon={<AddIcon />}
+                aria-label="Crear nueva normativa"
+                sx={{
+                  bgcolor: "#0d9488",
+                  "&:hover": { bgcolor: "#0f766e" },
+                  textTransform: "none",
+                  fontWeight: 600,
+                  borderRadius: "8px",
+                  px: 2,
+                  py: 0.75,
+                  fontSize: "0.85rem",
+                  boxShadow: "0 1px 3px rgba(13,148,136,0.2)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Nueva normativa
+              </Button>
+            </Box>
           </Box>
-        ) : error ? (
-          <Box p={2}>
-            <Typography color="error">{error}</Typography>
-          </Box>
-        ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Nivel</TableCell>
-                <TableCell>Jerarquía</TableCell>
-                <TableCell>Fecha</TableCell>
-                <TableCell>Fecha Vigencia</TableCell>
-                <TableCell>Tipo Registro</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.length === 0 ? (
+
+          {loading ? (
+            <Box display="flex" justifyContent="center" p={4} role="status" aria-live="polite" aria-label="Cargando normativas">
+              <CircularProgress size={28} aria-hidden="true" sx={{ color: "#0d9488" }} />
+              <Typography variant="srOnly" sx={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)" }}>
+                Cargando normativas...
+              </Typography>
+            </Box>
+          ) : error ? (
+            <Box p={3} role="alert" aria-live="assertive">
+              <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1, bgcolor: "#fef2f2", color: "#991b1b", px: 2, py: 1.25, borderRadius: "8px", border: "1px solid", borderColor: "#fecaca" }}>
+                <Typography sx={{ fontWeight: 500, fontSize: "0.875rem" }}>{error}</Typography>
+              </Box>
+            </Box>
+          ) : (
+            <Table size="small" aria-label="Lista de normativas" sx={{ "& .MuiTableCell-root": { wordBreak: "break-word", overflowWrap: "break-word" } }}>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={8}>
-                    <Typography color="text.secondary">No hay normativas registradas.</Typography>
-                  </TableCell>
+                  {normHeaders.map((h) => (
+                    <TableCell
+                      key={h.key}
+                      align={h.align || "left"}
+                      sx={{
+                        display: h.mobile ? undefined : { xs: "none", md: "table-cell" },
+                        fontWeight: 600,
+                        color: "#57534e",
+                        fontSize: "0.75rem",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        borderBottom: "2px solid",
+                        borderColor: "#e7e5e4",
+                        py: 1.5,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {h.label}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ) : (
-                items.map((n) => (
-                  <TableRow key={n.id_normativa}>
-                    <TableCell>{n.nombre_normativa}</TableCell>
-                    <TableCell>{tiposMap[n.id_tipo_normativa] || "—"}</TableCell>
-                    <TableCell>{n.nivel_normativa}</TableCell>
-                    <TableCell>{n.jerarquia_normativa}</TableCell>
-                    <TableCell>{n.fecha_normativa}</TableCell>
-                    <TableCell>{n.fecha_vigencia_normativa}</TableCell>
-                    <TableCell>{n.tipo_registro_normativa}</TableCell>
-                    <TableCell>
-                      <Button size="small" onClick={() => handleEditModal(n)} sx={{ mr: 0.5 }}>
-                        Editar
-                      </Button>
-                      <Button size="small" color="error" onClick={() => handleDelete(n.id_normativa)}>
-                        Eliminar
-                      </Button>
+              </TableHead>
+              <TableBody>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={normHeaders.length} sx={{ textAlign: "center", py: 5 }}>
+                      <Box sx={{ color: "#d6d3d1", mb: 1, fontSize: "2rem", lineHeight: 1 }}>○</Box>
+                      <Typography sx={{ color: "#a8a29e", fontWeight: 500 }}>
+                        {search ? "No se encontraron normativas con ese criterio." : "No hay normativas registradas."}
+                      </Typography>
+                      {!search && (
+                        <Button
+                          size="small"
+                          onClick={handleOpenModal}
+                          startIcon={<AddIcon />}
+                          sx={{ mt: 1.5, textTransform: "none", fontWeight: 600, color: "#0d9488", borderRadius: "8px" }}
+                          aria-label="Crear la primera normativa"
+                        >
+                          Crear primera normativa
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </TableContainer>
+                ) : (
+                  filtered.map((n) => (
+                    <TableRow
+                      key={n.id_normativa}
+                      sx={{
+                        "&:hover": { bgcolor: "#fafaf9" },
+                        "&:focus-within": { bgcolor: "#f0fdfa" },
+                        transition: "background-color 0.15s ease",
+                      }}
+                    >
+                      <TableCell sx={{ fontWeight: 600, color: "#1c1917", fontSize: "0.85rem" }}>
+                        {n.nombre_normativa}
+                      </TableCell>
+                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem" }}>
+                        {tiposMap[n.id_tipo_normativa] || "—"}
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem" }}>
+                        {n.nivel_normativa != null ? n.nivel_normativa : "—"}
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem" }}>
+                        {n.jerarquia_normativa || "—"}
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
+                        {n.fecha_normativa || "—"}
+                      </TableCell>
+                      <TableCell sx={{ color: "#57534e", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
+                        {n.fecha_vigencia_normativa || "—"}
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: "none", md: "table-cell" }, color: "#57534e", fontSize: "0.85rem" }}>
+                        {n.tipo_registro_normativa || "—"}
+                      </TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        {n.archivo_normativa && (
+                          <Tooltip title="Ver archivo" arrow>
+                            <IconButton
+                              size="small"
+                              onClick={() => openArchivo(n.archivo_normativa)}
+                              aria-label={`Ver archivo de ${n.nombre_normativa}`}
+                              sx={{
+                                color: "#0d9488",
+                                borderRadius: "8px",
+                                mr: 0.25,
+                                "&:hover": { bgcolor: "rgba(13,148,136,0.08)" },
+                              }}
+                            >
+                              <OpenInNewIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Tooltip title="Editar normativa" arrow>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditModal(n)}
+                            aria-label={`Editar ${n.nombre_normativa}`}
+                            sx={{
+                              color: "#0d9488",
+                              borderRadius: "8px",
+                              mr: 0.5,
+                              "&:hover": { bgcolor: "rgba(13,148,136,0.08)" },
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar normativa" arrow>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDelete(n.id_normativa, n.nombre_normativa)}
+                            aria-label={`Eliminar ${n.nombre_normativa}`}
+                            sx={{
+                              color: "#ef4444",
+                              borderRadius: "8px",
+                              "&:hover": { bgcolor: "rgba(239,68,68,0.08)" },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </TableContainer>
+      </Box>
 
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth scroll="paper">
-        <DialogTitle>{editingId ? "Editar Normativa" : "Nueva Normativa"}</DialogTitle>
-        <DialogContent dividers sx={{ pt: 2 }}>
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        maxWidth="md"
+        fullWidth
+        scroll="paper"
+        aria-labelledby={dialogTitleId}
+        slotProps={{
+          backdrop: { sx: { backdropFilter: "blur(2px)", bgcolor: "rgba(0,0,0,0.3)" } },
+        }}
+        PaperProps={{ sx: { borderRadius: "12px", boxShadow: "0 20px 60px rgba(0,0,0,0.12)" } }}
+      >
+        <DialogTitle
+          id={dialogTitleId}
+          sx={{
+            fontWeight: 700,
+            color: "#1c1917",
+            fontSize: "1.1rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid",
+            borderColor: "#e7e5e4",
+            px: 3,
+            py: 2,
+          }}
+        >
+          {editingId ? "Editar normativa" : "Nueva normativa"}
+          <IconButton
+            size="small"
+            onClick={handleCloseModal}
+            aria-label="Cerrar formulario"
+            sx={{ color: "#a8a29e", borderRadius: "8px" }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ pt: 2.5, px: 3 }}>
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Tipo de Normativa</InputLabel>
+            <InputLabel id="tipo-normativa-label">Tipo de Normativa</InputLabel>
             <Select
+              labelId="tipo-normativa-label"
               label="Tipo de Normativa"
               value={formData.id_tipo_normativa === "" ? "" : formData.id_tipo_normativa}
               onChange={handleChange("id_tipo_normativa")}
@@ -240,18 +560,63 @@ const NormativaList = ({ onView }) => {
           {field("descripcion_normativa", "Descripción", { multiline: true, rows: 2 })}
           {field("nivel_normativa", "Nivel", { type: "number" })}
           {field("jerarquia_normativa", "Jerarquía")}
-          {field("archivo_normativa", "Archivo (URL o ruta)")}
+          <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <TextField
+              fullWidth
+              label="Archivo (URL o ruta)"
+              value={formData.archivo_normativa}
+              onChange={handleChange("archivo_normativa")}
+              sx={{ flex: 1, minWidth: 200 }}
+            />
+            {formData.archivo_normativa && (
+              <Button
+                size="small"
+                onClick={() => openArchivo(formData.archivo_normativa)}
+                startIcon={<OpenInNewIcon fontSize="small" />}
+                sx={{ textTransform: "none", fontWeight: 500, color: "#0d9488" }}
+              >
+                Ver archivo
+              </Button>
+            )}
+          </Box>
           {field("fecha_normativa", "Fecha", { type: "date", InputLabelProps: { shrink: true } })}
           {field("fecha_modificacion_normativa", "Fecha Modificación", { type: "date", InputLabelProps: { shrink: true } })}
           {field("fecha_vigencia_normativa", "Fecha Vigencia", { type: "date", InputLabelProps: { shrink: true } })}
           {field("tipo_registro_normativa", "Tipo de Registro")}
           {field("observaciones_normativa", "Observaciones", { multiline: true, rows: 2 })}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal}>Cancelar</Button>
-          <Button variant="contained" onClick={handleSubmit}>Guardar</Button>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid", borderColor: "#e7e5e4" }}>
+          <Button
+            onClick={handleCloseModal}
+            sx={{ textTransform: "none", fontWeight: 500, color: "#78716c", borderRadius: "8px", px: 2.5 }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            sx={{
+              bgcolor: "#0d9488",
+              "&:hover": { bgcolor: "#0f766e" },
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: "8px",
+              px: 3,
+              boxShadow: "0 1px 3px rgba(13,148,136,0.25)",
+            }}
+          >
+            {editingId ? "Actualizar" : "Guardar"}
+          </Button>
         </DialogActions>
       </Dialog>
+
+      <Box
+        id={liveId}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        sx={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)" }}
+      />
     </>
   );
 };
