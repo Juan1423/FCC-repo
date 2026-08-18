@@ -510,8 +510,7 @@ const swaggerDefinitions = {
                 fecha: { type: "string", format: "date-time", description: "Fecha de la operación" },
                 modulo: { type: "string", description: "Módulo de operación" },
                 operacion: { type: "string", description: "Operación realizada" },
-                detalle: { type: "string", description: "Detalle de la operación" },
-                fecha: { type: "string", format: "date-time", description: "Fecha de la operación" }
+                detalle: { type: "string", description: "Detalle de la operación" }
               },
               required: ["id_usuario", "modulo", "operacion", "detalle", "fecha","hora_ingreso","hora_salida"]
             }

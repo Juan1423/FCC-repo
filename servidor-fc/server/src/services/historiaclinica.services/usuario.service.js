@@ -76,6 +76,6 @@ class UsuarioService  {
 
         return { success: true, message: 'Contraseña actualizada correctamente' };
     }
-};
+}
 
 module.exports = UsuarioService;

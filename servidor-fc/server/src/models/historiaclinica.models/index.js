@@ -44,7 +44,6 @@ function setupHistoriaClinicaModels(sequelize) {
     Examen,
     SignosVitales,
     Aps,
-    Enfermedad,
   });
   TipoTerapia.associate({ Terapias });
   Terapias.associate({ PersonalSalud, Historia, TipoTerapia });
