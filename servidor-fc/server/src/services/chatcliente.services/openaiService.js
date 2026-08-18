@@ -62,39 +62,6 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
     console.warn('Error obteniendo contexto RAG:', error);
     prompt += "No se pudo acceder a la base de conocimientos en este momento.\n\n";
   }
-  const informacionFundacion = `
-📋 INFORMACIÓN DE LA INSTITUCIÓN:
-Nombre: ${fundacion.nombre}
-Misión: ${fundacion.mision}
-Ubicación: ${fundacion.ubicaciones.principal.ciudad}, ${fundacion.ubicaciones.principal.provincia}, ${fundacion.ubicaciones.principal.pais}
-Dirección: ${fundacion.ubicaciones.principal.direccion}
-Teléfono: ${fundacion.contacto.telefonoPrincipal}
-Email: ${fundacion.contacto.email}
-Sitio Web: ${fundacion.contacto.sitioWeb}
-
-🕐 HORARIOS DE ATENCIÓN:
-Lunes a Viernes: ${fundacion.horarios.atencionGeneral.lunesViernes}
-Sábados: ${fundacion.horarios.atencionGeneral.sabados}
-Domingos: ${fundacion.horarios.atencionGeneral.domingos}
-Emergencias: ${fundacion.horarios.emergencias.disponible ? 'Disponible 24/7' : 'No disponible fuera de horarios'}
-
-🏥 SERVICIOS DISPONIBLES:
-- Medicina General: ${fundacion.servicios.medicina.nombre} - ${fundacion.servicios.medicina.descripcion}
-- Especialidades: ${fundacion.servicios.especialidades.nombre} - ${fundacion.servicios.especialidades.descripcion}
-- Laboratorio: ${fundacion.servicios.laboratorio.nombre} - ${fundacion.servicios.laboratorio.descripcion}
-- Terapias: ${fundacion.servicios.terapias.nombre} - ${fundacion.servicios.terapias.descripcion}
-- Telemedicina: ${fundacion.servicios.telemedicina.nombre} - ${fundacion.servicios.telemedicina.descripcion}
-
-📱 REDES SOCIALES:
-Facebook: ${fundacion.contacto.redesSociales.facebook}
-Instagram: ${fundacion.contacto.redesSociales.instagram}
-Twitter: ${fundacion.contacto.redesSociales.twitter}
-WhatsApp: ${fundacion.contacto.redesSociales.whatsapp}
-
-Utiliza esta información para responder preguntas sobre horarios, servicios, ubicación y contacto. Sé amable y profesional.
-`;
-
-  prompt += informacionFundacion + "\n\n";
 
   // Instrucciones Adicionales (Dinámicas)
   // Prompts Específicos: tipo_prompt 'instrucciones'

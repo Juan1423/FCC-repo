@@ -15,6 +15,13 @@ class KnowledgeService {
         try {
             console.log(`--> Procesando archivo: ${file.originalname}`);
 
+            // Verificar que pgvector esté disponible
+            try {
+                await sequelize.query("SELECT 1 FROM pg_extension WHERE extname = 'vector'");
+            } catch {
+                throw new Error("La extensión pgvector no está instalada en PostgreSQL. Ejecuta: CREATE EXTENSION IF NOT EXISTS vector;");
+            }
+
             // 1. Registrar documento
             const doc = await models.DocumentoConocimiento.create({
                 titulo,
@@ -50,7 +57,7 @@ class KnowledgeService {
                 const vector = response.data[0].embedding;
 
                 await sequelize.query(
-                    `INSERT INTO fcc_ia.ia_segmentos_vector (documento_id, contenido, embedding) 
+                    `INSERT INTO fcc_historiaclinica.ia_segmentos_vector (documento_id, contenido, embedding) 
                      VALUES (:docId, :content, :vec)`,
                     {
                         replacements: { 
