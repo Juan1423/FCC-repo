@@ -118,6 +118,11 @@ const SeguridadSchema = {
         allowNull: false,
         defaultValue: true,
     },
+    created_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: DataTypes.NOW,
+    },
 };
 
 module.exports = { Seguridad, SeguridadSchema };

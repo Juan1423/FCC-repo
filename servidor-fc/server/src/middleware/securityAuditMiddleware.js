@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const PUBLIC_ROUTES = [
   { method: 'POST', path: '/auth' },
   { method: 'POST', path: '/users/login' },
+  { method: 'POST', path: '/usuario-anonimo/register' },
 ];
 
 const SENSITIVE_FIELDS = ['token', 'password', 'newPassword', 'confirmPassword', 'oldPassword'];

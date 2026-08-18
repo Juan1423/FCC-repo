@@ -14,7 +14,7 @@ class UsuarioAnonimoController {
       });
     } catch (error) {
       console.error('Error en create usuario anonimo:', error);
-      const statusCode = error.message.includes('ya está registrada') ? 409 : 500;
+      const statusCode = error.statusCode || (error.message.includes('ya está registrada') ? 409 : 500);
       res.status(statusCode).json({
         success: false,
         message: error.message || 'Error interno del servidor',
@@ -132,7 +132,7 @@ class UsuarioAnonimoController {
       });
     } catch (error) {
       console.error('Error en update usuario anonimo:', error);
-      const statusCode = error.message.includes('ya está registrada') ? 409 : 500;
+      const statusCode = error.statusCode || (error.message.includes('ya está registrada') ? 409 : 500);
       res.status(statusCode).json({
         success: false,
         message: error.message || 'Error interno del servidor',

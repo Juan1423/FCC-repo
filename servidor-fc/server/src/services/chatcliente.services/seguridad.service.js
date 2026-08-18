@@ -29,8 +29,8 @@ class SeguridadService {
   }
 
   async findAll(options = {}) {
+    const { limit, offset, where } = options;
     try {
-      const { limit, offset, where } = options;
       const seguridad = await Seguridad.findAll({
         where,
         limit,
@@ -62,8 +62,14 @@ class SeguridadService {
       });
       return seguridad;
     } catch (error) {
-      console.error('Error obteniendo registros de seguridad:', error);
-      throw error;
+      console.warn('Error en findAll con includes, intentando query simple:', error.message);
+      const seguridad = await Seguridad.findAll({
+        where,
+        limit,
+        offset,
+        order: [['created_at', 'DESC']]
+      });
+      return seguridad;
     }
   }
 
@@ -96,8 +102,8 @@ class SeguridadService {
       });
       return seguridad;
     } catch (error) {
-      console.error('Error obteniendo registro de seguridad por ID:', error);
-      throw error;
+      console.warn('Error en findById con includes, intentando query simple:', error.message);
+      return await Seguridad.findByPk(id);
     }
   }
 

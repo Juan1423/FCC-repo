@@ -56,7 +56,7 @@ class PreguntaAnonimaService {
   async getStats() {
     try {
       const total = await models.PreguntaAnonima.count();
-      const uniqueUsers = await PreguntaAnonima.count({
+      const uniqueUsers = await models.PreguntaAnonima.count({
         distinct: true,
         col: 'cedula'
       });

@@ -109,7 +109,8 @@ class SeguridadController {
         }
       });
     } catch (error) {
-      console.error('Error en getAll seguridad:', error);
+      console.error('Error en getAll seguridad:', error.message);
+      console.error('Stack:', error.stack);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor',

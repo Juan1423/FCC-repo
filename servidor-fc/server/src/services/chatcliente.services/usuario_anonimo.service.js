@@ -17,19 +17,59 @@ class UsuarioAnonimoService {
     return models;
   }
 
+  _validateData(data) {
+    const errors = [];
+    if (!data || typeof data !== 'object') {
+      errors.push('El cuerpo de la petición debe ser un objeto JSON válido');
+      return errors;
+    }
+    if (!data.nombre || typeof data.nombre !== 'string') {
+      errors.push('El nombre es requerido y debe ser texto');
+    } else {
+      const nombre = data.nombre.trim();
+      if (nombre.length < 2 || nombre.length > 100) {
+        errors.push(`El nombre debe tener entre 2 y 100 caracteres (actual: ${nombre.length})`);
+      }
+    }
+    if (!data.cedula || typeof data.cedula !== 'string') {
+      errors.push('La cédula es requerida y debe ser texto');
+    } else {
+      const cedula = data.cedula.trim().replace(/[^0-9]/g, '');
+      if (cedula.length < 5 || cedula.length > 20) {
+        errors.push(`La cédula debe tener entre 5 y 20 dígitos (actual: ${cedula.length}, valor: "${cedula}")`);
+      }
+    }
+    return errors;
+  }
+
   async create(data) {
     try {
-      const { UsuarioAnonimo } = await this._ensureModels();
-
-      // Verificar si la cédula ya existe
-      const existing = await UsuarioAnonimo.findOne({
-        where: { cedula: data.cedula }
-      });
-      if (existing) {
-        throw new Error('La cédula ya está registrada');
+      const validationErrors = this._validateData(data);
+      if (validationErrors.length > 0) {
+        const err = new Error(validationErrors.join('; '));
+        err.statusCode = 400;
+        throw err;
       }
 
-      const usuario = await UsuarioAnonimo.create(data);
+      const { UsuarioAnonimo } = await this._ensureModels();
+
+      const cedulaLimpia = data.cedula.trim().replace(/[^0-9]/g, '');
+      const nombreLimpio = data.nombre.trim();
+
+      const existing = await UsuarioAnonimo.findOne({
+        where: { cedula: cedulaLimpia }
+      });
+      if (existing) {
+        const err = new Error('La cédula ya está registrada');
+        err.statusCode = 409;
+        throw err;
+      }
+
+      const usuario = await UsuarioAnonimo.create({
+        ...data,
+        nombre: nombreLimpio,
+        cedula: cedulaLimpia
+      });
       return usuario;
     } catch (error) {
       console.error('Error creando usuario anónimo:', error);
