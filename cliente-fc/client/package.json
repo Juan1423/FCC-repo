@@ -37,13 +37,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "lint": "cross-env NODE_ENV=development eslint src --ext .js,.jsx",
+    "lint:fix": "cross-env NODE_ENV=development eslint src --ext .js,.jsx --fix"
   },
   "browserslist": {
     "production": [
@@ -58,7 +53,12 @@
     ]
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.23.10",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@testing-library/jest-dom": "^6.4.5"
+    "@testing-library/jest-dom": "^6.4.5",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0"
   }
 }
