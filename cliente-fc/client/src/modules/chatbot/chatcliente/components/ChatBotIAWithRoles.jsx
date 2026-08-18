@@ -118,7 +118,7 @@ export const ChatBotIAWithRoles = ({
       )}
 
       {/* Modal pidiendo login al alcanzar límite */}
-      <Dialog open={showLoginPrompt} onClose={() => setShowLoginPrompt(false)}>
+      <Dialog open={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} disableRestoreFocus>
         <Box sx={{ p: 3, minWidth: '400px' }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             ✨ Acceso Ilimitado Disponible

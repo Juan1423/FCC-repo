@@ -282,6 +282,7 @@ const UsuariosAnonimosTable = () => {
         onClose={() => setSecurityDialog({ open: false, userData: null })} 
         maxWidth="md" 
         fullWidth
+        disableRestoreFocus
       >
         <DialogTitle sx={{ backgroundColor: '#f5f5f5', borderBottom: '1px solid #ddd' }}>
           Información Completa de Seguridad - {securityDialog.userData?.nombre}

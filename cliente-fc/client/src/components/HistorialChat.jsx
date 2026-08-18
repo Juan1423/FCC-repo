@@ -769,7 +769,7 @@ const fetchConversaciones = async () => {
       )}
 
       {/* Diálogo de Edición */}
-      <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, conversacion: null })} maxWidth="md" fullWidth>
+      <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, conversacion: null })} maxWidth="md" fullWidth disableRestoreFocus>
         <DialogTitle>Editar Conversación</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -887,6 +887,7 @@ const fetchConversaciones = async () => {
         onClose={() => setSecurityDialog({ open: false, userData: null })} 
         maxWidth="md" 
         fullWidth
+        disableRestoreFocus
       >
         <DialogTitle sx={{ backgroundColor: '#f5f5f5', borderBottom: '1px solid #ddd' }}>
           Información Completa de Seguridad - {securityDialog.userData?.userName}

@@ -577,7 +577,7 @@ const handleSave = async () => {
         </Button>
       </Box>
       {loading ? (<Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress size={60} /></Box>) : (<TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}><Table><TableHead><TableRow sx={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}><TableCell sx={{ color: 'text.primary', fontWeight: 'bold', width: '50px' }}><input type="checkbox" checked={selectedPrompts.size === filteredPrompts.length && filteredPrompts.length > 0} onChange={(e) => handleSelectAll(e.target.checked)} disabled={filteredPrompts.length === 0} title="Seleccionar todos" /></TableCell><TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>ID</TableCell><TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>Tipo</TableCell><TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>Título</TableCell><TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>Descripción</TableCell><TableCell sx={{ color: 'text.primary', fontWeight: 'bold', textAlign: 'center' }}>PDF</TableCell><TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>Acciones</TableCell></TableRow></TableHead><TableBody>{filteredPrompts.map((prompt) => {const pdfExists = pdfAvailability[prompt.archivo_pdf]; return (<TableRow key={prompt.id_prompt} hover sx={{ backgroundColor: selectedPrompts.has(prompt.id_prompt) ? '#e3f2fd' : 'inherit' }}><TableCell sx={{ width: '50px', color: 'text.primary' }}><input type="checkbox" checked={selectedPrompts.has(prompt.id_prompt)} onChange={() => handleSelectPrompt(prompt.id_prompt)} title={`Seleccionar prompt ${prompt.id_prompt}`} /></TableCell><TableCell sx={{ color: 'text.primary' }}>{prompt.id_prompt}</TableCell><TableCell sx={{ color: 'text.primary' }}>{prompt.tipo_prompt}</TableCell><TableCell sx={{ color: 'text.primary' }}>{prompt.titulo}</TableCell><TableCell sx={{ color: 'text.primary' }}>{prompt.descripcion}</TableCell><TableCell sx={{ color: 'text.primary', textAlign: 'center' }}>{prompt.archivo_pdf ? (pdfExists ? (<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}><span style={{ fontSize: '16px', color: '#4caf50' }}>✓</span><Typography variant="caption" sx={{ color: '#4caf50', fontWeight: 600 }}>Disponible</Typography></Box>) : (<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}><span style={{ fontSize: '16px', color: '#ff9800' }}>⚠</span><Typography variant="caption" sx={{ color: '#ff9800' }}>No encontrado</Typography></Box>)) : (<Typography variant="caption" sx={{ color: 'text.secondary' }}>—</Typography>)}</TableCell><TableCell sx={{ color: 'text.primary' }}><Box sx={{ display: 'flex', gap: 0.5 }}>{prompt.archivo_pdf && (<IconButton onClick={() => handleDownloadPdf(prompt.archivo_pdf)} title={pdfExists ? `Descargar ${prompt.archivo_pdf}` : 'Archivo no disponible'} color={pdfExists ? 'primary' : 'inherit'} disabled={!pdfExists || loading} size="small"><Download fontSize="small" /></IconButton>)}<IconButton onClick={() => handleActivate(prompt.id_prompt)} title="Activar Prompt" color="primary" disabled={loading} size="small"><PlayArrow fontSize="small" /></IconButton><IconButton onClick={() => handleOpen(prompt)} title="Editar" color="primary" disabled={loading} size="small"><Edit fontSize="small" /></IconButton><IconButton onClick={() => handleDelete(prompt.id_prompt)} title="Eliminar" color="error" disabled={loading} size="small"><Delete fontSize="small" /></IconButton></Box></TableCell></TableRow>)})}</TableBody></Table></TableContainer>)}
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth disableRestoreFocus>
         <DialogTitle sx={{ 
           fontWeight: 700, 
           color: 'text.primary',
@@ -688,7 +688,7 @@ const handleSave = async () => {
       </Dialog>
       
       {/* Dialog para ver información de Seguridad */}
-      <Dialog open={securityOpen} onClose={() => setSecurityOpen(false)} maxWidth="lg" fullWidth>
+      <Dialog open={securityOpen} onClose={() => setSecurityOpen(false)} maxWidth="lg" fullWidth disableRestoreFocus>
         <DialogTitle sx={{ 
           fontWeight: 'bold', 
           backgroundColor: '#f5f5f5',
@@ -942,7 +942,7 @@ const handleSave = async () => {
       </Dialog>
 
       {/* Dialog para reporte de usuario */}
-      <Dialog open={userReportOpen} onClose={() => setUserReportOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={userReportOpen} onClose={() => setUserReportOpen(false)} maxWidth="md" fullWidth disableRestoreFocus>
         <DialogTitle sx={{ 
           fontWeight: 'bold', 
           backgroundColor: '#f5f5f5',

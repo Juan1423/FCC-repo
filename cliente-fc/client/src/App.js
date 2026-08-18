@@ -70,9 +70,13 @@ function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false);
   const [wantsLogin, setWantsLogin] = useState(false);
 
-  // Verificar si el usuario ya está autenticado al cargar
+  // Sincronizar estado de autenticación periódicamente
   useEffect(() => {
     setUserAuthenticated(isAuthenticated());
+    const interval = setInterval(() => {
+      setUserAuthenticated(isAuthenticated());
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleChatbotClick = () => {

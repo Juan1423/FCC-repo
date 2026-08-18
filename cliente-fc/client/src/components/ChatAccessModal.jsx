@@ -11,7 +11,6 @@ import {
   TextField,
   CircularProgress,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import LoginIcon from '@mui/icons-material/Login';
 import PersonIcon from '@mui/icons-material/Person';
 import { createUsuarioAnonimo } from '../services/chatbotAdminServices';
@@ -23,7 +22,6 @@ import { createUsuarioAnonimo } from '../services/chatbotAdminServices';
  * 2. Acceder como visitante (30 preguntas)
  */
 const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) => {
-  const navigate = useNavigate();
   const [step, setStep] = useState('choice'); // 'choice' | 'register' | 'continuing'
   const [nombre, setNombre] = useState('');
   const [cedula, setCedula] = useState('');
@@ -74,8 +72,15 @@ const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) =
   };
 
   const handleRegisterVisitor = async () => {
-    if (!nombre.trim() || !cedula.trim()) {
-      setError('Por favor completa nombre y cédula');
+    const nombreLimpio = nombre.trim();
+    const cedulaLimpia = cedula.trim().replace(/[^0-9]/g, '');
+
+    if (nombreLimpio.length < 2 || nombreLimpio.length > 100) {
+      setError('El nombre debe tener entre 2 y 100 caracteres');
+      return;
+    }
+    if (cedulaLimpia.length < 5 || cedulaLimpia.length > 20) {
+      setError('La cédula debe tener entre 5 y 20 dígitos');
       return;
     }
 
@@ -83,11 +88,11 @@ const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) =
     setError(null);
 
     try {
-      const response = await createUsuarioAnonimo({ nombre, cedula });
+      const response = await createUsuarioAnonimo({ nombre: nombreLimpio, cedula: cedulaLimpia });
       if (response && response.success) {
         // Guardar datos en localStorage para identificar al visitante
-        localStorage.setItem('visitorName', nombre);
-        localStorage.setItem('visitorCedula', cedula);
+        localStorage.setItem('visitorName', nombreLimpio);
+        localStorage.setItem('visitorCedula', cedulaLimpia);
 
         // Guardar el ID único del usuario anónimo para poder asociar sus conversaciones
         const visitorId = response.data?.id_usuario_anonimo || response.data?.id || null;
@@ -100,7 +105,7 @@ const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) =
         setCedula('');
         onClose();
         if (onContinueAsVisitor) {
-          onContinueAsVisitor({ nombre, cedula, id: visitorId });
+          onContinueAsVisitor({ nombre: nombreLimpio, cedula: cedulaLimpia, id: visitorId });
         }
       } else {
         setError(response.message || 'Error al registrar visitante');
@@ -120,7 +125,7 @@ const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) =
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth disableRestoreFocus>
       <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
         <Typography variant="h6" component="span">
           🤖 Chat con Fundación
