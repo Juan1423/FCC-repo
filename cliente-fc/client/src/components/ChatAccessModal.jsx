@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import PersonIcon from '@mui/icons-material/Person';
-import { createUsuarioAnonimo } from '../services/chatbotAdminServices';
+import { registrarUsuarioAnonimo } from '../services/chatService';
 
 /**
  * Modal que aparece cuando el usuario hace clic en el botón FAB del chatbot
@@ -88,7 +88,7 @@ const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) =
     setError(null);
 
     try {
-      const response = await createUsuarioAnonimo({ nombre: nombreLimpio, cedula: cedulaLimpia });
+      const response = await registrarUsuarioAnonimo({ nombre: nombreLimpio, cedula: cedulaLimpia });
       if (response && response.success) {
         // Guardar datos en localStorage para identificar al visitante
         localStorage.setItem('visitorName', nombreLimpio);

@@ -30,25 +30,16 @@ import ExportarAuditorias from './modules/sistema/auditoria/componets/exportarAu
 import ComunidadModule from './modules/gestion/comunidad';
 import NormativaModule from './modules/gestion/normativa';
 
-import ChatCliente from './modules/chatbot/chatcliente/views/ChatCliente';
-import ChatbotAdminPage from './modules/chatbot/chatcliente/views/ChatbotAdminPage';
+import ChatbotRoutes from './modules/chatbot/ChatbotRoutes';
 import SistemaDashboard from './modules/sistema/SistemaDashboard';
 import GestionDashboard from './modules/gestion/GestionDashboard';
 import SaludDashboard from './modules/salud/SaludDashboard';
-import ChatDashboard from './modules/chatbot/ChatbotDashboard';
-
 
 import DocumentacionModule from './modules/gestion/documentacion';
-
-/*import AsistenteInternoView from './modules/chatservidor/views/AsistenteInternoView';*/
 import CapacitacionesModule from './modules/gestion/capacitaciones';
 import DonacionesModule from './modules/gestion/donaciones';
 import DonacionNacionalForm from './modules/public/donaciones/DonacionNacionalForm';
 import DonacionInternacionalForm from './modules/public/donaciones/DonacionInternacionalForm';
-import IADashboard from './modules/chatbot/chatservidor/views/IADashboard';
-import GestionConocimientoView from './modules/chatbot/chatservidor/views/GestionConocimientoView';
-import HistorialIAView from './modules/chatbot/chatservidor/views/HistorialIAView';
-import AsesoramientoView from './modules/chatbot/chatservidor/views/AsesoramientoView';
 
 // ✅ Importa los chatbots
 import { ChatBotIA } from './components/ChatBotIA';
@@ -226,27 +217,11 @@ function App() {
             />
             <Route 
               path="/fcc-chatbot/*"
-              element={<PrivateRoute element={ChatCliente} allowedRoles={['admin']} />} 
-            />
-            <Route 
-              path="/fcc-chatbot-admin"
-              element={<PrivateRoute element={ChatbotAdminPage} allowedRoles={['admin']} />} 
+              element={<PrivateRoute element={ChatbotRoutes} allowedRoles={['admin']} />} 
             />
             <Route 
               path="/fcc-asistente-ia" 
-              element={<PrivateRoute element={IADashboard} allowedRoles={['admin']} />} 
-            />
-             <Route 
-              path="/fcc-asistente-ia/conocimiento" 
-              element={<PrivateRoute element={GestionConocimientoView} allowedRoles={['admin']} />} 
-            />
-            <Route 
-              path="/fcc-asistente-ia/historial" 
-              element={<PrivateRoute element={HistorialIAView} allowedRoles={['admin']} />} 
-            />
-            <Route 
-              path="/fcc-asistente-ia/asesoramiento" 
-              element={<PrivateRoute element={AsesoramientoView} allowedRoles={['admin']} />} 
+              element={<PrivateRoute element={ChatbotRoutes} allowedRoles={['admin']} />} 
             />
             <Route
               path="/fcc-capacitaciones/*"              
@@ -265,8 +240,8 @@ function App() {
               element={<PrivateRoute element={SaludDashboard} allowedRoles={['admin',"doctor", "personal_salud"]} />}
             />
             <Route
-              path="/fcc-chat"              
-              element={<PrivateRoute element={ChatDashboard} allowedRoles={['admin']} />}
+              path="/fcc-chat/*"              
+              element={<PrivateRoute element={ChatbotRoutes} allowedRoles={['admin']} />}
             />   
             <Route
               path="/fcc-documentacion/*"

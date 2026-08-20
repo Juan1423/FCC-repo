@@ -17,9 +17,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
 
 // Servicios
-import { enviarPreguntaAI } from '../services/openaiService';
-import iaService from '../services/iaService';
+import { enviarMensajePublico, enviarMensajeInterno, getVisitorId } from '../services/chatService';
 import { getCurrentUser } from '../utils/userUtils';
+import chatConfig from '../modules/chatbot/config/chatConfig';
 
 const styles = {
   floatBtn: {
@@ -82,7 +82,9 @@ export const ChatBotIA = () => {
             if (messages.length === 0) {
               setMessages([{ 
                 sender: 'bot', 
-                text: `👋 Hola ${nombre}. \n\nSoy tu Asistente de Gestión.\nEstoy conectado a los documentos internos. ¿Qué necesitas consultar hoy?` 
+                text: typeof chatConfig.welcomeMessages.interno === 'function' 
+                  ? chatConfig.welcomeMessages.interno(nombre)
+                  : chatConfig.welcomeMessages.internoFallback
               }]);
             }
             return; 
@@ -92,7 +94,7 @@ export const ChatBotIA = () => {
 
       setIsInternalUser(false);
       if (messages.length === 0) {
-        setMessages([{ sender: 'bot', text: '¡Hola! Soy el asistente virtual de la Fundación. ¿En qué puedo ayudarte?' }]);
+        setMessages([{ sender: 'bot', text: chatConfig.welcomeMessages.publico }]);
       }
     };
 
@@ -115,19 +117,12 @@ export const ChatBotIA = () => {
 
       if (isInternalUser) {
         // --- MODO INTERNO ---
-        const userId = getCurrentUser()?.id_usuario || 'temp';
-        
-        // RESTAURADO A LAS VARIABLES ORIGINALES QUE FUNCIONAN CON TU BACKEND
-        const res = await iaService.consultarAsistente({
-          mensaje: userText, 
-          sessionId: 'session-' + userId
-        });
-        
-        // RESTAURADO EL PARSEO ORIGINAL DE LA RESPUESTA
-        respuesta = res.data?.success ? res.data.data.respuesta : "No encontré información en los documentos.";
+        const res = await enviarMensajeInterno({ mensaje: userText });
+        respuesta = res?.data?.respuesta || res?.respuesta || "No encontré información en los documentos.";
       } else {
         // --- MODO PÚBLICO ---
-        respuesta = await enviarPreguntaAI(userText);
+        const res = await enviarMensajePublico({ mensaje: userText, visitor_id: getVisitorId() });
+        respuesta = res?.data?.respuesta || res?.data?.mensaje || 'No se recibió respuesta.';
       }
 
       setMessages(prev => [...prev, { sender: 'bot', text: respuesta }]);

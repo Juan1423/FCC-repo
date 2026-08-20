@@ -42,7 +42,7 @@ import {
   Security,
 } from '@mui/icons-material';
 import { getCurrentUserId } from '../utils/userUtils';
-import { getAllConversaciones, createConocimiento, updateConversacion, deleteConversacion, generateEmbeddings, blockUser, unblockUser, blockIP, unblockIP, usarConversacionEspecifico } from '../services/chatbotAdminServices';
+import { getConversaciones as getAllConversaciones, createConocimiento, updateConversacion, deleteConversacion, generarEmbeddings as generateEmbeddings, blockUser, unblockUser, blockIP, unblockIP, usarConversacionEspecifico } from '../services/chatService';
 
 const HistorialChat = () => {
   const [conversaciones, setConversaciones] = useState([]);

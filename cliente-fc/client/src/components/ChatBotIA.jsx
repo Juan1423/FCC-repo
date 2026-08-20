@@ -1,8 +1,9 @@
 // ChatBotIA.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { enviarPreguntaAI, enviarFeedback } from '../services/openaiService';
+import { enviarMensajePublico, enviarFeedback, getVisitorId } from '../services/chatService';
 import { login, getUserInfo, getAuthToken } from '../services/authServices';
 import { Modal, Box, TextField, Button, Typography, Snackbar, Alert } from '@mui/material';
+import chatConfig from '../modules/chatbot/config/chatConfig';
 import './ChatBotIA.css';
 
 /**
@@ -32,7 +33,7 @@ export const ChatBotIA = ({
   console.log('ChatBotIA props:', { showLoginModalInitially, isVisitor, onLoginSuccess: !!onLoginSuccess });
   
   const [messages, setMessages] = useState([
-    { from: 'bot', text: '¡Hola! Soy el chatbot de la Fundación. ¿En qué puedo ayudarte?' }
+    { from: 'bot', text: chatConfig.welcomeMessages.publico }
   ]);
   const [input, setInput] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
@@ -89,7 +90,7 @@ export const ChatBotIA = ({
   // Si se fuerza borrar memoria desde fuera - SOLO limpia la sesión actual, NO la BD
   useEffect(() => {
     if (forceClearMemory) {
-      setMessages([{ from: 'bot', text: '¡Hola! Soy el chatbot de la Fundación. ¿En qué puedo ayudarte?' }]);
+      setMessages([{ from: 'bot', text: chatConfig.welcomeMessages.publico }]);
       setCurrentConversationId(null);
       setShowFeedback(false);
       setQuestionCount(0);
@@ -141,13 +142,14 @@ export const ChatBotIA = ({
     console.log('Enviando mensaje:', userMessage, 'con promptId:', selectedPrompt ? selectedPrompt.id_prompt : null);
 
     try {
-      const result = await enviarPreguntaAI(
-        userMessage,
-        selectedPrompt ? selectedPrompt.id_prompt : null,
-        consentimientoAccepted,
-        { clientTime: new Date().toISOString() },
-        selectedPrompt ? selectedPrompt.promptText : null
-      );
+      const result = await enviarMensajePublico({
+        mensaje: userMessage,
+        promptId: selectedPrompt ? selectedPrompt.id_prompt : null,
+        consentimiento: consentimientoAccepted,
+        metadata: { clientTime: new Date().toISOString() },
+        promptText: selectedPrompt ? selectedPrompt.promptText : null,
+        visitor_id: getVisitorId(),
+      });
       console.log('Respuesta del bot:', result);
       setMessages(prev => [...prev, { from: 'bot', text: result.respuesta || result }]);
       if (result.id_conversacion) {
@@ -198,7 +200,7 @@ export const ChatBotIA = ({
         setIsLoggedIn(true); // Marcar como logueado
         setShowLogin(false); // Cerrar modal de login
         setLoginData({ email: '', password: '' });
-        setMessages([{ from: 'bot', text: '¡Hola! Soy el chatbot de la Fundación. ¿En qué puedo ayudarte?' }]);
+        setMessages([{ from: 'bot', text: chatConfig.welcomeMessages.publico }]);
         
         // Si se abrió desde el modal de acceso (showLoginModalInitially), solo permitir chat sin redirigir
         // Si se abrió normalmente, permitir que se cierre y use el sistema
@@ -234,7 +236,7 @@ export const ChatBotIA = ({
   const handleFeedback = async (calificacion, comentario = '') => {
     if (currentConversationId) {
       try {
-        await enviarFeedback(currentConversationId, calificacion, comentario);
+        await enviarFeedback({ id_conversacion: currentConversationId, calificacion, comentario });
         setShowFeedback(false);
       } catch (error) {
         console.error('Error enviando feedback:', error);
