@@ -118,7 +118,7 @@ const verifyTokenOrVisitor = async (req, res, next) => {
       if (error) {
         return res.status(401).json({ mensaje: "Token inválido" });
       } else {
-        console.log('Token decodificado:', data);
+        console.log('Token decodificado:', data); // Debug
         req.user = data;
         req.isVisitor = false;
         next();
@@ -143,4 +143,18 @@ const verifyTokenOrVisitor = async (req, res, next) => {
   }
 };
 
-module.exports = { verifyToken, getUserDataFromToken, verifyTokenAdmin , validateAndReturnUserData, verifyTokenOrVisitor};
+const requireRole = (roles) => {
+  const allowedRoles = Array.isArray(roles) ? roles.map(r => r.toLowerCase()) : [String(roles).toLowerCase()];
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ mensaje: 'Token no proporcionado' });
+    }
+    const userRol = String(req.user.rol || req.user.role || '').toLowerCase();
+    if (!allowedRoles.includes(userRol)) {
+      return res.status(403).json({ mensaje: 'No tienes permisos para realizar esta acción' });
+    }
+    next();
+  };
+};
+
+module.exports = { verifyToken, getUserDataFromToken, verifyTokenAdmin , validateAndReturnUserData, verifyTokenOrVisitor, requireRole};

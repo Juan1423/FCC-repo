@@ -4,7 +4,19 @@ const jwt = require('jsonwebtoken');
 const PUBLIC_ROUTES = [
   { method: 'POST', path: '/auth' },
   { method: 'POST', path: '/users/login' },
-  { method: 'POST', path: '/usuario-anonimo/register' },
+  { method: 'POST', path: '/chat/publico/usuario-anonimo/register' },
+  { method: 'POST', path: '/chat/publico/mensaje' },
+  { method: 'POST', path: '/chat/publico/feedback' },
+  { method: 'POST', path: '/chat/publico/pregunta-anonima' },
+  { method: 'GET', path: '/region' },
+  { method: 'GET', path: '/provincia' },
+  { method: 'GET', path: '/canton' },
+  { method: 'GET', path: '/parroquia' },
+  { method: 'GET', path: '/continente' },
+  { method: 'GET', path: '/pais' },
+  { method: 'GET', path: '/ciudad' },
+  { method: 'GET', path: '/tipo_donante' },
+  { method: 'GET', path: '/tipo_donacion' },
 ];
 
 const SENSITIVE_FIELDS = ['token', 'password', 'newPassword', 'confirmPassword', 'oldPassword'];

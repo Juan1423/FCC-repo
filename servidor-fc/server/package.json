@@ -9,7 +9,8 @@
     "test:coverage": "jest --coverage --forceExit --detectOpenHandles",
     "db:seed:required": "sequelize-cli db:seed --seed 20240806233857-required-seeders.js",
     "db:seed:optional": "sequelize-cli db:seed --seed 20240806233921-optional-seeders.js",
-    "db:seed:all": "npm run db:seed:required && npm run db:seed:optional"
+    "db:seed:chat": "sequelize-cli db:seed --seed 20260818000001-chat-temas-validos.js && sequelize-cli db:seed --seed 20260818000002-chat-protocolos-sensibles.js && sequelize-cli db:seed --seed 20260818000003-chat-configuracion.js && sequelize-cli db:seed --seed 20260818000004-chat-prompts-base.js",
+    "db:seed:all": "npm run db:seed:required && npm run db:seed:optional && npm run db:seed:chat"
   },
   "keywords": [],
   "author": "",

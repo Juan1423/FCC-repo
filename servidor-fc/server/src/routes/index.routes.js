@@ -8,11 +8,9 @@ const setupUploadsRoutes = require('./setupUploadsRoutes');
 
 const setupComunidadRoutes = require('./comunidad.routes');
 const setupCapacitacionRoutes = require('./capacitaciones.routes')
-const setupChatClienteRoutes = require('./chatcliente.routes')
-const setupChatServidorRoutes = require('./chatservidor.routes')
+const setupChatRoutes = require('./chat.routes')
 const setupDocumentacionRoutes = require('./documentacion.routes')
-const setupDonacionesRoutes = require('./donaciones.routes')
-const setupOpenAiRoutes = require('./openai.routes');
+const setupDonacionesRoutes = require('./donaciones.routes');
 
 function routerApi(app) {
   const router = express.Router();
@@ -182,12 +180,10 @@ function routerApi(app) {
   setupAuthRoutes(router);
   setupCie11Routes(router);
   setupComunidadRoutes(router);
-  setupCapacitacionRoutes(router)
-  setupChatClienteRoutes(router)
-  setupChatServidorRoutes(router)
-  setupDocumentacionRoutes(router)
-  setupDonacionesRoutes(router)
-  setupOpenAiRoutes(router);
+  setupCapacitacionRoutes(router);
+  setupChatRoutes(router);
+  setupDocumentacionRoutes(router);
+  setupDonacionesRoutes(router);
 }
 
 module.exports = routerApi;
