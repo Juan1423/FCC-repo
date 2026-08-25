@@ -22,9 +22,13 @@ class RoleService {
         return USER_ROLES.VISITANTE;
       }
 
+      // Normalizar alias de roles del backend
+      const ROLE_ALIASES = { admin: 'administrador' };
+      const normalizedRole = ROLE_ALIASES[userInfo.rol] || userInfo.rol;
+
       // Validar que el rol sea uno de los permitidos
-      const validRole = Object.values(USER_ROLES).includes(userInfo.rol);
-      return validRole ? userInfo.rol : USER_ROLES.VISITANTE;
+      const validRole = Object.values(USER_ROLES).includes(normalizedRole);
+      return validRole ? normalizedRole : USER_ROLES.VISITANTE;
     } catch (error) {
       console.error('Error obteniendo rol actual:', error);
       return USER_ROLES.VISITANTE;
