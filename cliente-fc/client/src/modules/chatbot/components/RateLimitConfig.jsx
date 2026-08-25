@@ -13,6 +13,7 @@ import {
   Button,
   Chip,
   InputAdornment,
+  Alert,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { getRateLimitLogs, clearRateLimit } from '../../../services/chatService';
@@ -48,6 +49,11 @@ const RateLimitConfig = () => {
       <Typography variant="h5" gutterBottom>
         Rate Limit Logs
       </Typography>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Monitorea el uso del chatbot por usuario o IP. Si un usuario excede el límite diario de mensajes,
+        puedes liberar su límite manualmente desde aquí.
+      </Alert>
 
       <TextField
         fullWidth

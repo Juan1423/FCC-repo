@@ -19,6 +19,7 @@ import {
   Switch,
   Chip,
   Tooltip,
+  Alert,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Upload as UploadIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import {
@@ -167,6 +168,11 @@ const KnowledgeAdmin = () => {
           </Button>
         </Box>
       </Box>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        La base de conocimiento almacena documentos que el chatbot usa para responder preguntas.
+        Sube PDFs o escribe contenido directamente. Los embeddings se generan automáticamente para búsqueda semántica.
+      </Alert>
 
       <TableContainer component={Paper}>
         <Table>

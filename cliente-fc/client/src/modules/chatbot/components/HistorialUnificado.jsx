@@ -13,6 +13,7 @@ import {
   Button,
   Chip,
   InputAdornment,
+  Alert,
 } from '@mui/material';
 import { Search as SearchIcon, Download as DownloadIcon } from '@mui/icons-material';
 import { getConversaciones } from '../../../services/chatService';
@@ -89,6 +90,11 @@ const HistorialUnificado = () => {
           Exportar CSV
         </Button>
       </Box>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Historial completo de conversaciones del chatbot (público e interno).
+        Puedes buscar por mensaje, respuesta o session ID, y exportar los resultados a CSV.
+      </Alert>
 
       <TextField
         fullWidth

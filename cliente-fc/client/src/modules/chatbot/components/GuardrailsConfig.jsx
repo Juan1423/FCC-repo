@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   FormGroup,
   Divider,
+  Alert,
 } from '@mui/material';
 import { getChatConfig, updateChatConfig } from '../../../services/chatService';
 
@@ -22,12 +23,16 @@ const GuardrailsConfig = () => {
 
   const cargarConfig = async () => {
     const resp = await getChatConfig();
-    if (resp?.success) {
-      const obj = {};
-      resp.data.forEach((r) => {
-        obj[r.clave] = r.tipo === 'boolean' ? r.valor === 'true' : r.valor;
-      });
-      setConfig(obj);
+    if (resp?.success && resp.data) {
+      if (Array.isArray(resp.data)) {
+        const obj = {};
+        resp.data.forEach((r) => {
+          obj[r.clave] = r.tipo === 'boolean' ? r.valor === 'true' : r.valor;
+        });
+        setConfig(obj);
+      } else {
+        setConfig(resp.data);
+      }
     }
     setLoading(false);
   };
@@ -55,6 +60,11 @@ const GuardrailsConfig = () => {
       <Typography variant="h5" gutterBottom>
         Configuración de Guardrails
       </Typography>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Los guardrails controlan el comportamiento del chatbot: detección de temas sensibles,
+        clasificación off-topic y sistema de aprendizaje. Los umbrales determinan la sensibilidad de cada filtro.
+      </Alert>
 
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>

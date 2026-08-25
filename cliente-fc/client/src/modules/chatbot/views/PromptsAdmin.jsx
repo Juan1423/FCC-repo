@@ -18,6 +18,7 @@ import {
   TextField,
   Switch,
   Chip,
+  Alert,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Download as DownloadIcon, Upload as UploadIcon } from '@mui/icons-material';
 import {
@@ -121,6 +122,11 @@ const PromptsAdmin = () => {
           Nuevo Prompt
         </Button>
       </Box>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Los prompts definen el comportamiento y personalidad del chatbot.
+        Solo puede haber un prompt activo a la vez. Sube un PDF para dar contexto adicional al asistente.
+      </Alert>
 
       <TableContainer component={Paper}>
         <Table>

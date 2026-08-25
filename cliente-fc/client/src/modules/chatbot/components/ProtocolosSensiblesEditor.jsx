@@ -17,6 +17,7 @@ import {
   Button,
   TextField,
   Chip,
+  Alert,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { getProtocolos, createProtocolo, updateProtocolo, deleteProtocolo } from '../../../services/chatService';
@@ -75,6 +76,12 @@ const ProtocolosSensiblesEditor = () => {
           <AddIcon />
         </IconButton>
       </Box>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Los protocolos sensibles interceptan mensajes antes de llegar a OpenAI.
+        Si un mensaje coincide con las palabras clave de un protocolo, se responde con la respuesta predefinida.
+        Útil para temas legales, emergencias o contenido sensible.
+      </Alert>
 
       <TableContainer component={Paper}>
         <Table>

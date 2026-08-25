@@ -17,6 +17,7 @@ import {
   DialogActions,
   TextField,
   Chip,
+  Alert,
 } from '@mui/material';
 import { CheckCircle as CheckIcon, Cancel as CancelIcon, Visibility as ViewIcon } from '@mui/icons-material';
 import {
@@ -110,6 +111,11 @@ const AprendizajeAdmin = () => {
       <Typography variant="h4" gutterBottom>
         Aprendizaje del Chatbot
       </Typography>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Revisa conversaciones marcadas para aprendizaje. Aprueba para crear respuestas canónicas que el chatbot
+        usará en lugar de OpenAI, o rechaza si la respuesta no es adecuada.
+      </Alert>
 
       {stats && (
         <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
