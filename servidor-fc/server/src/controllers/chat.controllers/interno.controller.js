@@ -28,7 +28,7 @@ const enviarMensaje = async (req, res) => {
             });
         }
 
-        const evaluacion = await guardrailsService.evaluadorEntrada(mensaje);
+        const evaluacion = await guardrailsService.evaluarEntrada(mensaje);
 
         if (evaluacion.decision === 'protocolo') {
             const protocolo = evaluacion.protocolo;

@@ -1,15 +1,7 @@
 jest.mock('jsonwebtoken');
-jest.mock('../src/libs/sequelize', () => ({
-  models: {
-    Seguridad: {
-      findOne: jest.fn(),
-    },
-  },
-}));
 
 const jwt = require('jsonwebtoken');
 const { verifyToken, verifyTokenAdmin, verifyTokenOrVisitor } = require('../src/middleware/verifyToken');
-const { models } = require('../src/libs/sequelize');
 
 process.env.JWT_SECRET = 'test-secret';
 
@@ -29,7 +21,7 @@ const mockRes = () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  models.Seguridad.findOne.mockResolvedValue(null);
+  delete process.env.BLOCKED_IPS;
 });
 
 describe('verifyToken', () => {
@@ -71,7 +63,7 @@ describe('verifyToken', () => {
   });
 
   test('responde 403 si la IP está bloqueada', async () => {
-    models.Seguridad.findOne.mockResolvedValue({ id: 1, action: 'block_ip', ip_address: '127.0.0.1' });
+    process.env.BLOCKED_IPS = JSON.stringify(['127.0.0.1']);
     const req = mockReq();
     const res = mockRes();
     const next = jest.fn();

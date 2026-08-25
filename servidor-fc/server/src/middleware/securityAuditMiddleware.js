@@ -66,14 +66,8 @@ const getRequestIp = (req) => {
 const isIpBlocked = async (ip) => {
   if (!ip) return false;
   try {
-    const blocked = await models.Seguridad.findOne({
-      where: {
-        action: 'block_ip',
-        ip_address: ip,
-        activo: true
-      }
-    });
-    return !!blocked;
+    const blockedIPs = JSON.parse(process.env.BLOCKED_IPS || '[]');
+    return blockedIPs.includes(ip);
   } catch (error) {
     console.error('Error verificando bloqueo de IP:', error);
     return false;
