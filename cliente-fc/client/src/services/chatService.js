@@ -21,20 +21,18 @@ const getHeaders = (includeAuth = true) => {
   if (token) {
     headers['token'] = token;
   } else {
-    const visitorId = localStorage.getItem('visitorId') || `visitor-${Date.now()}`;
-    if (!localStorage.getItem('visitorId')) {
-      localStorage.setItem('visitorId', visitorId);
-    }
-    headers['visitor-id'] = visitorId;
+    headers['visitor-id'] = getVisitorId();
   }
   return headers;
 };
 
 const getVisitorId = () => {
-  const visitorId = localStorage.getItem('visitorId') || `visitor-${Date.now()}`;
-  if (!localStorage.getItem('visitorId')) {
-    localStorage.setItem('visitorId', visitorId);
+  const storedId = localStorage.getItem('visitorId');
+  if (storedId) {
+    return storedId;
   }
+  const visitorId = `visitor-${Date.now()}`;
+  localStorage.setItem('visitorId', visitorId);
   return visitorId;
 };
 

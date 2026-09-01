@@ -30,8 +30,6 @@ export const ChatBotIA = ({
   onLoginModalClose, // Callback cuando se cierra el login modal
   onLoginSuccess, // Callback cuando el login es exitoso
 }) => {
-  console.log('ChatBotIA props:', { showLoginModalInitially, isVisitor, onLoginSuccess: !!onLoginSuccess });
-  
   const [messages, setMessages] = useState([
     { from: 'bot', text: chatConfig.welcomeMessages.publico }
   ]);
@@ -55,7 +53,6 @@ export const ChatBotIA = ({
 
   // Verificar sesión existente o mostrar login según props
   useEffect(() => {
-    console.log('ChatBotIA montado - showLoginModalInitially:', showLoginModalInitially, 'isVisitor:', isVisitor);
     
     // Si es visitante, no mostrar login modal
     if (isVisitor) {
@@ -79,7 +76,6 @@ export const ChatBotIA = ({
           setUserName(userInfo.nombre);
           setIsLoggedIn(true);
           setShowLogin(false);
-          console.log('Sesión verificada:', userInfo.nombre);
         }
       } catch (error) {
         setShowLogin(true);
@@ -94,7 +90,6 @@ export const ChatBotIA = ({
       setCurrentConversationId(null);
       setShowFeedback(false);
       setQuestionCount(0);
-      console.log('Sesión del chat limpiada (memoria local). Los datos en BD se mantienen.');
     }
   }, [forceClearMemory]);
 
@@ -139,7 +134,7 @@ export const ChatBotIA = ({
     setInput('');
     setIsSending(true);
 
-    console.log('Enviando mensaje:', userMessage, 'con promptId:', selectedPrompt ? selectedPrompt.id_prompt : null);
+    const visitorId = getVisitorId();
 
     try {
       const result = await enviarMensajePublico({
@@ -148,9 +143,8 @@ export const ChatBotIA = ({
         consentimiento: consentimientoAccepted,
         metadata: { clientTime: new Date().toISOString() },
         promptText: selectedPrompt ? selectedPrompt.promptText : null,
-        visitor_id: getVisitorId(),
+        visitor_id: visitorId,
       });
-      console.log('Respuesta del bot:', result);
       setMessages(prev => [...prev, { from: 'bot', text: result.respuesta || result }]);
       if (result.id_conversacion) {
         setCurrentConversationId(result.id_conversacion);
@@ -189,8 +183,6 @@ export const ChatBotIA = ({
     setLoginLoading(true);
     try {
       const response = await login({ correo_usuario: loginData.email, password_usuario: loginData.password });
-      
-      console.log('Login response:', response);
       
       if (response && response.success && response.token) {
         // Guardar el nombre del usuario
