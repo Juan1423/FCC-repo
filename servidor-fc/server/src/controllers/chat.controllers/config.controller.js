@@ -32,10 +32,77 @@ const getTemasValidos = async (req, res) => {
     try {
         const { models } = require('../../libs/sequelize');
         const rows = await models.ChatTemaValido.findAll({
-            where: { activo: true },
             order: [['id_tema', 'ASC']],
         });
         res.json({ success: true, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const createTemaValido = async (req, res) => {
+    try {
+        const { models } = require('../../libs/sequelize');
+        const { tema, descripcion } = req.body;
+        if (!tema || !tema.trim()) {
+            return res.status(400).json({ success: false, message: 'tema es obligatorio' });
+        }
+        const row = await models.ChatTemaValido.create({
+            tema: tema.trim(),
+            descripcion: descripcion || null,
+            activo: true,
+        });
+        guardrailsService.invalidateCache && guardrailsService.invalidateCache();
+        res.status(201).json({ success: true, data: row });
+    } catch (error) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).json({ success: false, message: 'Ya existe un tema con ese nombre' });
+        }
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const updateTemaValido = async (req, res) => {
+    try {
+        const { models } = require('../../libs/sequelize');
+        const { id } = req.params;
+        const { tema, descripcion, activo } = req.body;
+
+        const row = await models.ChatTemaValido.findByPk(id);
+        if (!row) {
+            return res.status(404).json({ success: false, message: 'Tema no encontrado' });
+        }
+
+        if (tema !== undefined) row.tema = tema.trim();
+        if (descripcion !== undefined) row.descripcion = descripcion;
+        if (activo !== undefined) row.activo = activo;
+
+        if (descripcion !== undefined && descripcion !== null) {
+            row.embedding = null;
+        }
+
+        await row.save();
+        guardrailsService.invalidateCache && guardrailsService.invalidateCache();
+        res.json({ success: true, data: row });
+    } catch (error) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).json({ success: false, message: 'Ya existe un tema con ese nombre' });
+        }
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const deleteTemaValido = async (req, res) => {
+    try {
+        const { models } = require('../../libs/sequelize');
+        const { id } = req.params;
+        const row = await models.ChatTemaValido.findByPk(id);
+        if (!row) {
+            return res.status(404).json({ success: false, message: 'Tema no encontrado' });
+        }
+        await row.update({ activo: false });
+        guardrailsService.invalidateCache && guardrailsService.invalidateCache();
+        res.json({ success: true, message: 'Tema desactivado' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -154,6 +221,9 @@ module.exports = {
     getConfig,
     updateConfig,
     getTemasValidos,
+    createTemaValido,
+    updateTemaValido,
+    deleteTemaValido,
     regenerarTemas,
     getProtocolosSensibles,
     updateProtocoloSensible,
