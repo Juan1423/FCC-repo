@@ -57,7 +57,30 @@ const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) =
     setStep('register');
   };
 
-  const handleContinueAsExistingVisitor = () => {
+  const handleContinueAsExistingVisitor = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Re-registrar siempre (upsert por cédula) para sincronizar el ID con la BD
+      const response = await registrarUsuarioAnonimo({ nombre, cedula });
+      if (response && response.success) {
+        const visitorId = response.data?.id_usuario_anonimo || response.data?.id || null;
+        if (visitorId) {
+          localStorage.setItem('visitorId', visitorId);
+          onClose();
+          if (onContinueAsVisitor) {
+            onContinueAsVisitor({ nombre, cedula, id: visitorId });
+          }
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Error re-registrando visitante:', err);
+    } finally {
+      setLoading(false);
+    }
+
+    // Fallback: continuar con el ID existente si el re-registro falla
     const visitorId = localStorage.getItem('visitorId');
     onClose();
     if (onContinueAsVisitor) {
@@ -231,6 +254,7 @@ const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) =
                 variant="contained"
                 fullWidth
                 onClick={handleContinueAsExistingVisitor}
+                disabled={loading}
                 sx={{
                   p: 1.5,
                   backgroundColor: '#4caf50',
@@ -239,7 +263,7 @@ const ChatAccessModal = ({ open, onClose, onContinueAsVisitor, onLoginClick }) =
                   },
                 }}
               >
-                ✓ Continuar con estos datos
+                {loading ? <CircularProgress size={20} /> : '✓ Continuar con estos datos'}
               </Button>
 
               <Button
