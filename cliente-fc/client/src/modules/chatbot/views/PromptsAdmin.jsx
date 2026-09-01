@@ -124,8 +124,10 @@ const PromptsAdmin = () => {
       </Box>
 
       <Alert severity="info" sx={{ mb: 2 }}>
-        Los prompts definen el comportamiento y personalidad del chatbot.
-        Solo puede haber un prompt activo a la vez. Sube un PDF para dar contexto adicional al asistente.
+        Los prompts definen el comportamiento y personalidad del chatbot. Pueden estar activos varios a
+        la vez: los de tipo "Instrucciones" y "Contexto PDF" se combinan en cada respuesta (hasta 5 por
+        tipo), mientras que para tipo "Global" solo se aplica el más reciente. Sube un PDF para dar
+        contexto adicional al asistente.
       </Alert>
 
       <TableContainer component={Paper}>
