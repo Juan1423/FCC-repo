@@ -138,7 +138,7 @@ const AprendizajeAdmin = () => {
   const canManage = hasPermission('editPrompt');
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 0, sm: 1 } }}>
       <Typography variant="h4" gutterBottom>
         Aprendizaje del Chatbot
       </Typography>
@@ -149,7 +149,7 @@ const AprendizajeAdmin = () => {
       </Alert>
 
       {stats && (
-        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
           <Chip label={`Total revisiones: ${stats.total_revisiones || 0}`} />
           <Chip label={`Total canónicas: ${stats.total_canonicas || 0}`} />
           <Chip label={`Aprobadas: ${stats.aprobadas || 0}`} />

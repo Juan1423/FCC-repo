@@ -15,7 +15,7 @@ const IndividualView = ({ title, subtitle, icon, children }) => {
           )}
         </Box>
       </Box>
-      <Paper sx={{ p: { xs: 1.5, md: 3 }, minHeight: 400 }}>{children}</Paper>
+      <Paper sx={{ p: { xs: 1, sm: 2, md: 3 }, minHeight: 400, overflowX: 'auto' }}>{children}</Paper>
     </Box>
   );
 };

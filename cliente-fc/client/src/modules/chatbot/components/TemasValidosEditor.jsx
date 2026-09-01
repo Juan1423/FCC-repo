@@ -112,7 +112,7 @@ const TemasValidosEditor = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 1, flexWrap: 'wrap' }}>
         <Typography variant="h5">Temas Válidos (Off-topic)</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}

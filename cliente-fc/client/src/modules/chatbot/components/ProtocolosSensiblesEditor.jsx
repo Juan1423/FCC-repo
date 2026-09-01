@@ -132,7 +132,7 @@ const ProtocolosSensiblesEditor = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1.5 }}>
         <Typography variant="h5">Protocolos Sensibles</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()}>
           Nuevo protocolo

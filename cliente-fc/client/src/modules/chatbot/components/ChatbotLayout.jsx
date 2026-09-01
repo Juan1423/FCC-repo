@@ -22,7 +22,9 @@ const ChatbotLayout = ({ children }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: { xs: 2, md: 4 },
+          minWidth: 0,
+          overflowX: 'auto',
+          p: { xs: 1.5, sm: 2, md: 4 },
           width: { md: 'calc(100% - 240px)' },
           mt: { xs: 7, sm: 8 },
           minHeight: '100vh',

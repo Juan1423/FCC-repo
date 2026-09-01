@@ -110,8 +110,17 @@ const PromptsAdmin = () => {
   const canDelete = hasPermission('deletePrompt');
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+    <Box sx={{ p: { xs: 0, sm: 1 } }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+          flexWrap: 'wrap',
+          gap: 1.5,
+        }}
+      >
         <Typography variant="h4">Gestión de Prompts</Typography>
         <Button
           variant="contained"

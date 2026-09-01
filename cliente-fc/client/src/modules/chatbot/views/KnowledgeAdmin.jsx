@@ -166,10 +166,19 @@ const KnowledgeAdmin = () => {
   const canEdit = hasPermission('editPrompt');
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+    <Box sx={{ p: { xs: 0, sm: 1 } }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+          flexWrap: 'wrap',
+          gap: 1.5,
+        }}
+      >
         <Typography variant="h4">Base de Conocimiento</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Tooltip title="Subir PDF">
             <Button variant="outlined" startIcon={<UploadIcon />} onClick={handleUploadPdf} disabled={!canEdit || loading}>
               Subir Documento
