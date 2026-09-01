@@ -8,6 +8,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableFooter,
+  TablePagination,
   Paper,
   TextField,
   Button,
@@ -21,13 +23,17 @@ import { getConversaciones } from '../../../services/chatService';
 const HistorialUnificado = () => {
   const [historial, setHistorial] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [page] = useState(1);
-  const limit = 50;
+  const [page, setPage] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [total, setTotal] = useState(0);
 
   const cargarHistorial = useCallback(async () => {
-    const resp = await getConversaciones({ page, limit });
-    if (resp?.success) setHistorial(resp.data || []);
-  }, [page, limit]);
+    const resp = await getConversaciones({ page: page + 1, limit: itemsPerPage });
+    if (resp?.success) {
+      setHistorial(resp.data || []);
+      setTotal(resp?.pagination?.total ?? resp.data?.length ?? 0);
+    }
+  }, [page, itemsPerPage]);
 
   useEffect(() => {
     cargarHistorial();
@@ -41,6 +47,20 @@ const HistorialUnificado = () => {
       (item.session_id || '').toLowerCase().includes(term)
     );
   });
+
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleItemsPerPageChange = (event) => {
+    setItemsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setPage(0);
+  };
 
   const handleExportar = () => {
     const csvContent = [
@@ -84,7 +104,7 @@ const HistorialUnificado = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1.5 }}>
         <Typography variant="h5">Historial de Conversaciones</Typography>
         <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportar}>
           Exportar CSV
@@ -100,7 +120,7 @@ const HistorialUnificado = () => {
         fullWidth
         placeholder="Buscar en conversaciones..."
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={handleSearch}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -125,20 +145,43 @@ const HistorialUnificado = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered.map((item) => (
-              <TableRow key={item.id_conversacion}>
-                <TableCell>
-                  <Chip label={item.tipo} size="small" />
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Typography variant="subtitle1">No hay conversaciones</Typography>
                 </TableCell>
-                <TableCell>{getDecisionChip(item)}</TableCell>
-                <TableCell>{item.mensaje_usuario?.substring(0, 80)}...</TableCell>
-                <TableCell>{item.respuesta_bot?.substring(0, 80)}...</TableCell>
-                <TableCell>{item.tiempo_respuesta}</TableCell>
-                <TableCell>{item.tokens_usados}</TableCell>
-                <TableCell>{new Date(item.fecha_conversacion).toLocaleString()}</TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filtered.map((item) => (
+                <TableRow key={item.id_conversacion}>
+                  <TableCell>
+                    <Chip label={item.tipo} size="small" />
+                  </TableCell>
+                  <TableCell>{getDecisionChip(item)}</TableCell>
+                  <TableCell>{item.mensaje_usuario?.substring(0, 80)}...</TableCell>
+                  <TableCell>{item.respuesta_bot?.substring(0, 80)}...</TableCell>
+                  <TableCell>{item.tiempo_respuesta}</TableCell>
+                  <TableCell>{item.tokens_usados}</TableCell>
+                  <TableCell>{new Date(item.fecha_conversacion).toLocaleString()}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={7}>
+                <TablePagination
+                  rowsPerPageOptions={[10, 25, 50, 100]}
+                  component="div"
+                  count={searchTerm ? filtered.length : total}
+                  rowsPerPage={itemsPerPage}
+                  page={page}
+                  onPageChange={handlePageChange}
+                  onRowsPerPageChange={handleItemsPerPageChange}
+                />
+              </TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
       </TableContainer>
     </Box>
