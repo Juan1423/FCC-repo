@@ -16,8 +16,8 @@ const enviarMensaje = async (req, res) => {
             });
         }
 
-        const idUsuario = req.user?.user || null;
-        const isVisitor = req.isVisitor || false;
+        const isVisitor = req.isVisitor || req.user?.isVisitor || false;
+        const idUsuario = isVisitor ? null : (req.user?.user || null);
         const effectiveVisitorId = visitorId || req.user?.visitorId || null;
 
         let effectiveSessionId = sessionId;
