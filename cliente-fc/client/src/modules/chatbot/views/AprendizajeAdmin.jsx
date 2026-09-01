@@ -39,7 +39,11 @@ const AprendizajeAdmin = () => {
   const [stats, setStats] = useState(null);
   const [openCanonica, setOpenCanonica] = useState(false);
   const [editingCanonica, setEditingCanonica] = useState(null);
-  const [canonicaForm, setCanonicaForm] = useState({ pregunta: '', respuesta: '' });
+  const [canonicaForm, setCanonicaForm] = useState({ patron_trigger: '', respuesta_canonica: '' });
+  const [openAprobar, setOpenAprobar] = useState(false);
+  const [aprobandoId, setAprobandoId] = useState(null);
+  const [aprobarForm, setAprobarForm] = useState({ patron_trigger: '', respuesta_canonica: '' });
+  const [aprobarError, setAprobarError] = useState('');
   const { hasPermission } = useRoles();
 
   useEffect(() => {
@@ -63,10 +67,37 @@ const AprendizajeAdmin = () => {
     if (resp?.success) setStats(resp.data);
   };
 
-  const handleAprobar = async (id, respuesta) => {
-    await aprobarRevision(id, { respuesta });
-    loadRevisiones();
-    loadCanonicas();
+  const handleAprobar = (revision) => {
+    const respuestaCanonica = revision.sugerencia_respuesta || revision.respuesta_ia || '';
+    if (!respuestaCanonica.trim()) {
+      setAprobarForm({ patron_trigger: revision.mensaje_usuario || '', respuesta_canonica: '' });
+      setAprobarError('Esta revisión no tiene una respuesta que aprobar. Escribe una respuesta canónica para continuar.');
+      setAprobandoId(revision.id_revision);
+      setOpenAprobar(true);
+      return;
+    }
+    setAprobarForm({ patron_trigger: revision.mensaje_usuario || '', respuesta_canonica: respuestaCanonica });
+    setAprobarError('');
+    setAprobandoId(revision.id_revision);
+    setOpenAprobar(true);
+  };
+
+  const handleConfirmarAprobar = async () => {
+    if (!aprobarForm.respuesta_canonica.trim()) {
+      setAprobarError('La respuesta canónica es obligatoria.');
+      return;
+    }
+    try {
+      await aprobarRevision(aprobandoId, aprobarForm);
+      setOpenAprobar(false);
+      setAprobandoId(null);
+      loadRevisiones();
+      loadCanonicas();
+      loadStats();
+    } catch (error) {
+      console.error('Error aprobando revision:', error);
+      setAprobarError(error?.message || 'Error aprobando la revisión.');
+    }
   };
 
   const handleRechazar = async (id) => {
@@ -77,10 +108,10 @@ const AprendizajeAdmin = () => {
   const handleCanonicaOpen = (item = null) => {
     if (item) {
       setEditingCanonica(item.id_canonica);
-      setCanonicaForm({ pregunta: item.pregunta, respuesta: item.respuesta });
+      setCanonicaForm({ patron_trigger: item.patron_trigger, respuesta_canonica: item.respuesta_canonica });
     } else {
       setEditingCanonica(null);
-      setCanonicaForm({ pregunta: '', respuesta: '' });
+      setCanonicaForm({ patron_trigger: '', respuesta_canonica: '' });
     }
     setOpenCanonica(true);
   };
@@ -141,8 +172,8 @@ const AprendizajeAdmin = () => {
           <TableBody>
             {revisiones.map((rev) => (
               <TableRow key={rev.id_revision}>
-                <TableCell>{rev.pregunta}</TableCell>
-                <TableCell>{rev.respuesta_sugerida}</TableCell>
+                <TableCell>{rev.mensaje_usuario}</TableCell>
+                <TableCell>{rev.sugerencia_respuesta || rev.respuesta_ia}</TableCell>
                 <TableCell>{new Date(rev.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell align="right">
                   <Button
@@ -150,7 +181,7 @@ const AprendizajeAdmin = () => {
                     color="success"
                     size="small"
                     startIcon={<CheckIcon />}
-                    onClick={() => handleAprobar(rev.id_revision, rev.respuesta_sugerida)}
+                    onClick={() => handleAprobar(rev)}
                     disabled={!canManage}
                   >
                     Aprobar
@@ -187,8 +218,8 @@ const AprendizajeAdmin = () => {
           <TableBody>
             {canonicas.map((canon) => (
               <TableRow key={canon.id_canonica}>
-                <TableCell>{canon.pregunta}</TableCell>
-                <TableCell>{canon.respuesta?.substring(0, 100)}...</TableCell>
+                <TableCell>{canon.patron_trigger}</TableCell>
+                <TableCell>{canon.respuesta_canonica?.substring(0, 100)}...</TableCell>
                 <TableCell align="right">
                   <Button size="small" onClick={() => handleCanonicaOpen(canon)} disabled={!canManage}>
                     Editar
@@ -212,25 +243,59 @@ const AprendizajeAdmin = () => {
         <DialogTitle>{editingCanonica ? 'Editar' : 'Nueva'} Conocimiento Canónico</DialogTitle>
         <DialogContent>
           <TextField
-            label="Pregunta"
+            label="Patrón disparador *"
             fullWidth
             margin="dense"
-            value={canonicaForm.pregunta}
-            onChange={(e) => setCanonicaForm({ ...canonicaForm, pregunta: e.target.value })}
+            helperText="La pregunta/frase que activa esta respuesta canónica."
+            value={canonicaForm.patron_trigger}
+            onChange={(e) => setCanonicaForm({ ...canonicaForm, patron_trigger: e.target.value })}
           />
           <TextField
-            label="Respuesta"
+            label="Respuesta canónica *"
             fullWidth
             margin="dense"
             multiline
             rows={4}
-            value={canonicaForm.respuesta}
-            onChange={(e) => setCanonicaForm({ ...canonicaForm, respuesta: e.target.value })}
+            helperText="La respuesta fija que el chatbot usará en lugar de OpenAI cuando coincida el patrón."
+            value={canonicaForm.respuesta_canonica}
+            onChange={(e) => setCanonicaForm({ ...canonicaForm, respuesta_canonica: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCanonica(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleCanonicaSave}>Guardar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openAprobar} onClose={() => setOpenAprobar(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Aprobar Revisión</DialogTitle>
+        <DialogContent>
+          {aprobarError && <Alert severity="error" sx={{ mb: 2 }}>{aprobarError}</Alert>}
+          <TextField
+            label="Patrón disparador"
+            fullWidth
+            margin="dense"
+            helperText="La pregunta/frase que activará esta respuesta canónica."
+            value={aprobarForm.patron_trigger}
+            onChange={(e) => setAprobarForm({ ...aprobarForm, patron_trigger: e.target.value })}
+          />
+          <TextField
+            label="Respuesta canónica *"
+            fullWidth
+            margin="dense"
+            multiline
+            rows={5}
+            required
+            helperText="Puedes editar y mejorar la respuesta antes de aprobarla. Será la que el chatbot use en lugar de OpenAI."
+            value={aprobarForm.respuesta_canonica}
+            onChange={(e) => setAprobarForm({ ...aprobarForm, respuesta_canonica: e.target.value })}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenAprobar(false)}>Cancelar</Button>
+          <Button variant="contained" color="success" startIcon={<CheckIcon />} onClick={handleConfirmarAprobar}>
+            Confirmar aprobación
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
