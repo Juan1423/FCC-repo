@@ -16,6 +16,7 @@ class ChatPreguntaAnonima extends Model {
         this.belongsTo(models.ChatUsuarioAnonimo, {
             foreignKey: 'id_usuario_anonimo',
             as: 'usuarioAnonimo',
+            constraints: false,
         });
     }
 }
@@ -28,7 +29,7 @@ const ChatPreguntaAnonimaSchema = {
         autoIncrement: true,
     },
     id_usuario_anonimo: {
-        type: DataTypes.UUID,
+        type: DataTypes.STRING(36),
         allowNull: true,
     },
     cedula: {

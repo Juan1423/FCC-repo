@@ -28,7 +28,7 @@ class ChatUsuarioAnonimo extends Model {
 
 const ChatUsuarioAnonimoSchema = {
     id_usuario_anonimo: {
-        type: DataTypes.UUID,
+        type: DataTypes.STRING(36),
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,

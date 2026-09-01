@@ -20,6 +20,7 @@ class ChatConversacion extends Model {
         this.belongsTo(models.ChatUsuarioAnonimo, {
             foreignKey: 'id_usuario_anonimo',
             as: 'usuarioAnonimo',
+            constraints: false,
         });
         this.belongsTo(models.ChatPrompt, {
             foreignKey: 'id_prompt',
@@ -45,7 +46,7 @@ const ChatConversacionSchema = {
         allowNull: true,
     },
     id_usuario_anonimo: {
-        type: DataTypes.UUID,
+        type: DataTypes.STRING(36),
         allowNull: true,
     },
     session_id: {
