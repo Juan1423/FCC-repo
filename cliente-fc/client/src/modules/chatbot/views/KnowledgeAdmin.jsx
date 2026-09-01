@@ -40,11 +40,14 @@ const KnowledgeAdmin = () => {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
-    titulo: '',
+    tema_principal: '',
+    pregunta_frecuente: '',
+    respuesta_oficial: '',
     contenido: '',
-    categoria: '',
-    embeddable: true,
+    fuente_verificacion: '',
+    nivel_prioridad: 1,
   });
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const { roles, hasPermission } = useRoles();
 
@@ -58,31 +61,50 @@ const KnowledgeAdmin = () => {
   };
 
   const handleOpen = (item = null) => {
+    setFormError('');
     if (item) {
       setEditingId(item.id_conocimiento);
       setFormData({
-        titulo: item.titulo,
-        contenido: item.contenido,
-        categoria: item.categoria,
-        embeddable: item.embeddable,
+        tema_principal: item.tema_principal || '',
+        pregunta_frecuente: item.pregunta_frecuente || '',
+        respuesta_oficial: item.respuesta_oficial || '',
+        contenido: item.contenido || '',
+        fuente_verificacion: item.fuente_verificacion || '',
+        nivel_prioridad: item.nivel_prioridad || 1,
       });
     } else {
       setEditingId(null);
-      setFormData({ titulo: '', contenido: '', categoria: '', embeddable: true });
+      setFormData({ tema_principal: '', pregunta_frecuente: '', respuesta_oficial: '', contenido: '', fuente_verificacion: '', nivel_prioridad: 1 });
     }
     setOpen(true);
   };
 
   const handleSave = async () => {
     try {
+      const payload = {
+        tipo: 'pregunta',
+        tema_principal: formData.tema_principal.trim(),
+        pregunta_frecuente: formData.pregunta_frecuente.trim(),
+        respuesta_oficial: formData.respuesta_oficial.trim(),
+        contenido: formData.contenido.trim(),
+        fuente_verificacion: formData.fuente_verificacion.trim(),
+        nivel_prioridad: parseInt(formData.nivel_prioridad, 10) || 1,
+      };
+
+      if (!payload.tema_principal) {
+        setFormError('El tema principal es obligatorio');
+        return;
+      }
+
       if (editingId) {
-        await updateKnowledge(editingId, formData);
+        await updateKnowledge(editingId, payload);
       } else {
-        await createKnowledge(formData);
+        await createKnowledge(payload);
       }
       setOpen(false);
       loadKnowledge();
     } catch (error) {
+      setFormError(error.message || 'Error guardando knowledge');
       console.error('Error guardando knowledge:', error);
     }
   };
@@ -178,8 +200,8 @@ const KnowledgeAdmin = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Título</TableCell>
-              <TableCell>Categoría</TableCell>
+              <TableCell>Tema</TableCell>
+              <TableCell>Fuente de verificación</TableCell>
               <TableCell>Contenido</TableCell>
               <TableCell>Bloqueado</TableCell>
               <TableCell align="right">Acciones</TableCell>
@@ -188,8 +210,8 @@ const KnowledgeAdmin = () => {
           <TableBody>
             {knowledge.map((item) => (
               <TableRow key={item.id_conocimiento}>
-                <TableCell>{item.titulo}</TableCell>
-                <TableCell>{item.categoria}</TableCell>
+                <TableCell>{item.tema_principal}</TableCell>
+                <TableCell>{item.fuente_verificacion}</TableCell>
                 <TableCell>{item.contenido?.substring(0, 100)}...</TableCell>
                 <TableCell>
                   <Switch
@@ -216,28 +238,65 @@ const KnowledgeAdmin = () => {
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{editingId ? 'Editar Conocimiento' : 'Nuevo Conocimiento'}</DialogTitle>
         <DialogContent>
+          {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Esta entrada se guarda en la base de conocimiento. Tras guardar, pulsa "Generar Embeddings"
+            para que el bot pueda encontrarla al responder preguntas similares.
+          </Alert>
           <TextField
-            label="Título"
+            label="Tema principal *"
             fullWidth
             margin="dense"
-            value={formData.titulo}
-            onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+            required
+            helperText="Asunto que identifica esta entrada y aparece en la búsqueda. Obligatorio."
+            value={formData.tema_principal}
+            onChange={(e) => setFormData({ ...formData, tema_principal: e.target.value })}
           />
           <TextField
-            label="Categoría"
+            label="Pregunta frecuente"
             fullWidth
             margin="dense"
-            value={formData.categoria}
-            onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+            helperText="La pregunta tal como la haría un usuario. El bot la usa para encontrar esta entrada."
+            value={formData.pregunta_frecuente}
+            onChange={(e) => setFormData({ ...formData, pregunta_frecuente: e.target.value })}
+          />
+          <TextField
+            label="Respuesta oficial"
+            fullWidth
+            margin="dense"
+            multiline
+            rows={3}
+            helperText="La respuesta que el bot mostrará cuando encuentre esta entrada. Tiene prioridad sobre 'Contenido'."
+            value={formData.respuesta_oficial}
+            onChange={(e) => setFormData({ ...formData, respuesta_oficial: e.target.value })}
           />
           <TextField
             label="Contenido"
             fullWidth
             margin="dense"
             multiline
-            rows={4}
+            rows={3}
+            helperText="Texto de respaldo: se usa como respuesta si 'Respuesta oficial' está vacía y también alimenta la búsqueda semántica."
             value={formData.contenido}
             onChange={(e) => setFormData({ ...formData, contenido: e.target.value })}
+          />
+          <TextField
+            label="Fuente de verificación"
+            fullWidth
+            margin="dense"
+            helperText="Origen de la información (nombre del documento, enlace o referencia)."
+            value={formData.fuente_verificacion}
+            onChange={(e) => setFormData({ ...formData, fuente_verificacion: e.target.value })}
+          />
+          <TextField
+            label="Nivel de prioridad"
+            type="number"
+            inputProps={{ min: 1, max: 10 }}
+            fullWidth
+            margin="dense"
+            helperText="De 1 a 10. Más alto = más relevante al ordenar las coincidencias."
+            value={formData.nivel_prioridad}
+            onChange={(e) => setFormData({ ...formData, nivel_prioridad: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
