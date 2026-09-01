@@ -495,6 +495,32 @@ export const getTemasValidos = async () => {
   return handleResponse(response);
 };
 
+export const createTema = async (data) => {
+  const response = await fetch(`${API_URL}/chat/config/temas`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const updateTema = async (id, data) => {
+  const response = await fetch(`${API_URL}/chat/config/temas/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const deleteTema = async (id) => {
+  const response = await fetch(`${API_URL}/chat/config/temas/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
+};
+
 // === PROTOCOLOS SENSIBLES ===
 export const getProtocolos = async () => {
   const response = await fetch(`${API_URL}/chat/config/protocolos`, {

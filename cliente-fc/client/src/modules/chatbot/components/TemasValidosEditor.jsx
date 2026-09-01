@@ -14,14 +14,34 @@ import {
   Switch,
   FormControlLabel,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from '@mui/material';
-import { Refresh as RefreshIcon } from '@mui/icons-material';
-import { getTemasValidos, regenerarTemas } from '../../../services/chatService';
+import {
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Restore as RestoreIcon,
+} from '@mui/icons-material';
+import {
+  getTemasValidos,
+  regenerarTemas,
+  createTema,
+  updateTema,
+  deleteTema,
+} from '../../../services/chatService';
 
 const TemasValidosEditor = () => {
   const [temas, setTemas] = useState([]);
   const [regenerating, setRegenerating] = useState(false);
   const [message, setMessage] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ id_tema: null, tema: '', descripcion: '' });
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     cargarTemas();
@@ -49,18 +69,62 @@ const TemasValidosEditor = () => {
     setRegenerating(false);
   };
 
+  const handleOpen = (item = null) => {
+    setFormError('');
+    if (item) {
+      setForm({ id_tema: item.id_tema, tema: item.tema, descripcion: item.descripcion || '' });
+    } else {
+      setForm({ id_tema: null, tema: '', descripcion: '' });
+    }
+    setOpen(true);
+  };
+
+  const handleGuardar = async () => {
+    if (!form.tema.trim()) {
+      setFormError('El nombre del tema es obligatorio.');
+      return;
+    }
+    try {
+      if (form.id_tema) {
+        await updateTema(form.id_tema, { tema: form.tema, descripcion: form.descripcion });
+      } else {
+        await createTema({ tema: form.tema, descripcion: form.descripcion });
+      }
+      setOpen(false);
+      setMessage({ type: 'success', text: 'Tema guardado. Regenera los embeddings para que el nuevo contenido se use.' });
+      cargarTemas();
+    } catch (e) {
+      setFormError(e?.message || 'Error guardando el tema.');
+    }
+  };
+
+  const handleToggleActivo = async (item) => {
+    await updateTema(item.id_tema, { activo: !item.activo });
+    cargarTemas();
+  };
+
+  const handleDesactivar = async (id) => {
+    await deleteTema(id);
+    cargarTemas();
+  };
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 1, flexWrap: 'wrap' }}>
         <Typography variant="h5">Temas Válidos (Off-topic)</Typography>
-        <Button
-          variant="contained"
-          startIcon={<RefreshIcon />}
-          onClick={handleRegenerar}
-          disabled={regenerating}
-        >
-          {regenerating ? 'Regenerando...' : 'Regenerar Embeddings'}
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRegenerar}
+            disabled={regenerating}
+          >
+            {regenerating ? 'Regenerando...' : 'Regenerar Embeddings'}
+          </Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()}>
+            Nuevo tema
+          </Button>
+        </Box>
       </Box>
 
       {message && (
@@ -70,8 +134,11 @@ const TemasValidosEditor = () => {
       )}
 
       <Alert severity="info" sx={{ mb: 2 }}>
-        Los temas definen qué preguntas están dentro del alcance del chatbot.
-        Si un mensaje no coincide con ningún tema (similitud coseno &lt; threshold), se responde con off-topic.
+        Los temas definen el alcance del chatbot: qué preguntas sobre la Fundación debe responder. Si un
+        mensaje no coincide con ningún tema activo (similitud coseno &lt; umbral off-topic), se responde
+        como fuera de alcance. Puedes editar la descripción de cada tema para ajustarla a la información
+        precisa de la Fundación; tras editarla, el embedding quedaría pendiente y debes pulsar
+        "Regenerar Embeddings" (o se generará automáticamente en la primera consulta).
       </Alert>
 
       <TableContainer component={Paper}>
@@ -83,6 +150,7 @@ const TemasValidosEditor = () => {
               <TableCell>Descripción</TableCell>
               <TableCell>Embedding</TableCell>
               <TableCell>Activo</TableCell>
+              <TableCell align="right">Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -90,7 +158,7 @@ const TemasValidosEditor = () => {
               <TableRow key={t.id_tema}>
                 <TableCell>{t.id_tema}</TableCell>
                 <TableCell>{t.tema}</TableCell>
-                <TableCell>{t.descripcion?.substring(0, 80)}...</TableCell>
+                <TableCell sx={{ maxWidth: 320 }}>{t.descripcion?.substring(0, 100)}</TableCell>
                 <TableCell>
                   <Chip
                     label={t.embedding ? 'Generado' : 'Pendiente'}
@@ -100,15 +168,68 @@ const TemasValidosEditor = () => {
                 </TableCell>
                 <TableCell>
                   <FormControlLabel
-                    control={<Switch checked={t.activo} disabled size="small" />}
+                    control={<Switch checked={t.activo} onChange={() => handleToggleActivo(t)} size="small" />}
                     label=""
                   />
+                </TableCell>
+                <TableCell align="right">
+                  <Button size="small" startIcon={<EditIcon />} onClick={() => handleOpen(t)}>
+                    Editar
+                  </Button>
+                  {t.activo ? (
+                    <Button
+                      size="small"
+                      color="error"
+                      startIcon={<DeleteIcon />}
+                      onClick={() => handleDesactivar(t.id_tema)}
+                    >
+                      Desactivar
+                    </Button>
+                  ) : (
+                    <Button
+                      size="small"
+                      color="primary"
+                      startIcon={<RestoreIcon />}
+                      onClick={() => handleToggleActivo(t)}
+                    >
+                      Activar
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>{form.id_tema ? 'Editar Tema' : 'Nuevo Tema'}</DialogTitle>
+        <DialogContent>
+          {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
+          <TextField
+            label="Nombre del tema *"
+            fullWidth
+            margin="dense"
+            helperText="Identificador interno (ej. informacion_fundacion, servicios_medicos)."
+            value={form.tema}
+            onChange={(e) => setForm({ ...form, tema: e.target.value })}
+          />
+          <TextField
+            label="Descripción del alcance"
+            fullWidth
+            margin="dense"
+            multiline
+            rows={4}
+            helperText="Aquí escribes la información precisa de la Fundación sobre este tema. Se usa para decidir si una pregunta pertenece al alcance del chatbot."
+            value={form.descripcion}
+            onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleGuardar}>Guardar</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
