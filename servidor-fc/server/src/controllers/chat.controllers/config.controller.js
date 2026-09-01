@@ -96,7 +96,6 @@ const getProtocolosSensibles = async (req, res) => {
     try {
         const { models } = require('../../libs/sequelize');
         const rows = await models.ChatProtocoloSensible.findAll({
-            where: { activo: true },
             order: [['prioridad', 'ASC']],
         });
         res.json({ success: true, data: rows });
