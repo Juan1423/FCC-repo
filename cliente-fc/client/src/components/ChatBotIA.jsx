@@ -1,6 +1,6 @@
 // ChatBotIA.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { enviarMensajePublico, enviarFeedback, getVisitorId } from '../services/chatService';
+import { enviarMensajePublico, enviarFeedback, getVisitorId, getLimitesPublico } from '../services/chatService';
 import { login, getUserInfo, getAuthToken } from '../services/authServices';
 import { Modal, Box, TextField, Button, Typography, Snackbar, Alert } from '@mui/material';
 import chatConfig from '../modules/chatbot/config/chatConfig';
@@ -48,8 +48,24 @@ export const ChatBotIA = ({
   const [consentimientoAccepted, setConsentimientoAccepted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [rateInfo, setRateInfo] = useState(null);
   const messagesEndRef = useRef(null);
   const chatbotRef = useRef(null);
+
+  // Cargar límites/preguntas restantes (autoritativo del servidor; persiste en BD)
+  const refreshLimits = async () => {
+    try {
+      const res = await getLimitesPublico();
+      setRateInfo(res.data);
+    } catch (error) {
+      setRateInfo(null);
+    }
+  };
+
+  useEffect(() => {
+    refreshLimits();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   // Verificar sesión existente o mostrar login según props
   useEffect(() => {
@@ -120,11 +136,15 @@ export const ChatBotIA = ({
       return;
     }
 
-    // Verificar límite de preguntas (ahora flexible según rol)
+    // Verificar límite de preguntas (el servidor es la fuente autoritativa; maxQuestions como respaldo)
     const userMessages = messages.filter(msg => msg.from === 'user').length;
-    
-    // Si maxQuestions está definido (no null), verificar límite
-    if (maxQuestions !== null && userMessages >= maxQuestions) {
+
+    if (rateInfo) {
+      if (rateInfo.restantes - userMessages <= 0) {
+        setSnackbar({ open: true, message: `Has alcanzado el límite de ${rateInfo.limite} preguntas de hoy. Inicia sesión para acceso ilimitado.`, type: 'warning' });
+        return;
+      }
+    } else if (maxQuestions !== null && userMessages >= maxQuestions) {
       setMessages(prev => [...prev, { from: 'bot', text: `Has alcanzado el límite de ${maxQuestions} preguntas. Inicia sesión para acceso ilimitado.` }]);
       return;
     }
@@ -157,6 +177,7 @@ export const ChatBotIA = ({
       }
     } catch (error) {
       console.error('Error enviando mensaje:', error);
+      refreshLimits();
       let errorMessage = 'Lo siento, hubo un error al responder.';
       
       if (error.message) {
@@ -317,19 +338,32 @@ export const ChatBotIA = ({
             </label>
           </div>
         </div>
+        {rateInfo && rateInfo.isVisitor && typeof rateInfo.limite === 'number' && (
+          <div
+            style={{
+              padding: '4px 12px',
+              fontSize: 12,
+              color: rateInfo.restantes - messages.filter((m) => m.from === 'user').length <= 0 ? '#d32f2f' : '#666',
+            }}
+          >
+            {rateInfo.restantes - messages.filter((m) => m.from === 'user').length <= 0
+              ? `Límite de ${rateInfo.limite} preguntas alcanzado por hoy.`
+              : `Te quedan ${rateInfo.restantes - messages.filter((m) => m.from === 'user').length} de ${rateInfo.limite} preguntas hoy.`}
+          </div>
+        )}
         <div className="chatbot-input" style={{ display: 'flex', gap: 8, borderTop: '1px solid #ccc', padding: '8px' }}>
           <input
             type="text"
-            placeholder="Escribe tu mensaje..."
+            placeholder={rateInfo && rateInfo.restantes - messages.filter((m) => m.from === 'user').length <= 0 ? 'Límite de preguntas alcanzado' : 'Escribe tu mensaje...'}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={isSending}
+            disabled={isSending || (rateInfo !== null && rateInfo.restantes - messages.filter((m) => m.from === 'user').length <= 0)}
             style={{ flex: 1, padding: '8px', borderRadius: 6, border: '1px solid #ccc' }}
           />
           <button 
             onClick={sendMessage} 
-            disabled={isSending}
+            disabled={isSending || (rateInfo !== null && rateInfo.restantes - messages.filter((m) => m.from === 'user').length <= 0)}
             style={{ 
               padding: '8px 12px', 
               background: '#1976d2', 

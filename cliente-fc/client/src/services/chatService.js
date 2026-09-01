@@ -56,6 +56,14 @@ export const enviarFeedback = async (data) => {
   return handleResponse(response);
 };
 
+export const getLimitesPublico = async () => {
+  const response = await fetch(`${API_URL}/chat/publico/config`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
+};
+
 export const registrarUsuarioAnonimo = async (data) => {
   const response = await fetch(`${API_URL}/chat/publico/usuario-anonimo/register`, {
     method: 'POST',
