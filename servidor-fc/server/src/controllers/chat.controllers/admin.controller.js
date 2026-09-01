@@ -294,7 +294,7 @@ const getStats = async (req, res) => {
 
 const getRateLimitLogs = async (req, res) => {
     try {
-        const logs = guardrailsService.getRateLimitLogs();
+        const logs = await guardrailsService.getRateLimitLogs();
         res.json({ success: true, data: logs });
     } catch (error) {
         console.error('Error getting rate limit logs:', error.message);
@@ -308,7 +308,7 @@ const clearRateLimit = async (req, res) => {
         if (!identifier) {
             return res.status(400).json({ success: false, message: 'identifier es requerido' });
         }
-        guardrailsService.clearRateLimit(identifier);
+        await guardrailsService.clearRateLimit(identifier);
         res.json({ success: true, message: 'Rate limit limpiado para ' + identifier });
     } catch (error) {
         console.error('Error clearing rate limit:', error.message);

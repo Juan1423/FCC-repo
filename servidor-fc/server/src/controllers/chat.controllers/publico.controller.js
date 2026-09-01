@@ -6,7 +6,6 @@ const { v4: uuidv4 } = require('uuid');
 
 const enviarMensaje = async (req, res) => {
     try {
-        console.log("Peticion: ", req.body)
         const { mensaje, promptId = null, consentimiento = false, metadata = {}, sessionId = null, visitorId = null } = req.body;
 
         if (!mensaje || !mensaje.trim()) {
@@ -30,6 +29,19 @@ const enviarMensaje = async (req, res) => {
                     req.user = { ...(req.user || {}), visitorId: effectiveSessionId };
                 }
             }
+        }
+
+        const scope = idUsuario ? 'auth' : 'anon';
+        const identifier = (idUsuario || effectiveVisitorId || `anon-${uuidv4()}`).toString();
+
+        const rateResult = await guardrailsService.checkAndIncrement({ scope, identifier });
+        if (!rateResult.allowed) {
+            return res.status(429).json({
+                success: false,
+                message: `Límite de ${rateResult.limit} preguntas alcanzado. Intenta en ${rateResult.retryAfter} segundos.`,
+                retryAfter: rateResult.retryAfter,
+                rate: rateResult,
+            });
         }
 
         const evaluacion = await guardrailsService.evaluarEntrada(mensaje);
@@ -262,9 +274,39 @@ const crearPreguntaAnonima = async (req, res) => {
     }
 };
 
+const getLimits = async (req, res) => {
+    try {
+        const isVisitor = req.isVisitor || req.user?.isVisitor || false;
+        const idUsuario = isVisitor ? null : (req.user?.user || null);
+        const effectiveVisitorId = req.headers['visitor-id'] || req.user?.visitorId || null;
+
+        const scope = idUsuario ? 'auth' : 'anon';
+        const identifier = (idUsuario || effectiveVisitorId || `anon-${uuidv4()}`).toString();
+
+        const rate = await guardrailsService.getRateLimitStatus({ scope, identifier });
+
+        res.json({
+            success: true,
+            data: {
+                isVisitor,
+                scope,
+                identifier,
+                limite: rate.limit,
+                contador: rate.count,
+                restantes: rate.remaining,
+                reseteaEnSeg: rate.resetsInSec || 0,
+            },
+        });
+    } catch (error) {
+        console.error('Error obteniendo límites:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     enviarMensaje,
     enviarFeedback,
     registrarAnonimo,
     crearPreguntaAnonima,
+    getLimits,
 };

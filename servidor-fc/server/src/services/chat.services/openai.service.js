@@ -173,19 +173,6 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             throw new Error(`El mensaje no puede exceder ${chatConfig.chat.maxMessageLength} caracteres`);
         }
 
-        const scope = idUsuario ? 'auth' : 'anon';
-        const identifier = idUsuario || visitorId || idUsuarioAnonimo;
-
-        if (this.guardrailsService) {
-            const rateResult = this.guardrailsService.checkRateLimit({ scope, identifier });
-            if (!rateResult.allowed) {
-                const error = new Error(`Límite de preguntas alcanzado. Intenta en ${rateResult.retryAfter} segundos.`);
-                error.code = 'RATE_LIMIT_EXCEEDED';
-                error.retryAfter = rateResult.retryAfter;
-                throw error;
-            }
-        }
-
         const startTime = Date.now();
         let promptCompleto;
 

@@ -168,16 +168,18 @@ class GuardrailsService {
             ? 'rate_limit_autenticado_diario'
             : 'rate_limit_visitante_diario';
         const windowKey = 'rate_limit_ventana_horas';
-        const persistKey = 'rate_persist_interval_min';
 
         const limit = config[limitKey] !== undefined
             ? config[limitKey]
             : (scope === 'auth' ? 50 : 5);
         const windowHours = config[windowKey] !== undefined ? config[windowKey] : 24;
 
+        return this._checkInMemory(scope, identifier, limit, windowHours * 60 * 60 * 1000);
+    }
+
+    _checkInMemory(scope, identifier, limit, windowMs) {
         const key = `${scope}:${identifier}`;
         const now = Date.now();
-        const windowMs = windowHours * 60 * 60 * 1000;
 
         let counter = this.counters.get(key);
         if (!counter || (now - counter.startTime) > windowMs) {
@@ -188,29 +190,142 @@ class GuardrailsService {
 
         this.counters.set(key, counter);
 
-        if (counter.count > limit) {
-            const retryAfterMs = counter.resetAt - now;
-            return {
-                allowed: false,
-                remaining: 0,
-                retryAfter: Math.ceil(retryAfterMs / 1000),
-                limit,
-                count: counter.count,
-            };
-        }
-
+        const blocked = counter.count > limit;
         return {
-            allowed: true,
-            remaining: limit - counter.count,
-            retryAfter: 0,
+            allowed: !blocked,
+            remaining: blocked ? 0 : Math.max(limit - counter.count, 0),
+            retryAfter: blocked ? Math.ceil((counter.resetAt - now) / 1000) : 0,
             limit,
             count: counter.count,
         };
     }
 
+    async checkAndIncrement({ scope, identifier }) {
+        const config = await this.loadConfig();
+        const limitKey = scope === 'auth'
+            ? 'rate_limit_autenticado_diario'
+            : 'rate_limit_visitante_diario';
+        const windowKey = 'rate_limit_ventana_horas';
+
+        const limit = config[limitKey] !== undefined
+            ? config[limitKey]
+            : (scope === 'auth' ? 50 : 5);
+        const windowHours = config[windowKey] !== undefined ? config[windowKey] : 24;
+        const windowMs = windowHours * 60 * 60 * 1000;
+        const now = Date.now();
+        const key = `${scope}:${identifier}`;
+
+        try {
+            const row = await models.ChatRateLimit.findByPk(key);
+
+            if (!row) {
+                await models.ChatRateLimit.create({
+                    id: key,
+                    scope,
+                    identifier,
+                    conteo: 1,
+                    ventana_inicio: new Date(now),
+                    reset_at: new Date(now + windowMs),
+                });
+                return {
+                    allowed: 1 <= limit,
+                    remaining: Math.max(limit - 1, 0),
+                    retryAfter: 0,
+                    limit,
+                    count: 1,
+                };
+            }
+
+            const windowStart = new Date(row.ventana_inicio).getTime();
+            let updated = row;
+            if (now - windowStart >= windowMs) {
+                updated = await row.update({
+                    conteo: 1,
+                    ventana_inicio: new Date(now),
+                    reset_at: new Date(now + windowMs),
+                });
+            } else {
+                updated = await row.increment('conteo');
+                updated = await updated.reload();
+            }
+
+            const count = updated.conteo || 0;
+            const resetAt = new Date(updated.reset_at).getTime();
+            const blocked = count > limit;
+
+            return {
+                allowed: !blocked,
+                remaining: blocked ? 0 : Math.max(limit - count, 0),
+                retryAfter: blocked ? Math.max(0, Math.ceil((resetAt - now) / 1000)) : 0,
+                limit,
+                count,
+            };
+        } catch (dbError) {
+            console.warn('RateLimit: fallback a memoria:', dbError.message);
+            return this._checkInMemory(scope, identifier, limit, windowMs);
+        }
+    }
+
+    async getRateLimitStatus({ scope, identifier }) {
+        const config = await this.loadConfig();
+        const limitKey = scope === 'auth'
+            ? 'rate_limit_autenticado_diario'
+            : 'rate_limit_visitante_diario';
+        const windowKey = 'rate_limit_ventana_horas';
+
+        const limit = config[limitKey] !== undefined
+            ? config[limitKey]
+            : (scope === 'auth' ? 50 : 5);
+        const windowHours = config[windowKey] !== undefined ? config[windowKey] : 24;
+        const windowMs = windowHours * 60 * 60 * 1000;
+        const now = Date.now();
+        const key = `${scope}:${identifier}`;
+
+        try {
+            const row = await models.ChatRateLimit.findByPk(key);
+            if (!row || (now - new Date(row.ventana_inicio).getTime()) >= windowMs) {
+                return {
+                    allowed: true,
+                    remaining: limit,
+                    retryAfter: 0,
+                    limit,
+                    count: 0,
+                    resetsInSec: Math.ceil(windowMs / 1000),
+                };
+            }
+
+            const count = row.conteo || 0;
+            const blocked = count > limit;
+            const resetAt = new Date(row.reset_at).getTime();
+
+            return {
+                allowed: !blocked,
+                remaining: blocked ? 0 : Math.max(limit - count, 0),
+                retryAfter: blocked ? Math.max(0, Math.ceil((resetAt - now) / 1000)) : 0,
+                limit,
+                count,
+                resetsInSec: Math.max(0, Math.ceil((resetAt - now) / 1000)),
+            };
+        } catch (dbError) {
+            console.warn('RateLimit: estado desde valores por defecto:', dbError.message);
+            const counter = this.counters.get(key);
+            const count = counter && (now - counter.startTime) <= windowMs ? counter.count : 0;
+            const resetAt = counter ? counter.resetAt : now + windowMs;
+            const blocked = count > limit;
+            return {
+                allowed: !blocked,
+                remaining: blocked ? 0 : Math.max(limit - count, 0),
+                retryAfter: blocked ? Math.max(0, Math.ceil((resetAt - now) / 1000)) : 0,
+                limit,
+                count,
+                resetsInSec: Math.max(0, Math.ceil((resetAt - now) / 1000)),
+            };
+        }
+    }
+
     async persistCounters() {
         // Snapshot counters to persistent storage (optional - can be extended)
-        // Currently a no-op; persists in-memory only for single-instance deployment
+        // Currently a no-op; rate limiting persists in chat_rate_limit table
     }
 
     invalidateCache() {
@@ -218,27 +333,56 @@ class GuardrailsService {
         this.configExpiry = 0;
     }
 
-    getRateLimitLogs() {
+    async getRateLimitLogs() {
         const logs = [];
+
+        try {
+            const rows = await models.ChatRateLimit.findAll({ logging: false });
+            for (const row of rows) {
+                logs.push({
+                    scope: row.scope,
+                    identifier: row.identifier,
+                    count: row.conteo,
+                    firstHit: new Date(row.ventana_inicio).toISOString(),
+                    resetAt: new Date(row.reset_at).toISOString(),
+                    persisted: true,
+                    blocked: false,
+                });
+            }
+        } catch (dbError) {
+            console.warn('RateLimit: error leyendo logs de BD:', dbError.message);
+        }
+
         const now = Date.now();
         for (const [key, counter] of this.counters.entries()) {
-            const [scope, ...idParts] = key.split(':');
+            const separatorIndex = key.indexOf(':');
+            if (separatorIndex === -1) continue;
+            const scope = key.slice(0, separatorIndex);
+            const identifier = key.slice(separatorIndex + 1);
             logs.push({
                 scope,
-                identifier: idParts.join(':'),
+                identifier,
                 count: counter.count,
                 firstHit: new Date(counter.startTime).toISOString(),
+                resetAt: new Date(counter.resetAt).toISOString(),
+                persisted: false,
                 blocked: counter.count > (this.getConfig()[scope === 'auth' ? 'rate_limit_autenticado_diario' : 'rate_limit_visitante_diario'] || 50),
             });
         }
+
         return logs;
     }
 
-    clearRateLimit(identifier) {
+    async clearRateLimit(identifier) {
         for (const [key] of this.counters.entries()) {
             if (key.endsWith(`:${identifier}`)) {
                 this.counters.delete(key);
             }
+        }
+        try {
+            await models.ChatRateLimit.destroy({ where: { identifier } });
+        } catch (dbError) {
+            console.warn('RateLimit: error limpiando BD:', dbError.message);
         }
     }
 
