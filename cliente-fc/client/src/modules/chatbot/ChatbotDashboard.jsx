@@ -10,8 +10,16 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import TopicIcon from '@mui/icons-material/Topic';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import HistoryIcon from '@mui/icons-material/History';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 
 const dataTarjeta = [
+  {
+    title: 'Datos de la Fundación',
+    icon: <AccountBalanceIcon />,
+    description: 'Perfil institucional que usa el asistente',
+    path: 'fundacion',
+    color: '#0d9488',
+  },
   {
     title: 'Gestión de Prompts',
     icon: <PsychologyIcon />,

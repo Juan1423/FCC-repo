@@ -1,6 +1,6 @@
 'use strict';
 
-const { configService, guardrailsService } = require('../../services/chat.services');
+const { configService, guardrailsService, openaiService } = require('../../services/chat.services');
 
 const getConfig = async (req, res) => {
     try {
@@ -24,6 +24,34 @@ const updateConfig = async (req, res) => {
         res.json({ success: true, data: result });
     } catch (error) {
         console.error('Error updating config:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const getFundacionConfig = async (req, res) => {
+    try {
+        const perfil = await configService.getFundacion();
+        res.json({ success: true, data: perfil });
+    } catch (error) {
+        console.error('Error getting fundacion config:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const updateFundacionConfig = async (req, res) => {
+    try {
+        const { perfil } = req.body;
+        if (!perfil || typeof perfil !== 'object') {
+            return res.status(400).json({ success: false, message: 'perfil es requerido' });
+        }
+
+        const result = await configService.updateFundacion(perfil);
+        configService.invalidate();
+        guardrailsService.invalidateCache && guardrailsService.invalidateCache();
+        openaiService.invalidateConfig && openaiService.invalidateConfig();
+        res.json({ success: true, data: result });
+    } catch (error) {
+        console.error('Error updating fundacion config:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -220,6 +248,8 @@ const deleteProtocoloSensible = async (req, res) => {
 module.exports = {
     getConfig,
     updateConfig,
+    getFundacionConfig,
+    updateFundacionConfig,
     getTemasValidos,
     createTemaValido,
     updateTemaValido,

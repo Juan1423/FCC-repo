@@ -2,6 +2,7 @@
 
 const { models } = require('../../libs/sequelize');
 const chatConfig = require('../../config/chatConfig');
+const { FUNDACION_PERFIL_KEY, mergeFundacion } = require('../../utils/chat.fundacion.util');
 
 const typeParsers = {
     string: (v) => v,
@@ -80,6 +81,34 @@ class ConfigService {
     invalidate() {
         this.cache.clear();
         this.cacheExpiry = null;
+    }
+
+    async getFundacion() {
+        const config = await this.getConfig();
+        let stored = null;
+        if (config[FUNDACION_PERFIL_KEY]) {
+            try {
+                stored = JSON.parse(config[FUNDACION_PERFIL_KEY]);
+            } catch (error) {
+                console.warn('Error parseando fundacion_perfil:', error.message);
+            }
+        }
+        return mergeFundacion(stored);
+    }
+
+    async updateFundacion(perfil) {
+        if (!perfil || typeof perfil !== 'object') {
+            throw new Error('Perfil de fundación inválido');
+        }
+        const valor = JSON.stringify(perfil);
+        await models.ChatConfiguracion.upsert({
+            clave: FUNDACION_PERFIL_KEY,
+            valor,
+            tipo: 'string',
+            descripcion: 'Perfil completo de la fundación (JSON) usado por el chatbot',
+        });
+        this.cache.set(FUNDACION_PERFIL_KEY, { valor, tipo: 'string', raw: {} });
+        return mergeFundacion(perfil);
     }
 
     getClientConfig() {

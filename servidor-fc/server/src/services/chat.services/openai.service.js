@@ -4,6 +4,7 @@ const { OpenAI } = require('openai');
 const { models } = require('../../libs/sequelize');
 const { Op } = require('sequelize');
 const chatConfig = require('../../config/chatConfig');
+const { FUNDACION_PERFIL_KEY, mergeFundacion } = require('../../utils/chat.fundacion.util');
 
 class OpenAIService {
     constructor() {
@@ -47,6 +48,20 @@ class OpenAIService {
         this.configExpiry = 0;
     }
 
+    async getFundacionInfo() {
+        try {
+            const config = await this.loadConfig();
+            const stored = config[FUNDACION_PERFIL_KEY];
+            if (!stored) {
+                return mergeFundacion(null);
+            }
+            return mergeFundacion(JSON.parse(stored));
+        } catch (error) {
+            console.warn('Error cargando perfil de fundación desde BD:', error.message);
+            return mergeFundacion(null);
+        }
+    }
+
     async construirPromptCompleto(mensajeUsuario, { promptId = null, sessionId, tipo = 'publico' } = {}) {
         let prompt = chatConfig.systemPrompt.base + '\n\n';
 
@@ -56,7 +71,7 @@ class OpenAIService {
         prompt += '- No inventes información ni uses conocimientos externos.\n';
         prompt += '- Sé amable y profesional en tus respuestas.\n\n';
 
-        const fundacion = chatConfig.fundacion;
+        const fundacion = await this.getFundacionInfo();
         const informacionFundacion = `
 📋 INFORMACIÓN DE LA INSTITUCIÓN:
 Nombre: ${fundacion.nombre}

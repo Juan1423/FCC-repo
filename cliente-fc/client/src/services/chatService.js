@@ -479,6 +479,22 @@ export const updateChatConfig = async (clave, valor) => {
   return handleResponse(response);
 };
 
+export const getFundacionConfig = async () => {
+  const response = await fetch(`${API_URL}/chat/config/fundacion`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
+};
+
+export const updateFundacionConfig = async (perfil) => {
+  const response = await fetch(`${API_URL}/chat/config/fundacion`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify({ perfil }),
+  });
+  return handleResponse(response);
+};
+
 export const regenerarTemas = async () => {
   const response = await fetch(`${API_URL}/chat/config/regenerar-temas`, {
     method: 'POST',

@@ -8,6 +8,9 @@ const configController = require('../../controllers/chat.controllers/config.cont
 router.get('/', verifyTokenAdmin, configController.getConfig);
 router.put('/', verifyTokenAdmin, configController.updateConfig);
 
+router.get('/fundacion', verifyTokenAdmin, configController.getFundacionConfig);
+router.put('/fundacion', verifyTokenAdmin, configController.updateFundacionConfig);
+
 router.get('/temas', verifyTokenAdmin, configController.getTemasValidos);
 router.post('/temas', verifyTokenAdmin, configController.createTemaValido);
 router.put('/temas/:id', verifyTokenAdmin, configController.updateTemaValido);

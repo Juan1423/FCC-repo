@@ -9,6 +9,7 @@ import {
   Topic as TopicIcon,
   Speed as RateLimitIcon,
   Chat as ChatIcon,
+  AccountBalance as FoundationIcon,
 } from '@mui/icons-material';
 import ChatbotLayout from './components/ChatbotLayout';
 import ChatbotDashboard from './ChatbotDashboard';
@@ -21,6 +22,7 @@ import GuardrailsConfig from './components/GuardrailsConfig';
 import ProtocolosSensiblesEditor from './components/ProtocolosSensiblesEditor';
 import TemasValidosEditor from './components/TemasValidosEditor';
 import RateLimitConfig from './components/RateLimitConfig';
+import FundacionConfig from './components/FundacionConfig';
 
 const ChatbotRoutes = () => {
   return (
@@ -72,6 +74,18 @@ const ChatbotRoutes = () => {
               icon={<ShieldIcon color="primary" />}
             >
               <GuardrailsConfig />
+            </IndividualView>
+          }
+        />
+        <Route
+          path="fundacion"
+          element={
+            <IndividualView
+              title="Datos de la Fundación"
+              subtitle="Perfil institucional que usa el asistente"
+              icon={<FoundationIcon color="primary" />}
+            >
+              <FundacionConfig />
             </IndividualView>
           }
         />
