@@ -34,8 +34,7 @@ node app.js                            # Start server (port 5000, requires Postg
 npx sequelize-cli db:migrate           # Run migrations
 npm run db:seed:required               # Required seeders only
 npm run db:seed:optional               # Optional seeders only
-npm run db:seed:chat                   # Chat config seeders (4 files)
-npm run db:seed:all                    # All seeders (required + optional + chat)
+npm run db:seed:all                    # All seeders (required + optional)
 npm test                               # Jest (--forceExit --detectOpenHandles)
 npm run test:watch                     # Jest in watch mode
 npm run test:coverage                  # Jest with coverage
