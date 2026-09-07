@@ -37,7 +37,7 @@ class ConfigService {
             this.cacheExpiry = Date.now() + this.ttlMs;
             return this.cache;
         } catch (error) {
-            console.error('Error loading chat config:', error.message);
+            console.error('Error loading chat config:', error);
             this.cache.clear();
             return this.cache;
         }

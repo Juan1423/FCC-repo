@@ -56,7 +56,7 @@ const enviarMensaje = async (req, res) => {
                         sugerencia: null,
                     });
                 } catch (e) {
-                    console.warn('Learning addToRevision error:', e.message);
+                    console.error('Learning addToRevision error:', e);
                 }
             });
 

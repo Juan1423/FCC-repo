@@ -59,7 +59,7 @@ class LearningService {
 
             return revision;
         } catch (error) {
-            console.error('Error adding to revision:', error.message);
+            console.error('Error adding to revision:', error);
             return null;
         }
     }
@@ -142,7 +142,7 @@ class LearningService {
 
             return { triggerType, flagged: !!triggerType };
         } catch (error) {
-            console.error('Error evaluating conversation:', error.message);
+            console.error('Error evaluating conversation:', error);
             return { triggerType: null, flagged: false };
         }
     }

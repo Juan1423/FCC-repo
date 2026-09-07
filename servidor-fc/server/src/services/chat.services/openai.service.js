@@ -26,21 +26,28 @@ class OpenAIService {
         if (this.configCache && Date.now() < this.configExpiry) {
             return this.configCache;
         }
-        const rows = await models.ChatConfiguracion.findAll({ raw: true });
-        const config = {};
-        for (const row of rows) {
-            let val = row.valor;
-            switch (row.tipo) {
-                case 'number': val = parseInt(val, 10); break;
-                case 'float': val = parseFloat(val); break;
-                case 'boolean': val = val === 'true'; break;
-                default: val = row.valor;
+        try {
+            const rows = await models.ChatConfiguracion.findAll({ raw: true });
+            const config = {};
+            for (const row of rows) {
+                let val = row.valor;
+                switch (row.tipo) {
+                    case 'number': val = parseInt(val, 10); break;
+                    case 'float': val = parseFloat(val); break;
+                    case 'boolean': val = val === 'true'; break;
+                    default: val = row.valor;
+                }
+                config[row.clave] = val;
             }
-            config[row.clave] = val;
+            this.configCache = config;
+            this.configExpiry = Date.now() + 5 * 60 * 1000;
+            return config;
+        } catch (error) {
+            console.error('Error loading openai chat config:', error);
+            this.configCache = {};
+            this.configExpiry = Date.now() + 5 * 60 * 1000;
+            return this.configCache;
         }
-        this.configCache = config;
-        this.configExpiry = Date.now() + 5 * 60 * 1000;
-        return config;
     }
 
     invalidateConfig() {
@@ -265,12 +272,17 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
                             feedback: null,
                         });
                     } catch (evalError) {
-                        console.warn('Learning evaluation error:', evalError.message);
+                        console.error('Learning evaluation error:', evalError);
                     }
                 });
             } catch (e) {
-                // Silent fail - learning is async
+                console.error('Learning evaluation (async) error:', e);
             }
+        } else {
+            console.debug('Evaluación de aprendizaje omitida:', {
+                conversacionPersistida: !!conversacion,
+                learningServiceInyectado: !!this.learningService,
+            });
         }
 
         return {

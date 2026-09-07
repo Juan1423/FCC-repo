@@ -29,14 +29,13 @@ const verifyToken = async (req, res, next) => {
   }
 
   const token = req.headers["token"]; // Ensure the header key matches the client-side
-  console.log("------------------------------------------------------\nTOKEN Enviado:", token)
+  console.info('Token recibido (enmascarado):', token ? `...${token.slice(-4)}` : '(ausente)');
   const secret = process.env.JWT_SECRET;
   if (token) {
     jwt.verify(token, secret, (error, data) => {
       if (error) {
         return res.status(401).json({ mensaje: "Token inválido" }); // Use 401 for unauthorized
       } else {
-        console.log('Token decodificado:', data); // Debug
         req.user = data;
         next();
       }
@@ -111,7 +110,6 @@ const verifyTokenOrVisitor = async (req, res, next) => {
       if (error) {
         return res.status(401).json({ mensaje: "Token inválido" });
       } else {
-        console.log('Token decodificado:', data); // Debug
         req.user = data;
         req.isVisitor = false;
         next();

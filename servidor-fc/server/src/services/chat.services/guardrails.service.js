@@ -422,7 +422,7 @@ class GuardrailsService {
         try {
             queryEmbedding = await this.generateEmbedding(mensaje);
         } catch (e) {
-            console.warn('Could not generate embedding:', e.message);
+            console.error('Could not generate embedding:', e);
         }
 
         const onTopicResult = await this.isOnTopic(mensaje, queryEmbedding);

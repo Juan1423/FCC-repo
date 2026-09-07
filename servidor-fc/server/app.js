@@ -8,6 +8,8 @@ const swaggerDefinitions = require('./src/docs/swagger.definitions');
 
 dotenv.config();
 require('newrelic');
+const { installConsoleShim } = require('./src/utils/logger');
+installConsoleShim();
 const app = express();
 
 const routerApi = require('./src/routes/index.routes');
@@ -32,7 +34,16 @@ app.get('/', (req, res) => {
 
 routerApi(app);
 
+app.use((req, res) => {
+    res.status(404).json({ success: false, message: 'Ruta no encontrada' });
+});
+
+app.use((err, req, res, next) => {
+    console.error('Error no controlado:', err);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+});
+
 app.listen(port, () => {
-  console.log(`Servidor escuchando en el puerto ${port}`);
-  console.log(`Documentación Swagger disponible en ${baseUrl}/api-docs`);
+    console.log(`Servidor escuchando en el puerto ${port}`);
+    console.log(`Documentación Swagger disponible en ${baseUrl}/api-docs`);
 });

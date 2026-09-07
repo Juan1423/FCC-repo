@@ -97,6 +97,7 @@ npm run test:coverage                  # Jest with coverage
 - Controllers instantiate service classes: `const service = new Service();`
 - Response format: `{ success: true, data: <response> }` or `{ success: false, message: <error> }`
 - Controllers wrap logic in try/catch, return 500 on error
+- **Logging**: `src/utils/logger.js` intercepta TODOS los `console.*` vía shim global instalado en `app.js` (tras `require('newrelic')`). Sin imports explícitos: cualquier `console.log/warn/error` ya queda con timestamp, nivel, `[archivo:línea]`, redacción de campos sensibles y se escribe en `logs/app.log` (gitignored). Si un arg es `Error`, escribe el stack y dispara `newrelic.noticeError`. Tamaño máximo de archivo opcional: `LOGGING_MAX_MB` (default 5). `sequelize` usa `logging: false` (no inundar el log). Pasar el objeto `Error` (no solo `.message`) a `console.error` para capturar stack + NewRelic.
 - JWT auth: **custom `token` header** (`req.headers["token"]`), NOT `Authorization: Bearer`. Token stored in client cookie `auth_token`.
 - `securityAuditMiddleware.js` runs globally on `/api/fcc` — handles auth + audit logging in one pass
 - File uploads via multer — many specialized configs in `utils/multerConfig*.js`

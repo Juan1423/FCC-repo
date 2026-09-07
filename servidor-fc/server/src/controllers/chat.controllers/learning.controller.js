@@ -102,7 +102,7 @@ const createCanonica = async (req, res) => {
             embedding_trigger = await learningService.ragService.generateEmbedding(patron_trigger);
             embedding_trigger = JSON.stringify(embedding_trigger);
         } catch (e) {
-            console.warn('Could not generate embedding for trigger:', e.message);
+            console.error('Could not generate embedding for trigger:', e);
         }
 
         const row = await models.ChatRespuestaCanonica.create({

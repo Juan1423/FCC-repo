@@ -196,7 +196,7 @@ const enviarFeedback = async (req, res) => {
                         feedback: calificacion,
                     });
                 } catch (e) {
-                    console.warn('Learning evaluation error on feedback:', e.message);
+                    console.error('Learning evaluation error on feedback:', e);
                 }
             });
         }

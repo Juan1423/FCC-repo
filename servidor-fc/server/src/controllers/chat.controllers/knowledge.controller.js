@@ -101,7 +101,7 @@ const uploadDocumento = async (req, res) => {
         const result = await knowledgeService.ingestirDocumento(req.file, titulo);
         res.status(201).json({ success: true, data: result, message: 'Documento procesado exitosamente' });
     } catch (error) {
-        console.error('Error uploading documento:', error.message);
+        console.error('Error uploading documento:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -113,11 +113,12 @@ const generateEmbeddings = async (req, res) => {
             try {
                 const result = await knowledgeService.generarEmbeddings(ids);
             } catch (error) {
-                console.error('Background embedding error:', error.message);
+                console.error('Background embedding error:', error);
             }
         });
         res.json({ success: true, message: 'Generación de embeddings iniciada en segundo plano' });
     } catch (error) {
+        console.error('Error starting embeddings generation:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -128,11 +129,12 @@ const regenerarMemoria = async (req, res) => {
             try {
                 const result = await knowledgeService.regenerarMemoria();
             } catch (error) {
-                console.error('Background regenerarMemoria error:', error.message);
+                console.error('Background regenerarMemoria error:', error);
             }
         });
         res.json({ success: true, message: 'Regeneración de memoria iniciada en segundo plano' });
     } catch (error) {
+        console.error('Error starting memory regeneration:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
