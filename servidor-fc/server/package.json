@@ -4,9 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --forceExit --detectOpenHandles",
-    "test:watch": "jest --watch --forceExit --detectOpenHandles",
-    "test:coverage": "jest --coverage --forceExit --detectOpenHandles",
     "db:seed:required": "sequelize-cli db:seed --seed 20240806233857-required-seeders.js",
     "db:seed:optional": "sequelize-cli db:seed --seed 20240806233921-optional-seeders.js",
     "db:seed:chat": "sequelize-cli db:seed --seed 20260818000001-chat-temas-validos.js && sequelize-cli db:seed --seed 20260818000002-chat-protocolos-sensibles.js && sequelize-cli db:seed --seed 20260818000003-chat-configuracion.js && sequelize-cli db:seed --seed 20260818000004-chat-prompts-base.js",
@@ -38,8 +35,6 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "jest": "^30.4.2",
-    "sequelize-cli": "^6.6.2",
-    "supertest": "^7.2.2"
+    "sequelize-cli": "^6.6.2"
   }
 }
