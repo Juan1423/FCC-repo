@@ -9,8 +9,6 @@
     "@mui/lab": "^5.0.0-alpha.170",
     "@mui/material": "^5.15.19",
     "@mui/x-date-pickers": "^7.6.1",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.2",
     "cypress": "^13.13.2",
     "dayjs": "^1.11.11",
@@ -36,7 +34,6 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
     "lint": "cross-env NODE_ENV=development eslint src --ext .js,.jsx",
     "lint:fix": "cross-env NODE_ENV=development eslint src --ext .js,.jsx --fix"
   },
@@ -55,7 +52,6 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.23.10",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@testing-library/jest-dom": "^6.4.5",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.33.2",
