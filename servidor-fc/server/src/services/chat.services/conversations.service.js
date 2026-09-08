@@ -3,6 +3,11 @@
 const { models } = require('../../libs/sequelize');
 const { Op } = require('sequelize');
 
+const escapeCsv = (value) => {
+    const text = value === null || value === undefined ? '' : String(value);
+    return `"${text.replace(/"/g, '""')}"`;
+};
+
 class ConversationsService {
     async getAll(options = {}) {
         const { limit = 50, offset = 0, where = {}, tipo = null } = options;
@@ -119,21 +124,20 @@ class ConversationsService {
             raw: true,
         });
 
-        const header = 'ID,Tipo,Usuario Anónimo,Usuario,Session,Prompt,Mensaje Bot,Tiempo,Tokens,Fecha\n';
-        const lines = rows.map((r) => {
-            return [
-                r.id_conversacion,
-                r.tipo,
-                r.id_usuario_anonimo || '',
-                r.id_usuario || '',
-                r.session_id || '',
-                r.id_prompt || '',
-                (r.respuesta_bot || '').replace(/"/g, '""'),
-                r.tiempo_respuesta || '',
-                r.tokens_usados || '',
-                r.fecha_conversacion,
-            ].join(',');
-        });
+        const header = 'ID,Tipo,Usuario Anónimo,Usuario,Session,Prompt,Mensaje Usuario,Mensaje Bot,Tiempo,Tokens,Fecha\n';
+        const lines = rows.map((r) => [
+            escapeCsv(r.id_conversacion),
+            escapeCsv(r.tipo),
+            escapeCsv(r.id_usuario_anonimo),
+            escapeCsv(r.id_usuario),
+            escapeCsv(r.session_id),
+            escapeCsv(r.id_prompt),
+            escapeCsv(r.mensaje_usuario),
+            escapeCsv(r.respuesta_bot),
+            escapeCsv(r.tiempo_respuesta),
+            escapeCsv(r.tokens_usados),
+            escapeCsv(r.fecha_conversacion),
+        ].join(','));
 
         return header + lines.join('\n');
     }

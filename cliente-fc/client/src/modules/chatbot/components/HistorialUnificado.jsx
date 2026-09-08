@@ -16,24 +16,28 @@ import {
   Chip,
   InputAdornment,
   Alert,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { Search as SearchIcon, Download as DownloadIcon } from '@mui/icons-material';
-import { getConversaciones } from '../../../services/chatService';
+import { getConversaciones, getHistorialReporte } from '../../../services/chatService';
 
 const HistorialUnificado = () => {
   const [historial, setHistorial] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [tipo, setTipo] = useState('');
   const [page, setPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [total, setTotal] = useState(0);
+  const [exportError, setExportError] = useState('');
 
   const cargarHistorial = useCallback(async () => {
-    const resp = await getConversaciones({ page: page + 1, limit: itemsPerPage });
+    const resp = await getConversaciones({ page: page + 1, limit: itemsPerPage, tipo });
     if (resp?.success) {
       setHistorial(resp.data || []);
       setTotal(resp?.pagination?.total ?? resp.data?.length ?? 0);
     }
-  }, [page, itemsPerPage]);
+  }, [page, itemsPerPage, tipo]);
 
   useEffect(() => {
     cargarHistorial();
@@ -57,32 +61,31 @@ const HistorialUnificado = () => {
     setPage(0);
   };
 
+  const handleTipoChange = (event, newTipo) => {
+    setTipo(newTipo || '');
+    setPage(0);
+    setExportError('');
+  };
+
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setPage(0);
   };
 
-  const handleExportar = () => {
-    const csvContent = [
-      ['ID', 'Tipo', 'Usuario', 'Session', 'Mensaje', 'Respuesta', 'Fecha'],
-      ...filtered.map((h) => [
-        h.id_conversacion,
-        h.tipo,
-        h.id_usuario || h.id_usuario_anonimo || 'anon',
-        h.session_id || '',
-        h.mensaje_usuario || '',
-        h.respuesta_bot || '',
-        h.fecha_conversacion,
-      ]),
-    ].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','));
-
-    const blob = new Blob([csvContent.join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `historial_chat_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExportar = async () => {
+    try {
+      const blob = await getHistorialReporte({ tipo });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `historial_chat_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setExportError('');
+    } catch (e) {
+      console.error('Error exportando CSV:', e);
+      setExportError('No se pudo exportar el historial. Intenta de nuevo.');
+    }
   };
 
   const getDecisionChip = (item) => {
@@ -113,23 +116,35 @@ const HistorialUnificado = () => {
 
       <Alert severity="info" sx={{ mb: 2 }}>
         Historial completo de conversaciones del chatbot (público e interno).
-        Puedes buscar por mensaje, respuesta o session ID, y exportar los resultados a CSV.
+        Filtra por tipo (público/interno), busca por mensaje, respuesta o session ID, y exporta las filas del filtro a CSV.
       </Alert>
 
-      <TextField
-        fullWidth
-        placeholder="Buscar en conversaciones..."
-        value={searchTerm}
-        onChange={handleSearch}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-        sx={{ mb: 2 }}
-      />
+      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
+        <TextField
+          sx={{ flex: 1, minWidth: 220 }}
+          placeholder="Buscar en conversaciones..."
+          value={searchTerm}
+          onChange={handleSearch}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <ToggleButtonGroup value={tipo} exclusive onChange={handleTipoChange} size="small" aria-label="Filtro por tipo">
+          <ToggleButton value="">Todos</ToggleButton>
+          <ToggleButton value="publico">Público</ToggleButton>
+          <ToggleButton value="interno">Interno</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
+      {exportError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {exportError}
+        </Alert>
+      )}
 
       <TableContainer component={Paper}>
         <Table>
