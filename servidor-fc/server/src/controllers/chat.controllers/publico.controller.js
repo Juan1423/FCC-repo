@@ -173,7 +173,7 @@ const enviarMensaje = async (req, res) => {
 const enviarFeedback = async (req, res) => {
     try {
         const { id_conversacion, calificacion, comentario } = req.body;
-        const { learningService } = require('../../services/chat.services');
+        const { learningService, configService } = require('../../services/chat.services');
 
         if (!id_conversacion) {
             return res.status(400).json({ success: false, message: 'id_conversacion es requerido' });
@@ -186,7 +186,19 @@ const enviarFeedback = async (req, res) => {
 
         const feedbackValido = calificacion >= 1 && calificacion <= 5;
 
-        if (!feedbackValido || calificacion <= 2) {
+        if (!feedbackValido) {
+            return res.status(400).json({
+                success: false,
+                message: 'La calificación debe estar entre 1 y 5',
+            });
+        }
+
+        const config = await configService.getConfig();
+        const feedbackThreshold = config.feedback_threshold !== undefined
+            ? config.feedback_threshold
+            : 2;
+
+        if (calificacion <= feedbackThreshold) {
             setImmediate(async () => {
                 try {
                     await learningService.evaluarConversacion({

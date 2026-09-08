@@ -178,6 +178,9 @@ class GuardrailsService {
     }
 
     _checkInMemory(scope, identifier, limit, windowMs) {
+        if (limit < 1) {
+            return { allowed: true, remaining: null, retryAfter: 0, limit, count: 0, unlimited: true };
+        }
         const key = `${scope}:${identifier}`;
         const now = Date.now();
 
@@ -212,6 +215,11 @@ class GuardrailsService {
             : (scope === 'auth' ? 50 : 5);
         const windowHours = config[windowKey] !== undefined ? config[windowKey] : 24;
         const windowMs = windowHours * 60 * 60 * 1000;
+
+        if (limit < 1) {
+            return { allowed: true, remaining: null, retryAfter: 0, limit, count: 0, unlimited: true };
+        }
+
         const now = Date.now();
         const key = `${scope}:${identifier}`;
 

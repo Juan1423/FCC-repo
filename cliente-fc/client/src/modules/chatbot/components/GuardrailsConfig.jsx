@@ -17,14 +17,17 @@ const CONFIG_INFO = {
   rate_limit_autenticado_diario: {
     label: 'Límite diario de preguntas (autenticados)',
     descripcion: 'Cuántas preguntas puede hacer por día un usuario con sesión iniciada. Las autenticadas suelen tener un cupo mayor que los visitantes.',
+    min: 1,
   },
   rate_limit_visitante_diario: {
     label: 'Límite diario de preguntas (visitantes)',
     descripcion: 'Cuántas preguntas puede hacer por día un visitante anónimo del chat público. Al alcanzarlo, el bot bloquea la pregunta restante del día.',
+    min: 1,
   },
   rate_limit_ventana_horas: {
     label: 'Ventana del límite (horas)',
     descripcion: 'Período en horas dentro del cual se cuenta el consumo del límite diario (cada visitante/identificador).',
+    min: 1,
   },
   rate_persist_interval_min: {
     label: 'Persistencia del contador (minutos)',
@@ -45,18 +48,23 @@ const CONFIG_INFO = {
   max_contexto_rag_items: {
     label: 'Máx. fragmentos de contexto RAG',
     descripcion: 'Cuántos fragmentos de conocimiento se inyectan como contexto en el prompt.',
+    min: 1,
   },
   feedback_threshold: {
     label: 'Umbral de feedback negativo',
-    descripcion: 'Calificación mínima (1-5) a partir de la cual un feedback se considera negativo y puede marcar la conversación para aprendizaje.',
+    descripcion: 'Calificación mínima (1-5) a partir de la cual el feedback se considera negativo y puede marcar la conversación para aprendizaje. Umbral bajo = menos revisiones; alto = más revisiones.',
+    min: 1,
+    max: 5,
   },
   min_respuesta_length: {
     label: 'Longitud mínima de respuesta',
     descripcion: 'Respuestas más cortas que este número de caracteres se marcan para revisión de aprendizaje.',
+    min: 1,
   },
   max_respuesta_length: {
     label: 'Longitud máxima de respuesta',
     descripcion: 'Respuestas más largas que este número de caracteres se marcan para revisión de aprendizaje.',
+    min: 1,
   },
   enable_learning_queue: {
     label: 'Habilitar cola de aprendizaje',
@@ -75,6 +83,7 @@ const GuardrailsConfig = () => {
   const [keys, setKeys] = useState({ boolean: [], number: [] });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     cargarConfig();
@@ -99,10 +108,15 @@ const GuardrailsConfig = () => {
 
   const handleGuardar = async () => {
     setSaving(true);
+    setErrorMsg('');
     try {
       for (const [clave, valor] of Object.entries(config)) {
         await updateChatConfig(clave, String(valor));
       }
+    } catch (e) {
+      const msg = e?.response?.data?.message || e.message;
+      console.error('Error guardando config:', msg);
+      setErrorMsg(`No se pudieron guardar todos los cambios: ${msg}`);
     } finally {
       setSaving(false);
     }
@@ -168,7 +182,11 @@ const GuardrailsConfig = () => {
             <TextField
               label={configInfo(clave).label}
               type="number"
-              inputProps={{ step: clave.includes('threshold') ? '0.01' : '1' }}
+              inputProps={{
+                min: configInfo(clave).min,
+                max: configInfo(clave).max,
+                step: configInfo(clave).step || (clave.includes('threshold') ? '0.01' : '1'),
+              }}
               value={config[clave] ?? ''}
               onChange={(e) => handleChange(clave, e.target.value, true)}
               fullWidth
@@ -182,6 +200,12 @@ const GuardrailsConfig = () => {
           </Box>
         ))}
       </Paper>
+
+      {errorMsg && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMsg}
+        </Alert>
+      )}
 
       <Button variant="contained" disabled={saving} onClick={handleGuardar}>
         {saving ? 'Guardando...' : 'Guardar cambios'}
