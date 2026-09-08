@@ -12,18 +12,19 @@ const ConfigService = require('./config.service');
 const ragService = new RAGService();
 const guardrailsService = new GuardrailsService();
 const learningService = new LearningService(ragService);
+const configService = new ConfigService();
 const openaiService = new OpenAIService();
 
 openaiService.setDependencies({
     ragService,
     guardrailsService,
     learningService,
+    configService,
 });
 
 const knowledgeService = new KnowledgeService(ragService);
 const promptsService = new PromptsService();
 const conversationsService = new ConversationsService();
-const configService = new ConfigService();
 
 module.exports = {
     ragService,

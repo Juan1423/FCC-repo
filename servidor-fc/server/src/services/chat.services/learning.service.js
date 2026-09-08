@@ -33,6 +33,11 @@ class LearningService {
         return config;
     }
 
+    invalidateCache() {
+        this.configCache = null;
+        this.configExpiry = 0;
+    }
+
     normalize(text) {
         if (!text) return '';
         return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -67,6 +72,10 @@ class LearningService {
     async evaluarConversacion({ idConversacion, mensaje, respuesta, feedback = null }) {
         try {
             const config = await this.loadConfig();
+            if (config.enable_learning_queue === false) {
+                console.info(`[learning] Cola de aprendizaje desactivada (enable_learning_queue=false): revisión saltada para conversación ${idConversacion}`);
+                return { triggerType: null, flagged: false };
+            }
             const minLength = config.min_respuesta_length !== undefined ? config.min_respuesta_length : 50;
             const maxLength = config.max_respuesta_length !== undefined ? config.max_respuesta_length : 2000;
             const feedbackThreshold = config.feedback_threshold !== undefined ? config.feedback_threshold : 2;

@@ -1,6 +1,6 @@
 'use strict';
 
-const { configService, guardrailsService, openaiService } = require('../../services/chat.services');
+const { configService, guardrailsService, learningService, openaiService } = require('../../services/chat.services');
 
 const getConfig = async (req, res) => {
     try {
@@ -21,9 +21,13 @@ const updateConfig = async (req, res) => {
 
         const result = await configService.update(clave, valor);
         guardrailsService.invalidateCache && guardrailsService.invalidateCache();
+        learningService.invalidateCache && learningService.invalidateCache();
         res.json({ success: true, data: result });
     } catch (error) {
         console.error('Error updating config:', error.message);
+        if (error.code === 'CONFIG_VALIDATION') {
+            return res.status(400).json({ success: false, message: error.message });
+        }
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -48,6 +52,7 @@ const updateFundacionConfig = async (req, res) => {
         const result = await configService.updateFundacion(perfil);
         configService.invalidate();
         guardrailsService.invalidateCache && guardrailsService.invalidateCache();
+        learningService.invalidateCache && learningService.invalidateCache();
         openaiService.invalidateConfig && openaiService.invalidateConfig();
         res.json({ success: true, data: result });
     } catch (error) {

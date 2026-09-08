@@ -12,47 +12,27 @@ class OpenAIService {
         this.ragService = null;
         this.guardrailsService = null;
         this.learningService = null;
-        this.configCache = null;
-        this.configExpiry = 0;
+        this.configService = null;
     }
 
-    setDependencies({ ragService, guardrailsService, learningService }) {
+    setDependencies({ ragService, guardrailsService, learningService, configService }) {
         this.ragService = ragService;
         this.guardrailsService = guardrailsService;
         this.learningService = learningService;
+        this.configService = configService;
     }
 
     async loadConfig() {
-        if (this.configCache && Date.now() < this.configExpiry) {
-            return this.configCache;
+        if (!this.configService) {
+            return {};
         }
-        try {
-            const rows = await models.ChatConfiguracion.findAll({ raw: true });
-            const config = {};
-            for (const row of rows) {
-                let val = row.valor;
-                switch (row.tipo) {
-                    case 'number': val = parseInt(val, 10); break;
-                    case 'float': val = parseFloat(val); break;
-                    case 'boolean': val = val === 'true'; break;
-                    default: val = row.valor;
-                }
-                config[row.clave] = val;
-            }
-            this.configCache = config;
-            this.configExpiry = Date.now() + 5 * 60 * 1000;
-            return config;
-        } catch (error) {
-            console.error('Error loading openai chat config:', error);
-            this.configCache = {};
-            this.configExpiry = Date.now() + 5 * 60 * 1000;
-            return this.configCache;
-        }
+        return this.configService.getConfig();
     }
 
     invalidateConfig() {
-        this.configCache = null;
-        this.configExpiry = 0;
+        if (this.configService) {
+            this.configService.invalidate();
+        }
     }
 
     async getFundacionInfo() {

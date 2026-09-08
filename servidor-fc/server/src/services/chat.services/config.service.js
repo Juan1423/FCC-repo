@@ -11,6 +11,45 @@ const typeParsers = {
     boolean: (v) => v === 'true',
 };
 
+const CONFIG_CONSTRAINTS = {
+    feedback_threshold: { min: 1, max: 5, integer: true },
+    rate_limit_visitante_diario: { min: 1, integer: true },
+    rate_limit_autenticado_diario: { min: 1, integer: true },
+    max_respuesta_length: { min: 1, integer: true },
+};
+
+function validationError(message) {
+    const error = new Error(message);
+    error.code = 'CONFIG_VALIDATION';
+    return error;
+}
+
+function validateValue(clave, valor, tipo) {
+    const constraints = CONFIG_CONSTRAINTS[clave];
+    if (!constraints || (tipo !== 'number' && tipo !== 'float')) return;
+
+    const num = Number(valor);
+    if (valor === '' || Number.isNaN(num)) {
+        throw validationError(`El valor de '${clave}' debe ser numérico`);
+    }
+    if (constraints.integer && !Number.isInteger(num)) {
+        throw validationError(`El valor de '${clave}' debe ser un número entero`);
+    }
+
+    let within = true;
+    if (constraints.min !== undefined && num < constraints.min) within = false;
+    if (constraints.max !== undefined && num > constraints.max) within = false;
+
+    if (!within) {
+        const range = constraints.min !== undefined && constraints.max !== undefined
+            ? `entre ${constraints.min} y ${constraints.max}`
+            : constraints.min !== undefined
+                ? `mayor o igual a ${constraints.min}`
+                : `menor o igual a ${constraints.max}`;
+        throw validationError(`El valor de '${clave}' debe ser ${range}`);
+    }
+}
+
 class ConfigService {
     constructor() {
         this.cache = new Map();
@@ -66,10 +105,12 @@ class ConfigService {
     }
 
     async update(clave, valor) {
+        await this.loadConfig();
         const entry = this.cache.get(clave);
         if (!entry) {
             throw new Error(`Config key '${clave}' not found`);
         }
+        validateValue(clave, valor, entry.tipo);
         await models.ChatConfiguracion.update(
             { valor },
             { where: { clave } }
