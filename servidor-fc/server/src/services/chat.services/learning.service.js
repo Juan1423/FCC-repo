@@ -43,6 +43,11 @@ class LearningService {
         return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     }
 
+    countWords(text) {
+        if (!text) return 0;
+        return text.trim().split(/\s+/).filter(Boolean).length;
+    }
+
     async addToRevision({ idConversacion, triggerType, mensajeUsuario, respuestaIa, sugerencia = null }) {
         try {
             const existing = await models.ChatConversacionRevision.findOne({
@@ -87,10 +92,11 @@ class LearningService {
             }
 
             if (!triggerType && respuesta) {
-                if (respuesta.trim().length < minLength) {
+                const palabras = this.countWords(respuesta);
+                if (palabras < minLength) {
                     triggerType = 'respuesta_corta';
                 }
-                if (!triggerType && respuesta.trim().length > maxLength) {
+                if (!triggerType && palabras > maxLength) {
                     triggerType = 'respuesta_larga';
                 }
             }
@@ -298,6 +304,7 @@ class LearningService {
         const pendientes = await models.ChatConversacionRevision.count({ where: { status: 'pendiente' } });
         const aprobadas = await models.ChatConversacionRevision.count({ where: { status: 'aprobado' } });
         const rechazadas = await models.ChatConversacionRevision.count({ where: { status: 'rechazado' } });
+        const totalCanonicas = await models.ChatRespuestaCanonica.count({ where: { activo: true } });
 
         const triggerDistribution = await models.ChatConversacionRevision.findAll({
             attributes: [
@@ -308,7 +315,7 @@ class LearningService {
             raw: true,
         });
 
-        return { total, pendientes, aprobadas, rechazadas, triggerDistribution };
+        return { total, pendientes, aprobadas, rechazadas, total_canonicas: totalCanonicas, triggerDistribution };
     }
 }
 

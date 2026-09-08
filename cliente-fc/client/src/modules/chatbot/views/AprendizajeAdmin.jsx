@@ -212,6 +212,7 @@ const AprendizajeAdmin = () => {
             <TableRow>
               <TableCell>Pregunta</TableCell>
               <TableCell>Respuesta</TableCell>
+              <TableCell>Embedding</TableCell>
               <TableCell align="right">Acciones</TableCell>
             </TableRow>
           </TableHead>
@@ -220,6 +221,13 @@ const AprendizajeAdmin = () => {
               <TableRow key={canon.id_canonica}>
                 <TableCell>{canon.patron_trigger}</TableCell>
                 <TableCell>{canon.respuesta_canonica?.substring(0, 100)}...</TableCell>
+                <TableCell>
+                  {canon.embedding_trigger ? (
+                    <Chip size="small" color="success" label="Sí" title="Tiene embedding para el fallback por similitud" />
+                  ) : (
+                    <Chip size="small" label="No" title="Sin embedding: solo la disparará el patrón regex. Edita y guarda para regenerar." />
+                  )}
+                </TableCell>
                 <TableCell align="right">
                   <Button size="small" onClick={() => handleCanonicaOpen(canon)} disabled={!canManage}>
                     Editar

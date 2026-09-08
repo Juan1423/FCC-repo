@@ -39,7 +39,7 @@ const CONFIG_INFO = {
   },
   canonical_response_threshold: {
     label: 'Umbral de respuesta canónica',
-    descripcion: 'Similitud mínima (0-1) para que el chatbot use una respuesta canónica aprobada en lugar de llamar a OpenAI.',
+    descripcion: 'Similitud mínima (0-1) usada solo en el fallback por embeddings de respuestas canónicas. El patrón regex (patron_trigger) siempre tiene prioridad sobre este umbral.',
   },
   rag_similarity_threshold: {
     label: 'Umbral RAG',
@@ -57,13 +57,13 @@ const CONFIG_INFO = {
     max: 5,
   },
   min_respuesta_length: {
-    label: 'Longitud mínima de respuesta',
-    descripcion: 'Respuestas más cortas que este número de caracteres se marcan para revisión de aprendizaje.',
+    label: 'Longitud mínima de respuesta (en palabras)',
+    descripcion: 'Respuestas más cortas que este número de palabras se marcan para revisión de aprendizaje. Se cuentan palabras separadas por espacios, no tokens ni caracteres.',
     min: 1,
   },
   max_respuesta_length: {
-    label: 'Longitud máxima de respuesta',
-    descripcion: 'Respuestas más largas que este número de caracteres se marcan para revisión de aprendizaje.',
+    label: 'Longitud máxima de respuesta (en palabras)',
+    descripcion: 'Respuestas más largas que este número de palabras se marcan para revisión. Se cuentan palabras, no tokens: la columna Tokens del historial es información aparte.',
     min: 1,
   },
   enable_learning_queue: {

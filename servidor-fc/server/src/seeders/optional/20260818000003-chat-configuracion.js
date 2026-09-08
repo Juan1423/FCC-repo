@@ -12,8 +12,8 @@ const configKeys = [
   { clave: 'rate_persist_interval_min', valor: '5', tipo: 'number', descripcion: 'Intervalo de persistencia de contadores de rate limit' },
   { clave: 'sensitive_check_first', valor: 'true', tipo: 'boolean', descripcion: 'Verificar temas sensibles antes que off-topic' },
   { clave: 'feedback_threshold', valor: '2', tipo: 'number', descripcion: 'Calificación mínima para considerar feedback negativo (1-5)' },
-  { clave: 'min_respuesta_length', valor: '50', tipo: 'number', descripcion: 'Longitud mínima de respuesta para trigger de revisión' },
-  { clave: 'max_respuesta_length', valor: '2000', tipo: 'number', descripcion: 'Longitud máxima de respuesta para trigger de revisión' },
+  { clave: 'min_respuesta_length', valor: '10', tipo: 'number', descripcion: 'Longitud mínima de respuesta (en palabras) para trigger de revisión' },
+  { clave: 'max_respuesta_length', valor: '350', tipo: 'number', descripcion: 'Longitud máxima de respuesta (en palabras) para trigger de revisión' },
 ];
 
 module.exports = {

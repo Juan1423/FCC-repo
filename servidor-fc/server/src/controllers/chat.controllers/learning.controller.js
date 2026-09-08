@@ -132,7 +132,16 @@ const updateCanonica = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Respuesta canónica no encontrada' });
         }
 
-        if (patron_trigger !== undefined) row.patron_trigger = patron_trigger;
+        if (patron_trigger !== undefined) {
+            row.patron_trigger = patron_trigger;
+            try {
+                const emb = await learningService.ragService.generateEmbedding(patron_trigger);
+                row.embedding_trigger = JSON.stringify(emb);
+            } catch (e) {
+                console.error('Could not regenerate embedding for trigger:', e);
+                row.embedding_trigger = null;
+            }
+        }
         if (respuesta_canonica !== undefined) row.respuesta_canonica = respuesta_canonica;
         if (categoria !== undefined) row.categoria = categoria;
         if (prioridad !== undefined) row.prioridad = prioridad;
