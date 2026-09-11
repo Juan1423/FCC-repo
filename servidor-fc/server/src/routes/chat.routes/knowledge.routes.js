@@ -22,7 +22,6 @@ router.post('/regenerar-memoria', verifyTokenAdmin, knowledgeController.regenera
 router.post('/bloquear-todos', verifyTokenAdmin, knowledgeController.bloquearTodos);
 router.post('/desbloquear-todos', verifyTokenAdmin, knowledgeController.desbloquearTodos);
 router.post('/ejecutar-bloqueadas', verifyTokenAdmin, knowledgeController.ejecutarBloqueadas);
-router.post('/:id/usar-conocimiento', verifyTokenAdmin, knowledgeController.usarConocimiento);
 
 router.get('/:id', verifyTokenAdmin, knowledgeController.getById);
 

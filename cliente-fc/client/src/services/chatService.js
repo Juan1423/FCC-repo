@@ -318,15 +318,6 @@ export const ejecutarBloqueadasKnowledge = async () => {
   return handleResponse(response);
 };
 
-export const usarConocimiento = async (id, mensaje) => {
-  const response = await fetch(`${API_URL}/chat/knowledge/${id}/usar-conocimiento`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({ mensaje }),
-  });
-  return handleResponse(response);
-};
-
 // === ADMIN USUARIOS / PREGUNTAS ANÓNIMOS ===
 export const getUsuariosAnonimos = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
@@ -649,15 +640,6 @@ export const unblockIP = async (ip) => {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ ip }),
-  });
-  return handleResponse(response);
-};
-
-export const usarConversacionEspecifico = async (id, mensaje) => {
-  const response = await fetch(`${API_URL}/chat/admin/conversaciones/${id}/usar-conversacion`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({ mensaje }),
   });
   return handleResponse(response);
 };

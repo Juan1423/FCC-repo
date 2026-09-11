@@ -102,8 +102,6 @@ const chatConfig = {
   },
 
   chat: {
-    retainHistory: true,
-    maxHistoryMessages: 20,
     responseFormats: {
       default: 'text',
       supportedFormats: ['text', 'list', 'qa'],

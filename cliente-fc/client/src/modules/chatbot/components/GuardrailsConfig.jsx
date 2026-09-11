@@ -29,10 +29,6 @@ const CONFIG_INFO = {
     descripcion: 'Período en horas dentro del cual se cuenta el consumo del límite diario (cada visitante/identificador).',
     min: 1,
   },
-  rate_persist_interval_min: {
-    label: 'Persistencia del contador (minutos)',
-    descripcion: 'Cada cuántos minutos se guardan en la base de datos los contadores de rate limit en memoria.',
-  },
   off_topic_threshold: {
     label: 'Umbral off-topic',
     descripcion: 'Similitud mínima (0-1) para considerar que la pregunta trata de la Fundación. Muy bajo = casi todo se responde; muy alto = el bot se declara incapaz con frecuencia.',

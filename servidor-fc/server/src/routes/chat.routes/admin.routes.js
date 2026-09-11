@@ -28,7 +28,6 @@ router.get('/preguntas-anonimas', verifyTokenAdmin, adminController.getAllPregun
 router.get('/conversaciones', verifyTokenAdmin, adminController.getAllConversaciones);
 router.put('/conversaciones/:id', verifyTokenAdmin, adminController.updateConversacion);
 router.delete('/conversaciones/:id', verifyTokenAdmin, adminController.deleteConversacion);
-router.post('/conversaciones/:id/usar-conversacion', verifyTokenAdmin, adminController.usarConversacionEspecifica);
 router.get('/stats', verifyTokenAdmin, adminController.getStats);
 
 router.post('/seguridad/block-user', verifyTokenAdmin, adminController.blockRegisteredUser);

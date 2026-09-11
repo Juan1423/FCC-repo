@@ -412,26 +412,6 @@ const unblockIp = async (req, res) => {
     }
 };
 
-const usarConversacionEspecifica = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { mensaje } = req.body;
-        if (!mensaje) return res.status(400).json({ success: false, message: 'mensaje requerido' });
-        const { models } = require('../../libs/sequelize');
-        const conversacion = await models.ChatConversacion.findByPk(id);
-        if (!conversacion) return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
-        const { openaiService } = require('../../services/chat.services');
-        const resultado = await openaiService.chatInterno({
-            mensaje,
-            idUsuario: req.user?.user || null,
-            sessionId: `admin-usar-conv-${id}`,
-        });
-        res.json({ success: true, data: { respuesta: resultado.respuesta } });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
 module.exports = {
     getAllPrompts,
     getById,
@@ -454,7 +434,6 @@ module.exports = {
     unblockRegisteredUser,
     blockIp,
     unblockIp,
-    usarConversacionEspecifica,
     getStats,
     getRateLimitLogs,
     clearRateLimit,

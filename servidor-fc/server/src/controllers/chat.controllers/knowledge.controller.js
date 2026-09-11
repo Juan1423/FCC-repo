@@ -172,20 +172,6 @@ const ejecutarBloqueadas = async (req, res) => {
     }
 };
 
-const usarConocimiento = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { mensaje } = req.body;
-        const conocimiento = await knowledgeService.findById(id);
-        if (!conocimiento) {
-            return res.status(404).json({ success: false, message: 'Conocimiento no encontrado' });
-        }
-        res.json({ success: true, message: 'Endpoint de prueba - conocimiento válido', data: { conocimiento } });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
 module.exports = {
     create,
     getAll,
@@ -199,5 +185,4 @@ module.exports = {
     bloquearTodos,
     desbloquearTodos,
     ejecutarBloqueadas,
-    usarConocimiento,
 };

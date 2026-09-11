@@ -130,7 +130,7 @@ Plus `FUNDACION_*` vars for chatbot branding and `LOGGING_*` vars for debug outp
 
 Split across client and server:
 - **Client**: `src/modules/chatbot/` — `ChatbotDashboard.js`, `chatcliente/`, `chatservidor/`
-- **Client components**: `ChatBotIA.jsx` (public/visitor), `ChatIAServidor.jsx` (admin), `ChatAccessModal.jsx`, `HistorialChat.jsx`
+- **Client components**: `ChatBotIA.jsx` (public/visitor), `ChatIAServidor.jsx` (admin), `ChatAccessModal.jsx`, `HistorialUnificado.jsx`
 - **Server**: 9 service files (rag, guardrails, learning, openai, knowledge, prompts, conversations, config), 12 model files, 6 controllers
 - Two OpenAI integration patterns: legacy `openaiService.js` (node-fetch), modern `chat.services/openai.service.js` (OpenAI SDK)
 - Semantic search via cosine similarity (manual implementation, not pgvector SQL operators)

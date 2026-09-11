@@ -331,11 +331,6 @@ class GuardrailsService {
         }
     }
 
-    async persistCounters() {
-        // Snapshot counters to persistent storage (optional - can be extended)
-        // Currently a no-op; rate limiting persists in chat_rate_limit table
-    }
-
     invalidateCache() {
         this.configCache = null;
         this.configExpiry = 0;
