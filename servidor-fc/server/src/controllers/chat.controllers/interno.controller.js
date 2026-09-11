@@ -89,6 +89,20 @@ const enviarMensaje = async (req, res) => {
                 tokens_usados: 0,
             });
 
+            setImmediate(async () => {
+                try {
+                    await learningService.addToRevision({
+                        idConversacion: conversacion.id_conversacion,
+                        triggerType: 'off_topic',
+                        mensajeUsuario: mensaje,
+                        respuestaIa: offlineResponse,
+                        sugerencia: null,
+                    });
+                } catch (e) {
+                    console.error('Learning addToRevision error (off_topic interno):', e);
+                }
+            });
+
             return res.json({
                 success: true,
                 decision: 'off_topic',
@@ -99,7 +113,7 @@ const enviarMensaje = async (req, res) => {
             });
         }
 
-        const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings);
+        const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings, 'interno');
         if (canonical) {
             const conversacion = await models.ChatConversacion.create({
                 tipo: 'interno',
@@ -200,8 +214,68 @@ const exportarCSV = async (req, res) => {
     }
 };
 
+const enviarFeedback = async (req, res) => {
+    try {
+        const { id_conversacion, calificacion, comentario } = req.body;
+
+        if (!id_conversacion) {
+            return res.status(400).json({ success: false, message: 'id_conversacion es requerido' });
+        }
+
+        if (!Number.isInteger(calificacion) || calificacion < 1 || calificacion > 5) {
+            return res.status(400).json({
+                success: false,
+                message: 'La calificación debe ser un entero entre 1 y 5',
+            });
+        }
+
+        const conversacion = await models.ChatConversacion.findByPk(id_conversacion);
+        if (!conversacion) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+        if (conversacion.tipo !== 'interno') {
+            return res.status(400).json({ success: false, message: 'La conversación no pertenece al canal interno' });
+        }
+
+        const { configService } = require('../../services/chat.services');
+        const config = await configService.getConfig();
+        const feedbackThreshold = config.feedback_threshold !== undefined
+            ? config.feedback_threshold
+            : 2;
+
+        if (calificacion <= feedbackThreshold) {
+            setImmediate(async () => {
+                try {
+                    await learningService.evaluarConversacion({
+                        idConversacion: parseInt(id_conversacion),
+                        mensaje: conversacion.mensaje_usuario,
+                        respuesta: conversacion.respuesta_bot,
+                        feedback: calificacion,
+                    });
+                } catch (e) {
+                    console.error('Learning evaluation error on internal feedback:', e);
+                }
+            });
+        }
+
+        if (comentario) {
+            const metadata = { ...(conversacion.metadata || {}), feedback_comentario: comentario, feedback_calificacion: calificacion };
+            await conversacion.update({ metadata });
+        }
+
+        res.json({
+            success: true,
+            message: 'Feedback recibido exitosamente',
+        });
+    } catch (error) {
+        console.error('Error en feedback interno:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     enviarMensaje,
     listarHistorial,
     exportarCSV,
+    enviarFeedback,
 };

@@ -111,7 +111,7 @@ const enviarMensaje = async (req, res) => {
             });
         }
 
-        const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings);
+        const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings, 'publico');
         if (canonical) {
             const conversacion = await models.ChatConversacion.create({
                 tipo: 'publico',

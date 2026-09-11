@@ -162,7 +162,7 @@ class LearningService {
         }
     }
 
-    async findCanonicalResponse(mensaje, queryEmbedding = null) {
+    async findCanonicalResponse(mensaje, queryEmbedding = null, canal = 'ambos') {
         try {
             const config = await this.loadConfig();
             const threshold = config.canonical_response_threshold !== undefined
@@ -170,8 +170,8 @@ class LearningService {
                 : 0.85;
 
             const items = await models.ChatRespuestaCanonica.findAll({
-                where: { activo: true },
-                attributes: ['id_canonica', 'patron_trigger', 'embedding_trigger', 'respuesta_canonica', 'categoria', 'prioridad', 'usos_count'],
+                where: { activo: true, canal: { [Op.in]: ['ambos', canal] } },
+                attributes: ['id_canonica', 'patron_trigger', 'embedding_trigger', 'respuesta_canonica', 'categoria', 'prioridad', 'usos_count', 'canal'],
                 raw: true,
             });
 
@@ -230,18 +230,22 @@ class LearningService {
         }
     }
 
-    async listPendingRevisions({ page = 1, limit = 20, status = 'pendiente' }) {
+    async listPendingRevisions({ page = 1, limit = 20, status = 'pendiente', tipo = null }) {
         const offset = (page - 1) * limit;
         const where = status ? { status } : {};
+        const include = [
+            {
+                model: models.ChatConversacion,
+                as: 'conversacion',
+                attributes: ['id_conversacion', 'tipo', 'session_id', 'id_usuario', 'id_usuario_anonimo', 'fecha_conversacion'],
+            },
+        ];
+        if (tipo) {
+            include[0].where = { tipo };
+        }
         const { rows, count } = await models.ChatConversacionRevision.findAndCountAll({
             where,
-            include: [
-                {
-                    model: models.ChatConversacion,
-                    as: 'conversacion',
-                    attributes: ['id_conversacion', 'tipo', 'session_id', 'id_usuario', 'id_usuario_anonimo', 'fecha_conversacion'],
-                },
-            ],
+            include,
             order: [['createdAt', 'DESC']],
             limit,
             offset,
@@ -253,6 +257,16 @@ class LearningService {
         const revision = await models.ChatConversacionRevision.findByPk(idRevision);
         if (!revision) {
             throw new Error('Revisión no encontrada');
+        }
+
+        let canal = 'ambos';
+        try {
+            const conversacion = await revision.getConversacion();
+            if (conversacion && ['publico', 'interno'].includes(conversacion.tipo)) {
+                canal = conversacion.tipo;
+            }
+        } catch (e) {
+            console.warn('No se pudo derivar el canal de la revisión:', e.message);
         }
 
         let embeddingTrigger = null;
@@ -271,6 +285,7 @@ class LearningService {
             activo: true,
             creado_por: adminId,
             creado_desde_revision: idRevision,
+            canal,
         });
 
         await revision.update({

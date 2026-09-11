@@ -4,11 +4,12 @@ const { learningService } = require('../../services/chat.services');
 
 const listRevisiones = async (req, res) => {
     try {
-        const { page = 1, limit = 20, status = 'pendiente' } = req.query;
+        const { page = 1, limit = 20, status = 'pendiente', tipo } = req.query;
         const result = await learningService.listPendingRevisions({
             page: parseInt(page),
             limit: parseInt(limit),
             status,
+            tipo: tipo || null,
         });
         res.json({
             success: true,
@@ -90,11 +91,15 @@ const getCanonicaById = async (req, res) => {
 const createCanonica = async (req, res) => {
     try {
         const { models } = require('../../libs/sequelize');
-        const { patron_trigger, respuesta_canonica, categoria, prioridad } = req.body;
+        const { patron_trigger, respuesta_canonica, categoria, prioridad, canal = 'ambos' } = req.body;
         const adminId = req.user?.user;
 
         if (!patron_trigger || !respuesta_canonica) {
             return res.status(400).json({ success: false, message: 'patron_trigger y respuesta_canonica son requeridos' });
+        }
+
+        if (!['ambos', 'publico', 'interno'].includes(canal)) {
+            return res.status(400).json({ success: false, message: 'canal inválido. Valores: ambos, publico, interno' });
         }
 
         let embedding_trigger = null;
@@ -113,6 +118,7 @@ const createCanonica = async (req, res) => {
             prioridad: prioridad || 1,
             activo: true,
             creado_por: adminId,
+            canal,
         });
         learningService.ragService.invalidateCache();
         res.status(201).json({ success: true, data: row });
@@ -125,11 +131,15 @@ const updateCanonica = async (req, res) => {
     try {
         const { models } = require('../../libs/sequelize');
         const { id } = req.params;
-        const { patron_trigger, respuesta_canonica, categoria, prioridad, activo } = req.body;
+        const { patron_trigger, respuesta_canonica, categoria, prioridad, activo, canal } = req.body;
 
         const row = await models.ChatRespuestaCanonica.findByPk(id);
         if (!row) {
             return res.status(404).json({ success: false, message: 'Respuesta canónica no encontrada' });
+        }
+
+        if (canal !== undefined && !['ambos', 'publico', 'interno'].includes(canal)) {
+            return res.status(400).json({ success: false, message: 'canal inválido. Valores: ambos, publico, interno' });
         }
 
         if (patron_trigger !== undefined) {
@@ -146,6 +156,7 @@ const updateCanonica = async (req, res) => {
         if (categoria !== undefined) row.categoria = categoria;
         if (prioridad !== undefined) row.prioridad = prioridad;
         if (activo !== undefined) row.activo = activo;
+        if (canal !== undefined) row.canal = canal;
 
         await row.save();
         learningService.ragService.invalidateCache();
