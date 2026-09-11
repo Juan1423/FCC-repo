@@ -11,9 +11,10 @@ import {
   useTheme,
   CircularProgress,
   Chip,
+  Tooltip,
 } from '@mui/material';
-import { Send as SendIcon, SmartToy as BotIcon, Person as PersonIcon } from '@mui/icons-material';
-import { enviarMensajeInterno } from '../../../services/chatService';
+import { Send as SendIcon, SmartToy as BotIcon, Person as PersonIcon, ThumbUpAlt as ThumbUpIcon, ThumbDownAlt as ThumbDownIcon, CheckCircle as CheckIcon } from '@mui/icons-material';
+import { enviarMensajeInterno, enviarFeedbackInterno } from '../../../services/chatService';
 import chatConfig from '../config/chatConfig';
 
 const chatStyles = {
@@ -76,6 +77,7 @@ const ChatInterno = () => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rated, setRated] = useState({});
   const theme = useTheme();
   const messagesEndRef = useRef(null);
 
@@ -131,6 +133,7 @@ const ChatInterno = () => {
             text: resp.respuesta || 'No se recibió respuesta.',
             timestamp: new Date().toISOString(),
             metadata: resp.metadata,
+            id_conversacion: resp.id_conversacion || null,
           },
         ]);
       } else {
@@ -157,6 +160,16 @@ const ChatInterno = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleFeedback = async (msg, calificacion) => {
+    if (!msg.id_conversacion) return;
+    try {
+      await enviarFeedbackInterno({ id_conversacion: msg.id_conversacion, calificacion });
+      setRated((prev) => ({ ...prev, [msg.id]: calificacion }));
+    } catch (error) {
+      console.error('Error enviando feedback interno:', error);
     }
   };
 
@@ -195,6 +208,28 @@ const ChatInterno = () => {
                 ...(msg.type === 'user' ? chatStyles.userText : chatStyles.botText),
               }}
             />
+            {msg.type === 'bot' && !msg.isError && msg.id_conversacion && (
+              <Box sx={{ ml: 0.5, display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                {rated[msg.id] != null ? (
+                  <Tooltip title="Gracias por tu evaluación">
+                    <CheckIcon color="success" sx={{ fontSize: 18 }} />
+                  </Tooltip>
+                ) : (
+                  <>
+                    <Tooltip title="Me sirvió">
+                      <IconButton size="small" onClick={() => handleFeedback(msg, 5)} color="success">
+                        <ThumbUpIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="No me sirvió">
+                      <IconButton size="small" onClick={() => handleFeedback(msg, 1)} color="error">
+                        <ThumbDownIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )}
+              </Box>
+            )}
           </ListItem>
         ))}
         <div ref={messagesEndRef} />
