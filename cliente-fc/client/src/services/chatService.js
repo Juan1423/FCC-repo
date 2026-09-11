@@ -6,11 +6,16 @@ const handleResponse = async (response) => {
   try {
     data = await response.json();
   } catch (e) {
-    throw new Error(`Respuesta no válida del servidor (código ${response.status})`);
+    const err = new Error(`Respuesta no válida del servidor (código ${response.status})`);
+    err.status = response.status;
+    throw err;
   }
   if (!response.ok) {
     const message = data?.message || data?.error || `HTTP ${response.status}`;
-    throw new Error(message);
+    const err = new Error(message);
+    err.status = response.status;
+    err.data = data;
+    throw err;
   }
   return data;
 };
@@ -599,8 +604,9 @@ export const deleteProtocolo = async (id) => {
 };
 
 // === RATE LIMIT ===
-export const getRateLimitLogs = async () => {
-  const response = await fetch(`${API_URL}/chat/admin/rate-limit-logs`, {
+export const getRateLimitLogs = async (params = {}) => {
+  const qs = new URLSearchParams(params).toString();
+  const response = await fetch(`${API_URL}/chat/admin/rate-limit-logs${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
@@ -608,6 +614,24 @@ export const getRateLimitLogs = async () => {
 
 export const clearRateLimit = async (identifier) => {
   const response = await fetch(`${API_URL}/chat/admin/rate-limit/clear`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ identifier }),
+  });
+  return handleResponse(response);
+};
+
+export const blockRateLimitIdentifier = async (identifier) => {
+  const response = await fetch(`${API_URL}/chat/admin/rate-limit/block`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ identifier }),
+  });
+  return handleResponse(response);
+};
+
+export const unblockRateLimitIdentifier = async (identifier) => {
+  const response = await fetch(`${API_URL}/chat/admin/rate-limit/unblock`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ identifier }),
