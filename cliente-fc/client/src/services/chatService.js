@@ -100,6 +100,15 @@ export const getHistorialInterno = async (params = {}) => {
   return handleResponse(response);
 };
 
+export const enviarFeedbackInterno = async (data) => {
+  const response = await fetch(`${API_URL}/chat/interno/feedback`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
 export const getHistorialReporte = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
   const token = getAuthToken();
@@ -128,6 +137,7 @@ export const createPrompt = async (data, pdfFile = null) => {
     formData.append('instrucciones', data.instrucciones);
     formData.append('tipo_prompt', data.tipo_prompt);
     formData.append('activo', data.activo);
+    formData.append('canal', data.canal || 'ambos');
     formData.append('pdf', pdfFile);
 
     const response = await fetch(`${API_URL}/chat/admin/prompts`, {
@@ -154,6 +164,7 @@ export const updatePrompt = async (id, data, pdfFile = null) => {
     formData.append('instrucciones', data.instrucciones);
     formData.append('tipo_prompt', data.tipo_prompt);
     formData.append('activo', data.activo);
+    formData.append('canal', data.canal || 'ambos');
     formData.append('pdf', pdfFile);
 
     const response = await fetch(`${API_URL}/chat/admin/prompts/${id}`, {
@@ -253,10 +264,11 @@ export const toggleBloqueoKnowledge = async (id) => {
   return handleResponse(response);
 };
 
-export const uploadDocumento = async (pdfFile, titulo) => {
+export const uploadDocumento = async (pdfFile, titulo, canal = 'ambos') => {
   const formData = new FormData();
   formData.append('pdf', pdfFile);
   formData.append('titulo', titulo);
+  formData.append('canal', canal);
 
   const response = await fetch(`${API_URL}/chat/knowledge/upload-documento`, {
     method: 'POST',
