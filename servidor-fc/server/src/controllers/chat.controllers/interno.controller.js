@@ -40,24 +40,8 @@ const enviarMensaje = async (req, res) => {
                 respuesta_bot: protocolo.respuesta_canonica,
                 consentimiento: true,
                 metadata: { protocolo_categoria: protocolo.categoria },
-                flag_revision: true,
-                motivo_revision: 'tema_sensible',
                 tiempo_respuesta: 0,
                 tokens_usados: 0,
-            });
-
-            setImmediate(async () => {
-                try {
-                    await learningService.addToRevision({
-                        idConversacion: conversacion.id_conversacion,
-                        triggerType: 'tema_sensible',
-                        mensajeUsuario: mensaje,
-                        respuestaIa: protocolo.respuesta_canonica,
-                        sugerencia: null,
-                    });
-                } catch (e) {
-                    console.error('Learning addToRevision error:', e);
-                }
             });
 
             return res.json({

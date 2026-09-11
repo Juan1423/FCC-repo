@@ -57,18 +57,8 @@ const enviarMensaje = async (req, res) => {
                 respuesta_bot: protocolo.respuesta_canonica,
                 consentimiento: !!consentimiento,
                 metadata: { ...metadata, protocolo_categoria: protocolo.categoria },
-                flag_revision: true,
-                motivo_revision: 'tema_sensible',
                 tiempo_respuesta: 0,
                 tokens_usados: 0,
-            });
-
-            await require('../../services/chat.services').learningService.addToRevision({
-                idConversacion: conversacion.id_conversacion,
-                triggerType: 'tema_sensible',
-                mensajeUsuario: mensaje,
-                respuestaIa: protocolo.respuesta_canonica,
-                sugerencia: null,
             });
 
             return res.json({
