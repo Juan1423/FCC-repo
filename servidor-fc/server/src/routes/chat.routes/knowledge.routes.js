@@ -23,6 +23,11 @@ router.post('/bloquear-todos', verifyTokenAdmin, knowledgeController.bloquearTod
 router.post('/desbloquear-todos', verifyTokenAdmin, knowledgeController.desbloquearTodos);
 router.post('/ejecutar-bloqueadas', verifyTokenAdmin, knowledgeController.ejecutarBloqueadas);
 
+router.get('/documents', verifyTokenAdmin, knowledgeController.getAllDocumentos);
+router.delete('/documents/:id', verifyTokenAdmin, knowledgeController.deleteDocumento);
+router.post('/documents/:id/bloquear', verifyTokenAdmin, knowledgeController.bloquearDocumento);
+router.post('/documents/:id/desbloquear', verifyTokenAdmin, knowledgeController.desbloquearDocumento);
+
 router.get('/:id', verifyTokenAdmin, knowledgeController.getById);
 
 async function getStats(req, res) {

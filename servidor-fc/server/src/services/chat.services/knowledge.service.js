@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const pdf = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const { models } = require('../../libs/sequelize');
 const { Op } = require('sequelize');
 
@@ -30,6 +30,47 @@ class KnowledgeService {
 
     async findById(id) {
         return models.ChatConocimiento.findByPk(id);
+    }
+
+    async findAllDocumentos(options = {}) {
+        const { limit = 10, offset = 0, where = {} } = options;
+        return models.ChatDocumento.findAll({
+            where,
+            limit,
+            offset,
+            order: [['createdAt', 'DESC']],
+            include: [{
+                model: models.ChatConocimiento,
+                as: 'conocimientos',
+                attributes: ['id_conocimiento', 'bloqueado'],
+            }],
+        });
+    }
+
+    async countDocumentos(where = {}) {
+        return models.ChatDocumento.count({ where });
+    }
+
+    async deleteDocumento(id) {
+        const documento = await models.ChatDocumento.findByPk(id);
+        if (!documento) return null;
+        await models.ChatConocimiento.destroy({ where: { id_documento: id } });
+        await documento.destroy();
+        this.ragService.invalidateCache();
+        return true;
+    }
+
+    async toggleBloqueoDocumento(idDocumento, bloqueado) {
+        const documento = await models.ChatDocumento.findByPk(idDocumento);
+        if (!documento) return null;
+        const updateData = bloqueado
+            ? { bloqueado: true, embedding: null }
+            : { bloqueado: false };
+        const [affected] = await models.ChatConocimiento.update(updateData, {
+            where: { id_documento: idDocumento },
+        });
+        this.ragService.invalidateCache();
+        return affected;
     }
 
     async update(id, data) {
@@ -149,8 +190,11 @@ class KnowledgeService {
         });
 
         try {
-            const dataBuffer = fs.readFileSync(file.path);
-            const data = await pdf(dataBuffer);
+            const dataBuffer = file.buffer || fs.readFileSync(file.path);
+            const parser = new PDFParse({ data: dataBuffer });
+            await parser.load();
+            const data = await parser.getText();
+            parser.destroy();
             const textoLimpio = data.text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
 
             if (textoLimpio.trim().length < 10) {

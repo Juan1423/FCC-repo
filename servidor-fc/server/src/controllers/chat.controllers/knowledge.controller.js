@@ -19,19 +19,22 @@ const create = async (req, res) => {
 
 const getAll = async (req, res) => {
     try {
-        const { page = 1, limit = 10, tema_principal, estado_vigencia, nivel_prioridad, bloqueado } = req.query;
+        const { page = 1, limit = 10, tipo, tema_principal, estado_vigencia, nivel_prioridad, bloqueado } = req.query;
         const offset = (page - 1) * limit;
         const where = {};
+        if (tipo) where.tipo = tipo;
         if (tema_principal) where.tema_principal = tema_principal;
         if (estado_vigencia !== undefined) where.estado_vigencia = estado_vigencia === 'true';
         if (nivel_prioridad) where.nivel_prioridad = parseInt(nivel_prioridad);
         if (bloqueado !== undefined) where.bloqueado = bloqueado === 'true';
 
         const rows = await knowledgeService.findAll({ limit: parseInt(limit), offset, where });
+        const { models } = require('../../libs/sequelize');
+        const total = await models.ChatConocimiento.count({ where });
         res.json({
             success: true,
             data: rows,
-            pagination: { page: parseInt(page), limit: parseInt(limit) },
+            pagination: { page: parseInt(page), limit: parseInt(limit), total },
         });
     } catch (error) {
         console.error('Error getting conocimiento:', error.message);
@@ -172,6 +175,78 @@ const ejecutarBloqueadas = async (req, res) => {
     }
 };
 
+const getAllDocumentos = async (req, res) => {
+    try {
+        const { page = 1, limit = 10, estado } = req.query;
+        const offset = (page - 1) * limit;
+        const where = {};
+        if (estado) where.estado = estado;
+
+        const rows = await knowledgeService.findAllDocumentos({ limit: parseInt(limit), offset, where });
+        const total = await knowledgeService.countDocumentos(where);
+        res.json({
+            success: true,
+            data: rows.map((d) => ({
+                id_documento: d.id_documento,
+                titulo: d.titulo,
+                nombre_archivo: d.nombre_archivo,
+                tipo_mime: d.tipo_mime,
+                estado: d.estado,
+                chunks_count: d.chunks_count,
+                createdAt: d.createdAt,
+                updatedAt: d.updatedAt,
+                segmentos_bloqueados: (d.conocimientos || []).filter((c) => c.bloqueado).length,
+            })),
+            pagination: { page: parseInt(page), limit: parseInt(limit), total },
+        });
+    } catch (error) {
+        console.error('Error getting documentos:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const deleteDocumento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await knowledgeService.deleteDocumento(id);
+        if (result === null) {
+            return res.status(404).json({ success: false, message: 'Documento no encontrado' });
+        }
+        res.json({ success: true, message: 'Documento y sus segmentos eliminados' });
+    } catch (error) {
+        console.error('Error deleting documento:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const bloquearDocumento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const affected = await knowledgeService.toggleBloqueoDocumento(id, true);
+        if (affected === null) {
+            return res.status(404).json({ success: false, message: 'Documento no encontrado' });
+        }
+        res.json({ success: true, message: `Documento bloqueado (${affected} segmentos)` });
+    } catch (error) {
+        console.error('Error blocking documento:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const desbloquearDocumento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const affected = await knowledgeService.toggleBloqueoDocumento(id, false);
+        if (affected === null) {
+            return res.status(404).json({ success: false, message: 'Documento no encontrado' });
+        }
+        res.json({ success: true, message: `Documento desbloqueado (${affected} segmentos)` });
+    } catch (error) {
+        console.error('Error unblocking documento:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     create,
     getAll,
@@ -185,4 +260,8 @@ module.exports = {
     bloquearTodos,
     desbloquearTodos,
     ejecutarBloqueadas,
+    getAllDocumentos,
+    deleteDocumento,
+    bloquearDocumento,
+    desbloquearDocumento,
 };
