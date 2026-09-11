@@ -455,13 +455,16 @@ export const ChatBotIA = ({
             <Box 
               sx={{
                 position: 'relative',
-                width: 500,
+                width: '100%',
+                maxWidth: 500,
                 maxHeight: '80vh',
+                mx: 2,
                 backgroundColor: 'white',
                 borderRadius: 2,
                 boxShadow: 3,
                 p: 3,
-                overflowY: 'auto'
+                overflowY: 'auto',
+                boxSizing: 'border-box',
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -520,22 +523,28 @@ export const ChatBotIA = ({
         <div
           style={{
             position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
             zIndex: 3000,
-            width: 'min(92vw, 440px)',
-            maxWidth: '92vw',
+            pointerEvents: 'none',
             boxSizing: 'border-box',
           }}
         >
-          <Alert
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={snackbar.type}
-            sx={{ width: '100%', fontSize: '16px', boxSizing: 'border-box' }}
-          >
-            {snackbar.message}
-          </Alert>
+          <div style={{ width: '100%', maxWidth: 440, pointerEvents: 'auto', boxSizing: 'border-box' }}>
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.type}
+              sx={{ width: '100%', fontSize: '16px', boxSizing: 'border-box' }}
+            >
+              {snackbar.message}
+            </Alert>
+          </div>
         </div>,
         document.body
       )}
