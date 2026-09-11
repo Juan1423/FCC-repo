@@ -14,6 +14,8 @@ import {
   TextField,
   Button,
   Chip,
+  Collapse,
+  Divider,
   InputAdornment,
   Alert,
   ToggleButton,
@@ -31,6 +33,11 @@ const HistorialUnificado = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [total, setTotal] = useState(0);
   const [exportError, setExportError] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
+
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
 
   const cargarHistorial = useCallback(async () => {
     const resp = await getConversaciones({ page: page + 1, limit: itemsPerPage, tipo, q: searchTerm });
@@ -129,6 +136,7 @@ const HistorialUnificado = () => {
       <Alert severity="info" sx={{ mb: 2 }}>
         Historial completo de conversaciones del chatbot (público e interno).
         Filtra por tipo (público/interno), busca por mensaje, respuesta o session ID, y exporta las filas del filtro a CSV.
+        Haz clic en una fila para ver el mensaje y la respuesta completos.
       </Alert>
 
       <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
@@ -194,20 +202,57 @@ const HistorialUnificado = () => {
               </TableRow>
             ) : (
               historial.map((item) => (
-                <TableRow key={item.id_conversacion}>
-                  <TableCell>
-                    <Tooltip title={`Canal de la conversación: ${item.tipo}`}>
-                      <Chip label={item.tipo} size="small" />
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell>{getDecisionChip(item)}</TableCell>
-                  <TableCell>{item.mensaje_usuario?.substring(0, 80)}...</TableCell>
-                  <TableCell>{item.respuesta_bot?.substring(0, 80)}...</TableCell>
-                  <TableCell>{item.tiempo_respuesta}</TableCell>
-                  <TableCell>{item.tokens_usados}</TableCell>
-                  <TableCell>{new Date(item.fecha_conversacion).toLocaleString()}</TableCell>
-                </TableRow>
-              ))
+                  <React.Fragment key={item.id_conversacion}>
+                    <TableRow
+                      hover
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => toggleExpand(item.id_conversacion)}
+                    >
+                      <TableCell>
+                        <Tooltip title={`Canal de la conversación: ${item.tipo}`}>
+                          <Chip label={item.tipo} size="small" />
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>{getDecisionChip(item)}</TableCell>
+                      <TableCell sx={{ maxWidth: 280 }}>
+                        <Typography variant="body2" noWrap>
+                          {item.mensaje_usuario}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 280 }}>
+                        <Typography variant="body2" noWrap>
+                          {item.respuesta_bot}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{item.tiempo_respuesta}</TableCell>
+                      <TableCell>{item.tokens_usados}</TableCell>
+                      <TableCell>{new Date(item.fecha_conversacion).toLocaleString()}</TableCell>
+                    </TableRow>
+                    {expandedId === item.id_conversacion && (
+                      <TableRow>
+                        <TableCell colSpan={7} sx={{ py: 0 }}>
+                          <Collapse in timeout="auto" unmountOnExit>
+                            <Box sx={{ p: 2, bgcolor: 'grey.50' }}>
+                              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                Mensaje del usuario
+                              </Typography>
+                              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                {item.mensaje_usuario}
+                              </Typography>
+                              <Divider sx={{ my: 2 }} />
+                              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                Respuesta del bot
+                              </Typography>
+                              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                {item.respuesta_bot}
+                              </Typography>
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))
             )}
           </TableBody>
           <TableFooter>
