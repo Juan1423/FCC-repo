@@ -2,7 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { enviarMensajePublico, enviarFeedback, getVisitorId, getLimitesPublico } from '../services/chatService';
 import { login, getUserInfo, getAuthToken } from '../services/authServices';
-import { Modal, Box, TextField, Button, Typography, Snackbar, Alert } from '@mui/material';
+import { Modal, Box, TextField, Button, Typography, Alert } from '@mui/material';
+import { createPortal } from 'react-dom';
 import chatConfig from '../modules/chatbot/config/chatConfig';
 import './ChatBotIA.css';
 
@@ -179,11 +180,13 @@ export const ChatBotIA = ({
       console.error('Error enviando mensaje:', error);
       refreshLimits();
       let errorMessage = 'Lo siento, hubo un error al responder.';
-      
-      if (error.message) {
+
+      if (error?.data?.blocked) {
+        errorMessage = 'Lo sentimos, el uso del chat no está disponible desde este dispositivo. Si crees que es un error, escríbenos o intenta más tarde.';
+      } else if (error.message) {
         errorMessage += ` Detalles: ${error.message}`;
       }
-      
+
       setMessages(prev => [...prev, { from: 'bot', text: errorMessage }]);
     } finally {
       setIsSending(false);
@@ -264,6 +267,13 @@ export const ChatBotIA = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (!snackbar.open) return undefined;
+    const t = setTimeout(() => setSnackbar({ ...snackbar, open: false }), 4000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snackbar.open]);
 
   return (
     <>
@@ -502,32 +512,32 @@ export const ChatBotIA = ({
             </Box>
           </div>
         )}
-        {/* Snackbar para notificaciones - centrado en pantalla */}
-        <Snackbar 
-          open={snackbar.open} 
-          autoHideDuration={4000} 
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-          sx={{
-            '& .MuiPaper-root': {
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              minWidth: '350px'
-            }
+        </div>
+      </div>
+      )}
+
+      {snackbar.open && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 3000,
+            width: 'min(92vw, 440px)',
+            maxWidth: '92vw',
+            boxSizing: 'border-box',
           }}
         >
-          <Alert 
-            onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
             severity={snackbar.type}
-            sx={{ width: '100%', fontSize: '16px', minWidth: '350px' }}
+            sx={{ width: '100%', fontSize: '16px', boxSizing: 'border-box' }}
           >
             {snackbar.message}
           </Alert>
-        </Snackbar>
-      </div>
-      </div>
+        </div>,
+        document.body
       )}
     </>
   );
