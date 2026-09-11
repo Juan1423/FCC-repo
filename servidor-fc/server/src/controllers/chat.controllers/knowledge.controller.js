@@ -97,8 +97,11 @@ const uploadDocumento = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'Archivo PDF requerido' });
         }
-        const { titulo = req.file.originalname } = req.body;
-        const result = await knowledgeService.ingestirDocumento(req.file, titulo);
+        const { titulo = req.file.originalname, canal = 'ambos' } = req.body;
+        if (!['ambos', 'publico', 'interno'].includes(canal)) {
+            return res.status(400).json({ success: false, message: 'canal inválido. Valores: ambos, publico, interno' });
+        }
+        const result = await knowledgeService.ingestirDocumento(req.file, titulo, canal);
         res.status(201).json({ success: true, data: result, message: 'Documento procesado exitosamente' });
     } catch (error) {
         console.error('Error uploading documento:', error);

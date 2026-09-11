@@ -99,7 +99,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             const threshold = config.rag_similarity_threshold !== undefined ? config.rag_similarity_threshold : 0.7;
 
             try {
-                const ragContext = await this.ragService.buildRAGContext(mensajeUsuario, maxItems, threshold);
+                const ragContext = await this.ragService.buildRAGContext(mensajeUsuario, maxItems, threshold, tipo);
                 if (ragContext) {
                     prompt += ragContext + '\n\n';
                 }
@@ -113,6 +113,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             where: {
                 activo: true,
                 tipo_prompt: chatConfig.prompts.types.INSTRUCTIONS,
+                canal: { [Op.in]: ['ambos', tipo] },
             },
             limit: chatConfig.prompts.maxPromptsPerRequest,
         });
@@ -130,6 +131,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
                 activo: true,
                 tipo_prompt: chatConfig.prompts.types.INSTRUCTIONS,
                 archivo_pdf: { [Op.ne]: null },
+                canal: { [Op.in]: ['ambos', tipo] },
             },
             limit: chatConfig.prompts.maxPromptsPerRequest,
         });
@@ -143,13 +145,13 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
 
         if (promptId) {
             const promptRecord = await models.ChatPrompt.findByPk(promptId);
-            if (promptRecord) {
+            if (promptRecord && ['ambos', tipo].includes(promptRecord.canal || 'ambos')) {
                 prompt += `- Prompt específico: ${promptRecord.instrucciones}\n\n`;
             }
         }
 
         const globalInstructions = await models.ChatPrompt.findOne({
-            where: { activo: true, tipo_prompt: chatConfig.prompts.types.GLOBAL },
+            where: { activo: true, tipo_prompt: chatConfig.prompts.types.GLOBAL, canal: { [Op.in]: ['ambos', tipo] } },
             order: [['updatedAt', 'DESC']],
         });
 
@@ -181,6 +183,9 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
         if (promptId) {
             const promptRecord = await models.ChatPrompt.findByPk(promptId);
             if (!promptRecord) throw new Error('Prompt not found');
+            if (promptRecord.canal === 'interno') {
+                throw new Error('El prompt seleccionado no está disponible para el canal público');
+            }
             promptCompleto = `${promptRecord.instrucciones}\n\n`;
             if (promptRecord.archivo_pdf) {
                 promptCompleto += `Información adicional:\n${promptRecord.descripcion}\n\n`;
@@ -327,6 +332,25 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
                 });
             } catch (dbError) {
                 console.error('Error saving interna conversation:', dbError.message);
+            }
+        }
+
+        if (conversacion && this.learningService) {
+            try {
+                setImmediate(async () => {
+                    try {
+                        await this.learningService.evaluarConversacion({
+                            idConversacion: conversacion.id_conversacion,
+                            mensaje,
+                            respuesta,
+                            feedback: null,
+                        });
+                    } catch (evalError) {
+                        console.error('Learning evaluation error (interno):', evalError);
+                    }
+                });
+            } catch (e) {
+                console.error('Learning evaluation (async) error (interno):', e);
             }
         }
 

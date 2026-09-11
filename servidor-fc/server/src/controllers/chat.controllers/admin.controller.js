@@ -5,11 +5,12 @@ const { Op } = require('sequelize');
 
 const getAllPrompts = async (req, res) => {
     try {
-        const { page = 1, limit = 10, tipo_prompt, activo } = req.query;
+        const { page = 1, limit = 10, tipo_prompt, activo, canal } = req.query;
         const offset = (page - 1) * limit;
         const where = {};
         if (tipo_prompt) where.tipo_prompt = tipo_prompt;
         if (activo !== undefined) where.activo = activo === 'true';
+        if (canal) where.canal = canal;
 
         const prompts = await promptsService.findAll({
             limit: parseInt(limit),
@@ -38,11 +39,11 @@ const getById = async (req, res) => {
 
 const createPrompt = async (req, res) => {
     try {
-        const { titulo, descripcion, instrucciones, tipo_prompt, activo } = req.body;
+        const { titulo, descripcion, instrucciones, tipo_prompt, activo, canal } = req.body;
         const pdfFile = req.file || null;
 
         const prompt = await promptsService.create({
-            titulo, descripcion, instrucciones, tipo_prompt, activo,
+            titulo, descripcion, instrucciones, tipo_prompt, activo, canal,
         }, pdfFile);
 
         res.status(201).json({ success: true, data: prompt, message: 'Prompt creado exitosamente' });
@@ -55,11 +56,11 @@ const createPrompt = async (req, res) => {
 const updatePrompt = async (req, res) => {
     try {
         const { id } = req.params;
-        const { titulo, descripcion, instrucciones, tipo_prompt, activo } = req.body;
+        const { titulo, descripcion, instrucciones, tipo_prompt, activo, canal } = req.body;
         const pdfFile = req.file || null;
 
         const prompt = await promptsService.update(id, {
-            titulo, descripcion, instrucciones, tipo_prompt, activo,
+            titulo, descripcion, instrucciones, tipo_prompt, activo, canal,
         }, pdfFile);
 
         if (!prompt) {

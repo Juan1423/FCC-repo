@@ -139,7 +139,7 @@ class KnowledgeService {
         return result;
     }
 
-    async ingestirDocumento(file, titulo) {
+    async ingestirDocumento(file, titulo, canal = 'ambos') {
         const doc = await models.ChatDocumento.create({
             titulo,
             nombre_archivo: file.originalname,
@@ -157,7 +157,7 @@ class KnowledgeService {
                 throw new Error('El PDF no contiene texto legible.');
             }
 
-            const result = await this.ragService.ingestDocumento(textoLimpio, titulo, doc.id_documento);
+            const result = await this.ragService.ingestDocumento(textoLimpio, titulo, doc.id_documento, canal);
             await doc.update({ estado: 'LISTO', chunks_count: result.inserted });
             return { success: true, chunks: result.inserted, documento: doc };
         } catch (error) {

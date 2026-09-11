@@ -6,11 +6,14 @@ const { models } = require('../../libs/sequelize');
 
 class PromptsService {
     async create(data, pdfFile = null) {
-        const { titulo, descripcion, instrucciones, tipo_prompt, activo = true } = data;
+        const { titulo, descripcion, instrucciones, tipo_prompt, activo = true, canal = 'ambos' } = data;
 
         const tiposPermitidos = ['instrucciones', 'contexto_pdf', 'global'];
         if (!tipo_prompt || !tiposPermitidos.includes(tipo_prompt)) {
             throw new Error(`Tipo de prompt inválido. Valores permitidos: ${tiposPermitidos.join(', ')}`);
+        }
+        if (!['ambos', 'publico', 'interno'].includes(canal)) {
+            throw new Error('Canal inválido. Valores permitidos: ambos, publico, interno');
         }
 
         let archivo_pdf = null;
@@ -31,6 +34,7 @@ class PromptsService {
             tipo_prompt,
             activo,
             archivo_pdf,
+            canal,
         });
 
         return prompt;
@@ -52,7 +56,11 @@ class PromptsService {
     }
 
     async update(id, data, pdfFile = null) {
-        const { titulo, descripcion, instrucciones, tipo_prompt, activo } = data;
+        const { titulo, descripcion, instrucciones, tipo_prompt, activo, canal } = data;
+
+        if (canal !== undefined && !['ambos', 'publico', 'interno'].includes(canal)) {
+            throw new Error('Canal inválido. Valores permitidos: ambos, publico, interno');
+        }
 
         const updateData = {
             titulo: titulo || descripcion || 'Sin título',
@@ -61,6 +69,7 @@ class PromptsService {
             tipo_prompt,
             activo,
         };
+        if (canal !== undefined) updateData.canal = canal;
 
         if (pdfFile) {
             const uploadsDir = path.join(path.resolve(__dirname, '../../'), 'uploads', 'pdfs');

@@ -8,7 +8,7 @@ const chatConfig = require('../../config/chatConfig');
 class RAGService {
     constructor() {
         this.cache = new Map();
-        this.knowledgeCache = new Map();
+        this.knowledgeCacheByCanal = new Map();
         this.cacheExpiryMs = 5 * 60 * 1000;
         this.openai = null;
     }
@@ -51,22 +51,23 @@ class RAGService {
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 
-    async loadKnowledgeIntoCache(force = false) {
-        if (!force && this.knowledgeCache.size > 0) {
-            return this.knowledgeCache;
+    async loadKnowledgeIntoCache(canal = 'ambos', force = false) {
+        if (!force && this.knowledgeCacheByCanal.has(canal)) {
+            return this.knowledgeCacheByCanal.get(canal);
         }
         try {
             const rows = await models.ChatConocimiento.findAll({
                 where: {
                     estado_vigencia: true,
                     bloqueado: false,
+                    canal: { [Op.in]: ['ambos', canal] },
                     embedding: { [Op.ne]: null },
                 },
                 attributes: ['id_conocimiento', 'tipo', 'tema_principal', 'pregunta_frecuente', 'respuesta_oficial', 'contenido', 'chunk_index', 'fuente_verificacion', 'nivel_prioridad', 'embedding'],
                 raw: true,
             });
 
-            this.knowledgeCache.clear();
+            const canalCache = new Map();
             for (const row of rows) {
                 let parsedEmbedding = null;
                 try {
@@ -75,10 +76,11 @@ class RAGService {
                     console.warn(`Error parsing embedding for ${row.id_conocimiento}:`, e.message);
                 }
                 if (parsedEmbedding) {
-                    this.knowledgeCache.set(row.id_conocimiento, { ...row, embedding: parsedEmbedding });
+                    canalCache.set(row.id_conocimiento, { ...row, embedding: parsedEmbedding });
                 }
             }
-            return this.knowledgeCache;
+            this.knowledgeCacheByCanal.set(canal, canalCache);
+            return canalCache;
         } catch (error) {
             console.error('Error loading knowledge into cache:', error.message);
             return new Map();
@@ -87,21 +89,21 @@ class RAGService {
 
     invalidateCache() {
         this.cache.clear();
-        this.knowledgeCache.clear();
+        this.knowledgeCacheByCanal.clear();
     }
 
-    async searchSimilar(query, queryEmbedding, { limit = 3, threshold = 0.7 }) {
+    async searchSimilar(query, queryEmbedding, { limit = 3, threshold = 0.7, canal = 'ambos' }) {
         try {
-            const cacheKey = this.generateCacheKey('search', { query, limit, threshold });
+            const cacheKey = this.generateCacheKey('search', { query, limit, threshold, canal });
             const cached = this.cache.get(cacheKey);
             if (cached && Date.now() < cached.expiry) {
                 return cached.result;
             }
 
-            await this.loadKnowledgeIntoCache();
+            const knowledgeCache = await this.loadKnowledgeIntoCache(canal);
 
             const results = [];
-            for (const [id, row] of this.knowledgeCache.entries()) {
+            for (const [id, row] of knowledgeCache.entries()) {
                 const similarity = this.cosineSimilarity(queryEmbedding, row.embedding);
                 if (similarity >= threshold) {
                     results.push({ ...row, similarity });
@@ -119,9 +121,9 @@ class RAGService {
         }
     }
 
-    async searchSimilarKnowledge(query, { limit = 3, threshold = 0.7, bloqueados = false } = {}) {
+    async searchSimilarKnowledge(query, { limit = 3, threshold = 0.7, bloqueados = false, canal = 'ambos' } = {}) {
         const queryEmbedding = await this.generateEmbedding(query);
-        return this.searchSimilar(query, queryEmbedding, { limit, threshold });
+        return this.searchSimilar(query, queryEmbedding, { limit, threshold, canal });
     }
 
     async searchSimilarByEmbeddings(queryEmbedding, rows, threshold = 0.7, limit = 3) {
@@ -142,9 +144,9 @@ class RAGService {
             .slice(0, limit);
     }
 
-    async buildRAGContext(query, maxItems = 3, threshold = 0.7) {
+    async buildRAGContext(query, maxItems = 3, threshold = 0.7, canal = 'ambos') {
         try {
-            const relevant = await this.searchSimilarKnowledge(query, { limit: maxItems, threshold });
+            const relevant = await this.searchSimilarKnowledge(query, { limit: maxItems, threshold, canal });
 
             if (relevant.length === 0) {
                 return '';
@@ -186,7 +188,7 @@ class RAGService {
         }
     }
 
-    async ingestDocumento(textoExtraido, titulo, idDocumento = null) {
+    async ingestDocumento(textoExtraido, titulo, idDocumento = null, canal = 'ambos') {
         const chunks = this.crearChunks(textoExtraido, 1000, 200);
         const inserted = [];
 
@@ -206,6 +208,7 @@ class RAGService {
                 nivel_prioridad: 1,
                 estado_vigencia: true,
                 bloqueado: false,
+                canal,
             });
             inserted.push(record);
         }
