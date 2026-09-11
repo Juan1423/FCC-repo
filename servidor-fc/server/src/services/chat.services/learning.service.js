@@ -16,7 +16,7 @@ class LearningService {
         if (this.configCache && Date.now() < this.configExpiry) {
             return this.configCache;
         }
-        const rows = await models.ChatConfiguracion.findAll({ raw: true });
+        const rows = await models.ChatConfiguracion.findAll({ raw: true, order: [['clave', 'ASC']] });
         const config = {};
         for (const row of rows) {
             let val = row.valor;

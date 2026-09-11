@@ -7,7 +7,7 @@ import {
   Button,
   Switch,
   FormControlLabel,
-  FormGroup,
+  Grid,
   Divider,
   Alert,
 } from '@mui/material';
@@ -80,7 +80,6 @@ const configInfo = (key) => CONFIG_INFO[key] || { label: key.replace(/_/g, ' '),
 
 const GuardrailsConfig = () => {
   const [config, setConfig] = useState({});
-  const [keys, setKeys] = useState({ boolean: [], number: [] });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -93,11 +92,6 @@ const GuardrailsConfig = () => {
     const resp = await getChatConfig();
     if (resp?.success && resp.data) {
       setConfig(resp.data);
-      const entries = Object.entries(resp.data);
-      setKeys({
-        boolean: entries.filter(([, v]) => typeof v === 'boolean').map(([k]) => k),
-        number: entries.filter(([, v]) => typeof v === 'number').map(([k]) => k),
-      });
     }
     setLoading(false);
   };
@@ -122,8 +116,9 @@ const GuardrailsConfig = () => {
     }
   };
 
-  const booleanKeys = keys.boolean;
-  const numberKeys = keys.number;
+  const configKeys = Object.keys(CONFIG_INFO);
+  const booleanKeys = configKeys.filter((k) => typeof config[k] === 'boolean');
+  const numberKeys = configKeys.filter((k) => typeof config[k] === 'number');
 
   if (loading) {
     return <Typography>Cargando configuración...</Typography>;
@@ -144,29 +139,34 @@ const GuardrailsConfig = () => {
         <Typography variant="h6" gutterBottom>
           Controles (activar / desactivar)
         </Typography>
-        <FormGroup>
-          {booleanKeys.length === 0 && (
-            <Typography color="text.secondary">No hay opciones booleanas disponibles.</Typography>
-          )}
-          {booleanKeys.map((clave) => (
-            <Box key={clave} sx={{ mb: 1.5 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={Boolean(config[clave])}
-                    onChange={(e) => handleChange(clave, e.target.checked)}
-                  />
-                }
-                label={configInfo(clave).label}
-              />
-              {configInfo(clave).descripcion && (
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', pl: 6 }}>
-                  {configInfo(clave).descripcion}
-                </Typography>
-              )}
-            </Box>
-          ))}
-        </FormGroup>
+        <Box>
+          <Grid container spacing={2}>
+            {booleanKeys.length === 0 && (
+              <Grid item xs={12}>
+                <Typography color="text.secondary">No hay opciones booleanas disponibles.</Typography>
+              </Grid>
+            )}
+            {booleanKeys.map((clave) => (
+              <Grid item xs={12} md={6} key={clave}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      size="small"
+                      checked={Boolean(config[clave])}
+                      onChange={(e) => handleChange(clave, e.target.checked)}
+                    />
+                  }
+                  label={configInfo(clave).label}
+                />
+                {configInfo(clave).descripcion && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    {configInfo(clave).descripcion}
+                  </Typography>
+                )}
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       </Paper>
 
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -174,31 +174,36 @@ const GuardrailsConfig = () => {
           Umbrales y límites
         </Typography>
         <Divider sx={{ mb: 2 }} />
-        {numberKeys.length === 0 && (
-          <Typography color="text.secondary">No hay valores numéricos disponibles.</Typography>
-        )}
-        {numberKeys.map((clave) => (
-          <Box key={clave}>
-            <TextField
-              label={configInfo(clave).label}
-              type="number"
-              inputProps={{
-                min: configInfo(clave).min,
-                max: configInfo(clave).max,
-                step: configInfo(clave).step || (clave.includes('threshold') ? '0.01' : '1'),
-              }}
-              value={config[clave] ?? ''}
-              onChange={(e) => handleChange(clave, e.target.value, true)}
-              fullWidth
-              margin="normal"
-            />
-            {configInfo(clave).descripcion && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                {configInfo(clave).descripcion}
-              </Typography>
-            )}
-          </Box>
-        ))}
+        <Grid container spacing={2}>
+          {numberKeys.length === 0 && (
+            <Grid item xs={12}>
+              <Typography color="text.secondary">No hay valores numéricos disponibles.</Typography>
+            </Grid>
+          )}
+          {numberKeys.map((clave) => (
+            <Grid item xs={12} sm={6} md={4} key={clave}>
+              <TextField
+                label={configInfo(clave).label}
+                type="number"
+                size="small"
+                margin="dense"
+                fullWidth
+                inputProps={{
+                  min: configInfo(clave).min,
+                  max: configInfo(clave).max,
+                  step: configInfo(clave).step || (clave.includes('threshold') ? '0.01' : '1'),
+                }}
+                value={config[clave] ?? ''}
+                onChange={(e) => handleChange(clave, e.target.value, true)}
+              />
+              {configInfo(clave).descripcion && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  {configInfo(clave).descripcion}
+                </Typography>
+              )}
+            </Grid>
+          ))}
+        </Grid>
       </Paper>
 
       {errorMsg && (

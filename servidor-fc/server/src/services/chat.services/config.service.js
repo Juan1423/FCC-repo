@@ -63,7 +63,7 @@ class ConfigService {
                 return this.cache;
             }
 
-            const rows = await models.ChatConfiguracion.findAll({ raw: true });
+            const rows = await models.ChatConfiguracion.findAll({ raw: true, order: [['clave', 'ASC']] });
             const config = new Map();
             for (const row of rows) {
                 config.set(row.clave, {

@@ -14,7 +14,7 @@ class GuardrailsService {
         if (this.configCache && Date.now() < this.configExpiry) {
             return this.configCache;
         }
-        const configRows = await models.ChatConfiguracion.findAll({ raw: true });
+        const configRows = await models.ChatConfiguracion.findAll({ raw: true, order: [['clave', 'ASC']] });
         const config = {};
         for (const row of configRows) {
             let val = row.valor;
