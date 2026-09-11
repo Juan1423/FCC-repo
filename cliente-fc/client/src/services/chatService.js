@@ -230,6 +230,30 @@ export const getKnowledge = async (params = {}) => {
   return handleResponse(response);
 };
 
+export const getDocuments = async (params = {}) => {
+  const qs = new URLSearchParams(params).toString();
+  const response = await fetch(`${API_URL}/chat/knowledge/documents${qs ? `?${qs}` : ''}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
+};
+
+export const deleteDocument = async (id) => {
+  const response = await fetch(`${API_URL}/chat/knowledge/documents/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
+};
+
+export const toggleBloqueoDocumento = async (id, bloqueado) => {
+  const response = await fetch(`${API_URL}/chat/knowledge/documents/${id}/${bloqueado ? 'bloquear' : 'desbloquear'}`, {
+    method: 'POST',
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
+};
+
 export const createKnowledge = async (data) => {
   const response = await fetch(`${API_URL}/chat/knowledge`, {
     method: 'POST',

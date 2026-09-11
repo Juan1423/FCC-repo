@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -9,6 +9,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   IconButton,
   Dialog,
@@ -24,6 +25,8 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Upload as UploadIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import {
@@ -35,12 +38,23 @@ import {
   uploadDocumento,
   generarEmbeddings,
   regenerarMemoria,
+  getDocuments,
+  deleteDocument,
+  toggleBloqueoDocumento,
 } from '../../../services/chatService';
 import { useRoles } from '../utils/useRoles';
 import { AdminOnly } from '../components/ProtectedComponent';
 
 const KnowledgeAdmin = () => {
   const [knowledge, setKnowledge] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [tabValue, setTabValue] = useState(0);
+  const [documents, setDocuments] = useState([]);
+  const [docPage, setDocPage] = useState(0);
+  const [docRowsPerPage, setDocRowsPerPage] = useState(10);
+  const [docTotal, setDocTotal] = useState(0);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -61,13 +75,60 @@ const KnowledgeAdmin = () => {
   const canalLabel = { ambos: 'Ambos', publico: 'Público', interno: 'Interno' };
   const canalColor = { ambos: 'default', publico: 'info', interno: 'warning' };
 
+  const loadKnowledge = useCallback(async () => {
+    const resp = await getKnowledge({ page: page + 1, limit: rowsPerPage, tipo: 'pregunta' });
+    if (resp?.success) {
+      setKnowledge(resp.data || []);
+      setTotal(resp?.pagination?.total ?? resp.data?.length ?? 0);
+    }
+  }, [page, rowsPerPage]);
+
   useEffect(() => {
     loadKnowledge();
-  }, []);
+  }, [loadKnowledge]);
 
-  const loadKnowledge = async () => {
-    const resp = await getKnowledge();
-    if (resp?.success) setKnowledge(resp.data || []);
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const loadDocuments = useCallback(async () => {
+    const resp = await getDocuments({ page: docPage + 1, limit: docRowsPerPage });
+    if (resp?.success) {
+      setDocuments(resp.data || []);
+      setDocTotal(resp?.pagination?.total ?? resp.data?.length ?? 0);
+    }
+  }, [docPage, docRowsPerPage]);
+
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
+
+  const handleDocPageChange = (event, newPage) => {
+    setDocPage(newPage);
+  };
+
+  const handleDocRowsPerPageChange = (event) => {
+    setDocRowsPerPage(parseInt(event.target.value, 10));
+    setDocPage(0);
+  };
+
+  const allBlocked = (doc) => doc.chunks_count > 0 && doc.segmentos_bloqueados >= doc.chunks_count;
+
+  const handleDeleteDocumento = async (doc) => {
+    if (!window.confirm(`¿Eliminar "${doc.titulo}" y sus ${doc.chunks_count} segmentos?`)) return;
+    await deleteDocument(doc.id_documento);
+    loadDocuments();
+  };
+
+  const handleToggleBloqueoDocumento = async (doc) => {
+    const nextBlocked = !allBlocked(doc);
+    await toggleBloqueoDocumento(doc.id_documento, nextBlocked);
+    loadDocuments();
   };
 
   const handleOpen = (item = null) => {
@@ -141,7 +202,8 @@ const KnowledgeAdmin = () => {
         setLoading(true);
         try {
           await uploadDocumento(file, file.name, uploadCanal);
-          loadKnowledge();
+          setTabValue(1);
+          loadDocuments();
         } catch (error) {
           console.error('Error subiendo PDF:', error);
         } finally {
@@ -192,11 +254,6 @@ const KnowledgeAdmin = () => {
       >
         <Typography variant="h4">Base de Conocimiento</Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Tooltip title="Subir PDF">
-            <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setUploadOpen(true)} disabled={!canEdit || loading}>
-              Subir Documento
-            </Button>
-          </Tooltip>
           <Tooltip title="Generar embeddings">
             <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleGenerarEmbeddings} disabled={!canEdit || loading}>
               Generar Embeddings
@@ -207,59 +264,155 @@ const KnowledgeAdmin = () => {
               Regenerar Memoria
             </Button>
           </Tooltip>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()} disabled={!canEdit}>
-            Nuevo
-          </Button>
+          {tabValue === 0 && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()} disabled={!canEdit}>
+              Nuevo
+            </Button>
+          )}
+          {tabValue === 1 && (
+            <Tooltip title="Subir PDF">
+              <Button variant="contained" startIcon={<UploadIcon />} onClick={() => setUploadOpen(true)} disabled={!canEdit || loading}>
+                Subir Documento
+              </Button>
+            </Tooltip>
+          )}
         </Box>
       </Box>
 
+      <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 2 }}>
+        <Tab label="Conocimiento" />
+        <Tab label="Documentos" />
+      </Tabs>
+
       <Alert severity="info" sx={{ mb: 2 }}>
-        La base de conocimiento almacena documentos que el chatbot usa para responder preguntas.
-        Sube PDFs o escribe contenido directamente. Los embeddings se generan automáticamente para búsqueda semántica.
+        La pestaña <b>Conocimiento</b> contiene las entradas manuales con las que el chatbot responde.
+        La pestaña <b>Documentos</b> lista los PDFs subidos: cada documento se fragmenta internamente
+        en segmentos con embeddings para la búsqueda semántica, pero se administra como un solo archivo.
       </Alert>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Tema</TableCell>
-              <TableCell>Fuente de verificación</TableCell>
-              <TableCell>Contenido</TableCell>
-              <TableCell>Canal</TableCell>
-              <TableCell>Bloqueado</TableCell>
-              <TableCell align="right">Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {knowledge.map((item) => (
-              <TableRow key={item.id_conocimiento}>
-                <TableCell>{item.tema_principal}</TableCell>
-                <TableCell>{item.fuente_verificacion}</TableCell>
-                <TableCell>{item.contenido?.substring(0, 100)}...</TableCell>
-                <TableCell>
-                  <Chip size="small" label={canalLabel[item.canal] || 'Ambos'} color={canalColor[item.canal] || 'default'} />
-                </TableCell>
-                <TableCell>
-                  <Switch
-                    checked={item.bloqueado}
-                    onChange={() => handleToggleBloqueo(item.id_conocimiento)}
-                    disabled={!canEdit}
-                    color="warning"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton size="small" onClick={() => handleOpen(item)} disabled={!canEdit}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(item.id_conocimiento)} disabled={!canEdit} color="error">
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {tabValue === 0 && (
+        <>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Tema</TableCell>
+                  <TableCell>Fuente de verificación</TableCell>
+                  <TableCell>Contenido</TableCell>
+                  <TableCell>Canal</TableCell>
+                  <TableCell>Bloqueado</TableCell>
+                  <TableCell align="right">Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {knowledge.map((item) => (
+                  <TableRow key={item.id_conocimiento}>
+                    <TableCell>{item.tema_principal}</TableCell>
+                    <TableCell>{item.fuente_verificacion}</TableCell>
+                    <TableCell>{item.contenido?.substring(0, 100)}...</TableCell>
+                    <TableCell>
+                      <Chip size="small" label={canalLabel[item.canal] || 'Ambos'} color={canalColor[item.canal] || 'default'} />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={item.bloqueado}
+                        onChange={() => handleToggleBloqueo(item.id_conocimiento)}
+                        disabled={!canEdit}
+                        color="warning"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" onClick={() => handleOpen(item)} disabled={!canEdit}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDelete(item.id_conocimiento)} disabled={!canEdit} color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            rowsPerPageOptions={[10, 25, 50]}
+            component="div"
+            count={total}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            labelRowsPerPage="Filas por página"
+          />
+        </>
+      )}
+
+      {tabValue === 1 && (
+        <>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Título</TableCell>
+                  <TableCell>Archivo</TableCell>
+                  <TableCell># Segmentos</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell>Bloqueado</TableCell>
+                  <TableCell>Fecha</TableCell>
+                  <TableCell align="right">Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {documents.map((doc) => (
+                  <TableRow key={doc.id_documento}>
+                    <TableCell>{doc.titulo}</TableCell>
+                    <TableCell>{doc.nombre_archivo}</TableCell>
+                    <TableCell>{doc.chunks_count}</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        color={doc.estado === 'LISTO' ? 'success' : doc.estado === 'ERROR' ? 'error' : 'warning'}
+                        label={doc.estado}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={allBlocked(doc)}
+                        onChange={() => handleToggleBloqueoDocumento(doc)}
+                        disabled={!canEdit}
+                        color="warning"
+                      />
+                    </TableCell>
+                    <TableCell>{new Date(doc.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" onClick={() => handleDeleteDocumento(doc)} disabled={!canEdit} color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {documents.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">No hay documentos subidos</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            rowsPerPageOptions={[10, 25, 50]}
+            component="div"
+            count={docTotal}
+            rowsPerPage={docRowsPerPage}
+            page={docPage}
+            onPageChange={handleDocPageChange}
+            onRowsPerPageChange={handleDocRowsPerPageChange}
+            labelRowsPerPage="Filas por página"
+          />
+        </>
+      )}
 
       <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Subir Documento PDF</DialogTitle>
