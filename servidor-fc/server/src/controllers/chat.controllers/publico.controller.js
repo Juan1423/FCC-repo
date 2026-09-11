@@ -36,9 +36,12 @@ const enviarMensaje = async (req, res) => {
 
         const rateResult = await guardrailsService.checkAndIncrement({ scope, identifier });
         if (!rateResult.allowed) {
-            return res.status(429).json({
+            return res.status(rateResult.manuallyBlocked ? 403 : 429).json({
                 success: false,
-                message: `Límite de ${rateResult.limit} preguntas alcanzado. Intenta en ${rateResult.retryAfter} segundos.`,
+                blocked: !!rateResult.manuallyBlocked,
+                message: rateResult.manuallyBlocked
+                    ? 'El uso del chat no está disponible desde este dispositivo. Si crees que es un error, contáctanos.'
+                    : `Límite de ${rateResult.limit} preguntas alcanzado. Intenta en ${rateResult.retryAfter} segundos.`,
                 retryAfter: rateResult.retryAfter,
                 rate: rateResult,
             });

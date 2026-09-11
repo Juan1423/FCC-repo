@@ -304,10 +304,46 @@ const getStats = async (req, res) => {
 
 const getRateLimitLogs = async (req, res) => {
     try {
-        const logs = await guardrailsService.getRateLimitLogs();
-        res.json({ success: true, data: logs });
+        const { page = 1, limit = 10 } = req.query;
+        const { rows, total } = await guardrailsService.getRateLimitLogs({
+            page: parseInt(page),
+            limit: parseInt(limit),
+        });
+        res.json({
+            success: true,
+            data: rows,
+            pagination: { page: parseInt(page), limit: parseInt(limit), total },
+        });
     } catch (error) {
         console.error('Error getting rate limit logs:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const blockRateLimitIdentifier = async (req, res) => {
+    try {
+        const { identifier } = req.body;
+        if (!identifier) {
+            return res.status(400).json({ success: false, message: 'identifier es requerido' });
+        }
+        await guardrailsService.blockIdentifier(identifier);
+        res.json({ success: true, message: `Identificador ${identifier} bloqueado` });
+    } catch (error) {
+        console.error('Error blocking rate limit identifier:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const unblockRateLimitIdentifier = async (req, res) => {
+    try {
+        const { identifier } = req.body;
+        if (!identifier) {
+            return res.status(400).json({ success: false, message: 'identifier es requerido' });
+        }
+        await guardrailsService.unblockIdentifier(identifier);
+        res.json({ success: true, message: `Identificador ${identifier} desbloqueado` });
+    } catch (error) {
+        console.error('Error unblocking rate limit identifier:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -437,4 +473,6 @@ module.exports = {
     getStats,
     getRateLimitLogs,
     clearRateLimit,
+    blockRateLimitIdentifier,
+    unblockRateLimitIdentifier,
 };

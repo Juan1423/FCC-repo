@@ -8,6 +8,8 @@ class GuardrailsService {
         this.counters = new Map();
         this.configCache = null;
         this.configExpiry = 0;
+        this.blockedIdentifiers = new Set();
+        this._loadBlockedIdentifiers();
     }
 
     async loadConfig() {
@@ -181,6 +183,17 @@ class GuardrailsService {
         if (limit < 1) {
             return { allowed: true, remaining: null, retryAfter: 0, limit, count: 0, unlimited: true };
         }
+        if (this.blockedIdentifiers.has(identifier)) {
+            return {
+                allowed: false,
+                remaining: 0,
+                retryAfter: 86400,
+                limit,
+                count: 999999,
+                blocked: true,
+                manuallyBlocked: true,
+            };
+        }
         const key = `${scope}:${identifier}`;
         const now = Date.now();
 
@@ -222,6 +235,18 @@ class GuardrailsService {
 
         const now = Date.now();
         const key = `${scope}:${identifier}`;
+
+        if (this.blockedIdentifiers.has(identifier)) {
+            return {
+                allowed: false,
+                remaining: 0,
+                retryAfter: 86400,
+                limit,
+                count: 999999,
+                blocked: true,
+                manuallyBlocked: true,
+            };
+        }
 
         try {
             const row = await models.ChatRateLimit.findByPk(key);
@@ -289,6 +314,19 @@ class GuardrailsService {
         const now = Date.now();
         const key = `${scope}:${identifier}`;
 
+        if (this.blockedIdentifiers.has(identifier)) {
+            return {
+                allowed: false,
+                remaining: 0,
+                retryAfter: 86400,
+                limit,
+                count: 999999,
+                blocked: true,
+                manuallyBlocked: true,
+                resetsInSec: 86400,
+            };
+        }
+
         try {
             const row = await models.ChatRateLimit.findByPk(key);
             if (!row || (now - new Date(row.ventana_inicio).getTime()) >= windowMs) {
@@ -336,12 +374,13 @@ class GuardrailsService {
         this.configExpiry = 0;
     }
 
-    async getRateLimitLogs() {
+    async getRateLimitLogs({ page = 1, limit = 10 } = {}) {
         const logs = [];
 
         try {
             const rows = await models.ChatRateLimit.findAll({ logging: false });
             for (const row of rows) {
+                const blocked = row.conteo >= 999999 || this.blockedIdentifiers.has(row.identifier);
                 logs.push({
                     scope: row.scope,
                     identifier: row.identifier,
@@ -349,7 +388,8 @@ class GuardrailsService {
                     firstHit: new Date(row.ventana_inicio).toISOString(),
                     resetAt: new Date(row.reset_at).toISOString(),
                     persisted: true,
-                    blocked: false,
+                    blocked,
+                    manuallyBlocked: row.conteo >= 999999 || this.blockedIdentifiers.has(row.identifier),
                 });
             }
         } catch (dbError) {
@@ -369,11 +409,109 @@ class GuardrailsService {
                 firstHit: new Date(counter.startTime).toISOString(),
                 resetAt: new Date(counter.resetAt).toISOString(),
                 persisted: false,
-                blocked: counter.count > (this.getConfig()[scope === 'auth' ? 'rate_limit_autenticado_diario' : 'rate_limit_visitante_diario'] || 50),
+                blocked: counter.count > (this.getConfig()[scope === 'auth' ? 'rate_limit_autenticado_diario' : 'rate_limit_visitante_diario'] || 50)
+                    || this.blockedIdentifiers.has(identifier),
+                manuallyBlocked: this.blockedIdentifiers.has(identifier),
             });
         }
 
-        return logs;
+        const byIdentifier = new Map();
+        for (const log of logs) {
+            const existing = byIdentifier.get(log.identifier);
+            if (!existing) {
+                byIdentifier.set(log.identifier, { ...log, scopes: [log.scope] });
+            } else {
+                existing.scopes.push(log.scope);
+                existing.count = Math.max(existing.count, log.count);
+                existing.blocked = existing.blocked || log.blocked;
+                existing.manuallyBlocked = existing.manuallyBlocked || log.manuallyBlocked;
+                if (new Date(log.firstHit) < new Date(existing.firstHit)) existing.firstHit = log.firstHit;
+                if (new Date(log.resetAt) > new Date(existing.resetAt)) existing.resetAt = log.resetAt;
+            }
+        }
+
+        const merged = Array.from(byIdentifier.values())
+            .map((m) => ({
+                scope: m.scopes.sort().join(', '),
+                identifier: m.identifier,
+                count: m.count,
+                firstHit: m.firstHit,
+                resetAt: m.resetAt,
+                persisted: m.persisted,
+                blocked: m.blocked,
+                manuallyBlocked: m.manuallyBlocked,
+            }))
+            .sort((a, b) => new Date(b.firstHit) - new Date(a.firstHit));
+
+        const total = merged.length;
+        const start = (page - 1) * limit;
+        return { rows: merged.slice(start, start + limit), total };
+    }
+
+    async blockIdentifier(identifier) {
+        if (!identifier) return false;
+        const now = Date.now();
+        const resetAt = new Date(now + 365 * 24 * 60 * 60 * 1000);
+        for (const scope of ['anon', 'auth']) {
+            const key = `${scope}:${identifier}`;
+            try {
+                let row = await models.ChatRateLimit.findByPk(key);
+                if (row) {
+                    await row.update({ conteo: 999999, ventana_inicio: new Date(now), reset_at: resetAt });
+                } else {
+                    await models.ChatRateLimit.create({
+                        id: key,
+                        scope,
+                        identifier,
+                        conteo: 999999,
+                        ventana_inicio: new Date(now),
+                        reset_at: resetAt,
+                    });
+                }
+            } catch (dbError) {
+                console.warn(`RateLimit: no se pudo persistir bloqueo de ${identifier}:`, dbError.message);
+            }
+        }
+        this.blockedIdentifiers.add(identifier);
+        this.counters.delete(`anon:${identifier}`);
+        this.counters.delete(`publico:${identifier}`);
+        this.counters.delete(`auth:${identifier}`);
+        return true;
+    }
+
+    async unblockIdentifier(identifier) {
+        if (!identifier) return false;
+        this.blockedIdentifiers.delete(identifier);
+        this.counters.delete(`anon:${identifier}`);
+        this.counters.delete(`publico:${identifier}`);
+        this.counters.delete(`auth:${identifier}`);
+        const now = new Date();
+        try {
+            await models.ChatRateLimit.update(
+                {
+                    conteo: 0,
+                    ventana_inicio: now,
+                    reset_at: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+                },
+                { where: { identifier } }
+            );
+        } catch (dbError) {
+            console.warn(`RateLimit: error al desbloquear ${identifier}:`, dbError.message);
+        }
+        return true;
+    }
+
+    async _loadBlockedIdentifiers() {
+        try {
+            const rows = await models.ChatRateLimit.findAll({ logging: false });
+            for (const row of rows) {
+                if (row.conteo >= 999999) {
+                    this.blockedIdentifiers.add(row.identifier);
+                }
+            }
+        } catch (dbError) {
+            console.warn('RateLimit: error cargando identificadores bloqueados desde BD:', dbError.message);
+        }
     }
 
     async clearRateLimit(identifier) {

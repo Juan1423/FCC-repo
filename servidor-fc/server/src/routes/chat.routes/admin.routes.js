@@ -37,5 +37,7 @@ router.post('/seguridad/unblock-ip', verifyTokenAdmin, adminController.unblockIp
 
 router.get('/rate-limit-logs', verifyTokenAdmin, adminController.getRateLimitLogs);
 router.post('/rate-limit/clear', verifyTokenAdmin, adminController.clearRateLimit);
+router.post('/rate-limit/block', verifyTokenAdmin, adminController.blockRateLimitIdentifier);
+router.post('/rate-limit/unblock', verifyTokenAdmin, adminController.unblockRateLimitIdentifier);
 
 module.exports = router;
