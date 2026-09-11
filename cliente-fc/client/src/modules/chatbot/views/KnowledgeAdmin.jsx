@@ -117,6 +117,7 @@ const KnowledgeAdmin = () => {
     setDocPage(0);
   };
 
+  // Referencia: el campo 'bloqueado' de BD/API equivale al concepto "ignorado" de la interfaz.
   const allBlocked = (doc) => doc.chunks_count > 0 && doc.segmentos_bloqueados >= doc.chunks_count;
 
   const handleDeleteDocumento = async (doc) => {
@@ -300,7 +301,7 @@ const KnowledgeAdmin = () => {
                   <TableCell>Fuente de verificación</TableCell>
                   <TableCell>Contenido</TableCell>
                   <TableCell>Canal</TableCell>
-                  <TableCell>Bloqueado</TableCell>
+                  <TableCell>Ignorado</TableCell>
                   <TableCell align="right">Acciones</TableCell>
                 </TableRow>
               </TableHead>
@@ -314,12 +315,14 @@ const KnowledgeAdmin = () => {
                       <Chip size="small" label={canalLabel[item.canal] || 'Ambos'} color={canalColor[item.canal] || 'default'} />
                     </TableCell>
                     <TableCell>
-                      <Switch
-                        checked={item.bloqueado}
-                        onChange={() => handleToggleBloqueo(item.id_conocimiento)}
-                        disabled={!canEdit}
-                        color="warning"
-                      />
+                      <Tooltip title="Ignorado: el chatbot no usa este ítem al responder.">
+                        <Switch
+                          checked={item.bloqueado}
+                          onChange={() => handleToggleBloqueo(item.id_conocimiento)}
+                          disabled={!canEdit}
+                          color="warning"
+                        />
+                      </Tooltip>
                     </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => handleOpen(item)} disabled={!canEdit}>
@@ -358,7 +361,7 @@ const KnowledgeAdmin = () => {
                   <TableCell>Archivo</TableCell>
                   <TableCell># Segmentos</TableCell>
                   <TableCell>Estado</TableCell>
-                  <TableCell>Bloqueado</TableCell>
+                  <TableCell>Ignorado</TableCell>
                   <TableCell>Fecha</TableCell>
                   <TableCell align="right">Acciones</TableCell>
                 </TableRow>
@@ -377,12 +380,14 @@ const KnowledgeAdmin = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Switch
-                        checked={allBlocked(doc)}
-                        onChange={() => handleToggleBloqueoDocumento(doc)}
-                        disabled={!canEdit}
-                        color="warning"
-                      />
+                      <Tooltip title="Ignorado: el chatbot no usa ninguno de los segmentos de este documento al responder.">
+                        <Switch
+                          checked={allBlocked(doc)}
+                          onChange={() => handleToggleBloqueoDocumento(doc)}
+                          disabled={!canEdit}
+                          color="warning"
+                        />
+                      </Tooltip>
                     </TableCell>
                     <TableCell>{new Date(doc.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell align="right">

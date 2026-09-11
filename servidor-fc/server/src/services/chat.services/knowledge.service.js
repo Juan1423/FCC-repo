@@ -94,6 +94,7 @@ class KnowledgeService {
         return deleted > 0;
     }
 
+    // Referencia: el atributo 'bloqueado' de BD/API equivale al concepto "ignorado" mostrado en la interfaz.
     async toggleBloqueo(id) {
         const conocimiento = await this.findById(id);
         if (!conocimiento) return null;
