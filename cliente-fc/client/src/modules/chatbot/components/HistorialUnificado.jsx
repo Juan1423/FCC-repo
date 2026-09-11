@@ -18,6 +18,7 @@ import {
   Alert,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
 } from '@mui/material';
 import { Search as SearchIcon, Download as DownloadIcon } from '@mui/icons-material';
 import { getConversaciones, getHistorialReporte } from '../../../services/chatService';
@@ -32,25 +33,16 @@ const HistorialUnificado = () => {
   const [exportError, setExportError] = useState('');
 
   const cargarHistorial = useCallback(async () => {
-    const resp = await getConversaciones({ page: page + 1, limit: itemsPerPage, tipo });
+    const resp = await getConversaciones({ page: page + 1, limit: itemsPerPage, tipo, q: searchTerm });
     if (resp?.success) {
       setHistorial(resp.data || []);
       setTotal(resp?.pagination?.total ?? resp.data?.length ?? 0);
     }
-  }, [page, itemsPerPage, tipo]);
+  }, [page, itemsPerPage, tipo, searchTerm]);
 
   useEffect(() => {
     cargarHistorial();
   }, [cargarHistorial]);
-
-  const filtered = historial.filter((item) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      (item.mensaje_usuario || '').toLowerCase().includes(term) ||
-      (item.respuesta_bot || '').toLowerCase().includes(term) ||
-      (item.session_id || '').toLowerCase().includes(term)
-    );
-  });
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -74,7 +66,7 @@ const HistorialUnificado = () => {
 
   const handleExportar = async () => {
     try {
-      const blob = await getHistorialReporte({ tipo });
+      const blob = await getHistorialReporte({ tipo, q: searchTerm });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -90,19 +82,39 @@ const HistorialUnificado = () => {
 
   const getDecisionChip = (item) => {
     const metadata = item.metadata || {};
+    if (metadata.protocolo_categoria) {
+      return (
+        <Tooltip title="El mensaje activó un protocolo sensible. Requiere intervención de una persona">
+          <Chip label={`Protocolo: ${metadata.protocolo_categoria}`} size="small" color="error" />
+        </Tooltip>
+      );
+    }
     if (item.flag_revision && item.motivo_revision) {
-      return <Chip label={`Flag: ${item.motivo_revision}`} size="small" color="warning" />;
+      return (
+        <Tooltip title={`Marcada para revisión de aprendizaje. Motivo: ${item.motivo_revision}`}>
+          <Chip label={`Flag: ${item.motivo_revision}`} size="small" color="warning" />
+        </Tooltip>
+      );
     }
     if (metadata.canonical_match) {
-      return <Chip label="Canónica" size="small" color="success" />;
+      return (
+        <Tooltip title="Respondió con una respuesta canónica exacta (patrón regex o similud de embeddings)">
+          <Chip label="Canónica" size="small" color="success" />
+        </Tooltip>
+      );
     }
     if (metadata.off_topic) {
-      return <Chip label="Off-topic" size="small" color="info" />;
+      return (
+        <Tooltip title="El guardrail detectó un tema fuera de alcance (off-topic)">
+          <Chip label="Off-topic" size="small" color="info" />
+        </Tooltip>
+      );
     }
-    if (metadata.protocolo_categoria) {
-      return <Chip label={`Protocolo: ${metadata.protocolo_categoria}`} size="small" color="error" />;
-    }
-    return <Chip label="IA" size="small" color="primary" />;
+    return (
+      <Tooltip title="Respuesta generada por el modelo (no canónica, no marcada)">
+        <Chip label="IA" size="small" color="primary" />
+      </Tooltip>
+    );
   };
 
   return (
@@ -118,6 +130,20 @@ const HistorialUnificado = () => {
         Historial completo de conversaciones del chatbot (público e interno).
         Filtra por tipo (público/interno), busca por mensaje, respuesta o session ID, y exporta las filas del filtro a CSV.
       </Alert>
+
+      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
+        <Typography variant="subtitle2">Leyenda de la columna Decisión:</Typography>
+        <Chip label="Protocolo: X" size="small" color="error" />
+        <Typography variant="caption" sx={{ mr: 1 }}>Protocolo sensible: requiere intervención humana</Typography>
+        <Chip label="Flag: X" size="small" color="warning" />
+        <Typography variant="caption" sx={{ mr: 1 }}>Marcada a revisión de aprendizaje</Typography>
+        <Chip label="Canónica" size="small" color="success" />
+        <Typography variant="caption" sx={{ mr: 1 }}>Respuesta exacta de una canónica</Typography>
+        <Chip label="Off-topic" size="small" color="info" />
+        <Typography variant="caption" sx={{ mr: 1 }}>Tema fuera de alcance</Typography>
+        <Chip label="IA" size="small" color="primary" />
+        <Typography variant="caption">Respuesta generada por el modelo</Typography>
+      </Box>
 
       <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
         <TextField
@@ -160,17 +186,19 @@ const HistorialUnificado = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered.length === 0 ? (
+            {historial.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} align="center">
                   <Typography variant="subtitle1">No hay conversaciones</Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((item) => (
+              historial.map((item) => (
                 <TableRow key={item.id_conversacion}>
                   <TableCell>
-                    <Chip label={item.tipo} size="small" />
+                    <Tooltip title={`Canal de la conversación: ${item.tipo}`}>
+                      <Chip label={item.tipo} size="small" />
+                    </Tooltip>
                   </TableCell>
                   <TableCell>{getDecisionChip(item)}</TableCell>
                   <TableCell>{item.mensaje_usuario?.substring(0, 80)}...</TableCell>
@@ -188,7 +216,7 @@ const HistorialUnificado = () => {
                 <TablePagination
                   rowsPerPageOptions={[10, 25, 50, 100]}
                   component="div"
-                  count={searchTerm ? filtered.length : total}
+                  count={total}
                   rowsPerPage={itemsPerPage}
                   page={page}
                   onPageChange={handlePageChange}

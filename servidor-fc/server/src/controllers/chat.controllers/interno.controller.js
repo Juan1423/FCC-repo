@@ -202,8 +202,8 @@ const listarHistorial = async (req, res) => {
 
 const exportarCSV = async (req, res) => {
     try {
-        const { startDate, endDate, tipo = 'interno' } = req.query;
-        const csv = await conversationsService.exportCSV({ startDate, endDate, tipo });
+        const { startDate, endDate, tipo = 'interno', q } = req.query;
+        const csv = await conversationsService.exportCSV({ startDate, endDate, tipo, q });
 
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename=historial_ia_${new Date().toISOString().slice(0, 10)}.csv`);

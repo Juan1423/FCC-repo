@@ -239,10 +239,19 @@ const getAllPreguntasAnonimas = async (req, res) => {
 const getAllConversaciones = async (req, res) => {
     try {
         const { models } = require('../../libs/sequelize');
-        const { page = 1, limit = 50, tipo } = req.query;
+        const { page = 1, limit = 50, tipo, q } = req.query;
         const offset = (page - 1) * limit;
         const where = {};
         if (tipo) where.tipo = tipo;
+        if (q && String(q).trim()) {
+            const { Op } = require('sequelize');
+            const term = `%${String(q).trim()}%`;
+            where[Op.or] = {
+                mensaje_usuario: { [Op.iLike]: term },
+                respuesta_bot: { [Op.iLike]: term },
+                session_id: { [Op.iLike]: term },
+            };
+        }
 
         const rows = await models.ChatConversacion.findAll({
             where,

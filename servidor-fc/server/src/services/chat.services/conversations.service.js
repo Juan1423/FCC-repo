@@ -109,7 +109,7 @@ class ConversationsService {
     }
 
     async exportCSV(options = {}) {
-        const { startDate, endDate, tipo = null } = options;
+        const { startDate, endDate, tipo = null, q } = options;
         const where = {};
         if (startDate) where.fecha_conversacion = { [Op.gte]: new Date(startDate) };
         if (endDate) {
@@ -117,6 +117,14 @@ class ConversationsService {
             where.fecha_conversacion[Op.lte] = new Date(endDate);
         }
         if (tipo) where.tipo = tipo;
+        if (q && String(q).trim()) {
+            const term = `%${String(q).trim()}%`;
+            where[Op.or] = {
+                mensaje_usuario: { [Op.iLike]: term },
+                respuesta_bot: { [Op.iLike]: term },
+                session_id: { [Op.iLike]: term },
+            };
+        }
 
         const rows = await models.ChatConversacion.findAll({
             where,
