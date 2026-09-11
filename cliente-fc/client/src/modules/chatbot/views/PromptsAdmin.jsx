@@ -19,6 +19,10 @@ import {
   Switch,
   Chip,
   Alert,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Download as DownloadIcon, Upload as UploadIcon } from '@mui/icons-material';
 import {
@@ -43,9 +47,12 @@ const PromptsAdmin = () => {
     instrucciones: '',
     tipo_prompt: 'INSTRUCCIONES',
     activo: true,
+    canal: 'ambos',
   });
   const [pdfFile, setPdfFile] = useState(null);
   const { roles, hasPermission } = useRoles();
+  const canalLabel = { ambos: 'Ambos', publico: 'Público', interno: 'Interno' };
+  const canalColor = { ambos: 'default', publico: 'info', interno: 'warning' };
 
   useEffect(() => {
     loadPrompts();
@@ -65,6 +72,7 @@ const PromptsAdmin = () => {
         instrucciones: prompt.instrucciones,
         tipo_prompt: prompt.tipo_prompt,
         activo: prompt.activo,
+        canal: prompt.canal || 'ambos',
       });
     } else {
       setEditingId(null);
@@ -74,6 +82,7 @@ const PromptsAdmin = () => {
         instrucciones: '',
         tipo_prompt: 'INSTRUCCIONES',
         activo: true,
+        canal: 'ambos',
       });
     }
     setPdfFile(null);
@@ -146,6 +155,7 @@ const PromptsAdmin = () => {
               <TableCell>Título</TableCell>
               <TableCell>Tipo</TableCell>
               <TableCell>Instrucciones</TableCell>
+              <TableCell>Canal</TableCell>
               <TableCell>Estado</TableCell>
               <TableCell align="right">Acciones</TableCell>
             </TableRow>
@@ -156,6 +166,9 @@ const PromptsAdmin = () => {
                 <TableCell>{prompt.titulo}</TableCell>
                 <TableCell>{prompt.tipo_prompt}</TableCell>
                 <TableCell>{prompt.instrucciones?.substring(0, 100)}...</TableCell>
+                <TableCell>
+                  <Chip size="small" label={canalLabel[prompt.canal] || 'Ambos'} color={canalColor[prompt.canal] || 'default'} />
+                </TableCell>
                 <TableCell>
                   <Switch
                     checked={prompt.activo}
@@ -211,6 +224,19 @@ const PromptsAdmin = () => {
             value={formData.instrucciones}
             onChange={(e) => setFormData({ ...formData, instrucciones: e.target.value })}
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="canal-label">Canal</InputLabel>
+            <Select
+              labelId="canal-label"
+              label="Canal"
+              value={formData.canal}
+              onChange={(e) => setFormData({ ...formData, canal: e.target.value })}
+            >
+              <MenuItem value="ambos">Ambos</MenuItem>
+              <MenuItem value="publico">Público</MenuItem>
+              <MenuItem value="interno">Interno</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             select
             label="Tipo"

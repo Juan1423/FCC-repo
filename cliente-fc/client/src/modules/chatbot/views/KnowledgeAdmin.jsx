@@ -20,6 +20,10 @@ import {
   Chip,
   Tooltip,
   Alert,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Upload as UploadIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import {
@@ -46,10 +50,16 @@ const KnowledgeAdmin = () => {
     contenido: '',
     fuente_verificacion: '',
     nivel_prioridad: 1,
+    canal: 'ambos',
   });
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploadCanal, setUploadCanal] = useState('ambos');
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const { roles, hasPermission } = useRoles();
+
+  const canalLabel = { ambos: 'Ambos', publico: 'Público', interno: 'Interno' };
+  const canalColor = { ambos: 'default', publico: 'info', interno: 'warning' };
 
   useEffect(() => {
     loadKnowledge();
@@ -71,10 +81,11 @@ const KnowledgeAdmin = () => {
         contenido: item.contenido || '',
         fuente_verificacion: item.fuente_verificacion || '',
         nivel_prioridad: item.nivel_prioridad || 1,
+        canal: item.canal || 'ambos',
       });
     } else {
       setEditingId(null);
-      setFormData({ tema_principal: '', pregunta_frecuente: '', respuesta_oficial: '', contenido: '', fuente_verificacion: '', nivel_prioridad: 1 });
+      setFormData({ tema_principal: '', pregunta_frecuente: '', respuesta_oficial: '', contenido: '', fuente_verificacion: '', nivel_prioridad: 1, canal: 'ambos' });
     }
     setOpen(true);
   };
@@ -89,6 +100,7 @@ const KnowledgeAdmin = () => {
         contenido: formData.contenido.trim(),
         fuente_verificacion: formData.fuente_verificacion.trim(),
         nivel_prioridad: parseInt(formData.nivel_prioridad, 10) || 1,
+        canal: formData.canal,
       };
 
       if (!payload.tema_principal) {
@@ -128,12 +140,13 @@ const KnowledgeAdmin = () => {
       if (file) {
         setLoading(true);
         try {
-          await uploadDocumento(file, file.name);
+          await uploadDocumento(file, file.name, uploadCanal);
           loadKnowledge();
         } catch (error) {
           console.error('Error subiendo PDF:', error);
         } finally {
           setLoading(false);
+          setUploadOpen(false);
         }
       }
     };
@@ -180,7 +193,7 @@ const KnowledgeAdmin = () => {
         <Typography variant="h4">Base de Conocimiento</Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Tooltip title="Subir PDF">
-            <Button variant="outlined" startIcon={<UploadIcon />} onClick={handleUploadPdf} disabled={!canEdit || loading}>
+            <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setUploadOpen(true)} disabled={!canEdit || loading}>
               Subir Documento
             </Button>
           </Tooltip>
@@ -212,6 +225,7 @@ const KnowledgeAdmin = () => {
               <TableCell>Tema</TableCell>
               <TableCell>Fuente de verificación</TableCell>
               <TableCell>Contenido</TableCell>
+              <TableCell>Canal</TableCell>
               <TableCell>Bloqueado</TableCell>
               <TableCell align="right">Acciones</TableCell>
             </TableRow>
@@ -222,6 +236,9 @@ const KnowledgeAdmin = () => {
                 <TableCell>{item.tema_principal}</TableCell>
                 <TableCell>{item.fuente_verificacion}</TableCell>
                 <TableCell>{item.contenido?.substring(0, 100)}...</TableCell>
+                <TableCell>
+                  <Chip size="small" label={canalLabel[item.canal] || 'Ambos'} color={canalColor[item.canal] || 'default'} />
+                </TableCell>
                 <TableCell>
                   <Switch
                     checked={item.bloqueado}
@@ -243,6 +260,35 @@ const KnowledgeAdmin = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Subir Documento PDF</DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            El documento se fragmenta en segmentos con embeddings. Selecciona el canal: los PDFs internos no deben
+            contener información que el público deba ver.
+          </Alert>
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="upload-canal-label">Canal</InputLabel>
+            <Select
+              labelId="upload-canal-label"
+              label="Canal"
+              value={uploadCanal}
+              onChange={(e) => setUploadCanal(e.target.value)}
+            >
+              <MenuItem value="ambos">Ambos</MenuItem>
+              <MenuItem value="publico">Público</MenuItem>
+              <MenuItem value="interno">Interno</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUploadOpen(false)}>Cancelar</Button>
+          <Button variant="contained" startIcon={<UploadIcon />} onClick={handleUploadPdf} disabled={loading}>
+            Seleccionar PDF
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{editingId ? 'Editar Conocimiento' : 'Nuevo Conocimiento'}</DialogTitle>
@@ -307,6 +353,19 @@ const KnowledgeAdmin = () => {
             value={formData.nivel_prioridad}
             onChange={(e) => setFormData({ ...formData, nivel_prioridad: e.target.value })}
           />
+        <FormControl fullWidth margin="dense">
+            <InputLabel id="canal-label">Canal</InputLabel>
+            <Select
+              labelId="canal-label"
+              label="Canal"
+              value={formData.canal}
+              onChange={(e) => setFormData({ ...formData, canal: e.target.value })}
+            >
+              <MenuItem value="ambos">Ambos</MenuItem>
+              <MenuItem value="publico">Público</MenuItem>
+              <MenuItem value="interno">Interno</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>

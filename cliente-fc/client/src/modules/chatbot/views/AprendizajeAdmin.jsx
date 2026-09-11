@@ -18,6 +18,12 @@ import {
   TextField,
   Chip,
   Alert,
+  ToggleButton,
+  ToggleButtonGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { CheckCircle as CheckIcon, Cancel as CancelIcon, Visibility as ViewIcon } from '@mui/icons-material';
 import {
@@ -39,12 +45,16 @@ const AprendizajeAdmin = () => {
   const [stats, setStats] = useState(null);
   const [openCanonica, setOpenCanonica] = useState(false);
   const [editingCanonica, setEditingCanonica] = useState(null);
-  const [canonicaForm, setCanonicaForm] = useState({ patron_trigger: '', respuesta_canonica: '' });
+  const [canonicaForm, setCanonicaForm] = useState({ patron_trigger: '', respuesta_canonica: '', canal: 'ambos' });
   const [openAprobar, setOpenAprobar] = useState(false);
   const [aprobandoId, setAprobandoId] = useState(null);
   const [aprobarForm, setAprobarForm] = useState({ patron_trigger: '', respuesta_canonica: '' });
   const [aprobarError, setAprobarError] = useState('');
+  const [aprobarOrigen, setAprobarOrigen] = useState(null);
+  const [tipoFilter, setTipoFilter] = useState('');
   const { hasPermission } = useRoles();
+  const canalLabel = { ambos: 'Ambos', publico: 'Público', interno: 'Interno' };
+  const canalColor = { ambos: 'default', publico: 'info', interno: 'warning' };
 
   useEffect(() => {
     loadRevisiones();
@@ -52,9 +62,17 @@ const AprendizajeAdmin = () => {
     loadStats();
   }, []);
 
-  const loadRevisiones = async () => {
-    const resp = await getRevisiones();
+  const loadRevisiones = async (tipo) => {
+    const params = {};
+    if (tipo) params.tipo = tipo;
+    const resp = await getRevisiones(params);
     if (resp?.success) setRevisiones(resp.data || []);
+  };
+
+  const handleTipoFilter = (e, nuevoValor) => {
+    const val = nuevoValor ?? '';
+    setTipoFilter(val);
+    loadRevisiones(val || undefined);
   };
 
   const loadCanonicas = async () => {
@@ -69,6 +87,7 @@ const AprendizajeAdmin = () => {
 
   const handleAprobar = (revision) => {
     const respuestaCanonica = revision.sugerencia_respuesta || revision.respuesta_ia || '';
+    setAprobarOrigen(revision.conversacion?.tipo || 'ambos');
     if (!respuestaCanonica.trim()) {
       setAprobarForm({ patron_trigger: revision.mensaje_usuario || '', respuesta_canonica: '' });
       setAprobarError('Esta revisión no tiene una respuesta que aprobar. Escribe una respuesta canónica para continuar.');
@@ -108,10 +127,10 @@ const AprendizajeAdmin = () => {
   const handleCanonicaOpen = (item = null) => {
     if (item) {
       setEditingCanonica(item.id_canonica);
-      setCanonicaForm({ patron_trigger: item.patron_trigger, respuesta_canonica: item.respuesta_canonica });
+      setCanonicaForm({ patron_trigger: item.patron_trigger, respuesta_canonica: item.respuesta_canonica, canal: item.canal || 'ambos' });
     } else {
       setEditingCanonica(null);
-      setCanonicaForm({ patron_trigger: '', respuesta_canonica: '' });
+      setCanonicaForm({ patron_trigger: '', respuesta_canonica: '', canal: 'ambos' });
     }
     setOpenCanonica(true);
   };
@@ -159,10 +178,22 @@ const AprendizajeAdmin = () => {
       <Typography variant="h6" gutterBottom>
         Revisiones Pendientes
       </Typography>
+      <ToggleButtonGroup
+        value={tipoFilter}
+        exclusive
+        onChange={handleTipoFilter}
+        size="small"
+        sx={{ mb: 1.5 }}
+      >
+        <ToggleButton value="">Todos</ToggleButton>
+        <ToggleButton value="publico">Público</ToggleButton>
+        <ToggleButton value="interno">Interno</ToggleButton>
+      </ToggleButtonGroup>
       <TableContainer component={Paper} sx={{ mb: 4 }}>
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>Origen</TableCell>
               <TableCell>Pregunta</TableCell>
               <TableCell>Respuesta actual</TableCell>
               <TableCell>Fecha</TableCell>
@@ -172,6 +203,13 @@ const AprendizajeAdmin = () => {
           <TableBody>
             {revisiones.map((rev) => (
               <TableRow key={rev.id_revision}>
+                <TableCell>
+                  {rev.conversacion?.tipo ? (
+                    <Chip size="small" label={canalLabel[rev.conversacion.tipo] || rev.conversacion.tipo} color={canalColor[rev.conversacion.tipo] || 'default'} />
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
                 <TableCell>{rev.mensaje_usuario}</TableCell>
                 <TableCell>{rev.sugerencia_respuesta || rev.respuesta_ia}</TableCell>
                 <TableCell>{new Date(rev.createdAt).toLocaleDateString()}</TableCell>
@@ -213,6 +251,7 @@ const AprendizajeAdmin = () => {
               <TableCell>Pregunta</TableCell>
               <TableCell>Respuesta</TableCell>
               <TableCell>Embedding</TableCell>
+              <TableCell>Canal</TableCell>
               <TableCell align="right">Acciones</TableCell>
             </TableRow>
           </TableHead>
@@ -227,6 +266,9 @@ const AprendizajeAdmin = () => {
                   ) : (
                     <Chip size="small" label="No" title="Sin embedding: solo la disparará el patrón regex. Edita y guarda para regenerar." />
                   )}
+                </TableCell>
+                <TableCell>
+                  <Chip size="small" label={canalLabel[canon.canal] || 'Ambos'} color={canalColor[canon.canal] || 'default'} />
                 </TableCell>
                 <TableCell align="right">
                   <Button size="small" onClick={() => handleCanonicaOpen(canon)} disabled={!canManage}>
@@ -268,6 +310,19 @@ const AprendizajeAdmin = () => {
             value={canonicaForm.respuesta_canonica}
             onChange={(e) => setCanonicaForm({ ...canonicaForm, respuesta_canonica: e.target.value })}
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="canonica-canal-label">Canal</InputLabel>
+            <Select
+              labelId="canonica-canal-label"
+              label="Canal"
+              value={canonicaForm.canal}
+              onChange={(e) => setCanonicaForm({ ...canonicaForm, canal: e.target.value })}
+            >
+              <MenuItem value="ambos">Ambos</MenuItem>
+              <MenuItem value="publico">Público</MenuItem>
+              <MenuItem value="interno">Interno</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCanonica(false)}>Cancelar</Button>
@@ -279,6 +334,12 @@ const AprendizajeAdmin = () => {
         <DialogTitle>Aprobar Revisión</DialogTitle>
         <DialogContent>
           {aprobarError && <Alert severity="error" sx={{ mb: 2 }}>{aprobarError}</Alert>}
+          {aprobarOrigen && aprobarOrigen !== 'ambos' && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              La canónica se creará con canal <strong>{canalLabel[aprobarOrigen]}</strong> (origen de la
+              revisión) y solo estará disponible para {canalLabel[aprobarOrigen] === 'Interno' ? 'el chat interno' : 'el chat público'}.
+            </Alert>
+          )}
           <TextField
             label="Patrón disparador"
             fullWidth
