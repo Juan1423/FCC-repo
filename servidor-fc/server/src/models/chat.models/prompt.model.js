@@ -52,6 +52,11 @@ const ChatPromptSchema = {
         type: DataTypes.STRING(255),
         allowNull: true,
     },
+    canal: {
+        type: DataTypes.ENUM('ambos', 'publico', 'interno'),
+        allowNull: false,
+        defaultValue: 'ambos',
+    },
 };
 
 module.exports = { ChatPrompt, ChatPromptSchema };

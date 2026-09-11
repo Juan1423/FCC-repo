@@ -79,6 +79,11 @@ const ChatConocimientoSchema = {
         allowNull: false,
         defaultValue: false,
     },
+    canal: {
+        type: DataTypes.ENUM('ambos', 'publico', 'interno'),
+        allowNull: false,
+        defaultValue: 'ambos',
+    },
     fecha_creacion: {
         type: DataTypes.DATE,
         allowNull: false,

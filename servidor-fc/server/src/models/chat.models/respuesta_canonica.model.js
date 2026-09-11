@@ -67,6 +67,11 @@ const ChatRespuestaCanonicaSchema = {
         allowNull: false,
         defaultValue: 0,
     },
+    canal: {
+        type: DataTypes.ENUM('ambos', 'publico', 'interno'),
+        allowNull: false,
+        defaultValue: 'ambos',
+    },
 };
 
 module.exports = { ChatRespuestaCanonica, ChatRespuestaCanonicaSchema };
