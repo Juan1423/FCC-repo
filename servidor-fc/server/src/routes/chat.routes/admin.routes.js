@@ -5,6 +5,7 @@ const router = express.Router();
 const { verifyTokenAdmin, requireRole } = require('../../middleware/verifyToken');
 const multer = require('multer');
 const adminController = require('../../controllers/chat.controllers/admin.controller');
+const ragMonitorController = require('../../controllers/chat.controllers/ragMonitor.controller');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -39,5 +40,8 @@ router.get('/rate-limit-logs', verifyTokenAdmin, adminController.getRateLimitLog
 router.post('/rate-limit/clear', verifyTokenAdmin, adminController.clearRateLimit);
 router.post('/rate-limit/block', verifyTokenAdmin, adminController.blockRateLimitIdentifier);
 router.post('/rate-limit/unblock', verifyTokenAdmin, adminController.unblockRateLimitIdentifier);
+
+router.get('/rag-monitor', verifyTokenAdmin, ragMonitorController.listarDiagnosticos);
+router.get('/rag-monitor/stats', verifyTokenAdmin, ragMonitorController.getStats);
 
 module.exports = router;

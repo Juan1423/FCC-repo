@@ -147,10 +147,37 @@ class RAGService {
 
     async buildRAGContext(query, maxItems = 3, threshold = 0.7, canal = 'ambos') {
         try {
+            const detalle = await this.buildRAGContextDetalle(query, maxItems, threshold, canal);
+            return detalle.context;
+        } catch (error) {
+            console.error('Error building RAG context:', error.message);
+            return 'No se pudo acceder a la base de conocimientos en este momento.\n\n';
+        }
+    }
+
+    async buildRAGContextDetalle(query, maxItems = 3, threshold = 0.7, canal = 'ambos') {
+        try {
             const relevant = await this.searchSimilarKnowledge(query, { limit: maxItems, threshold, canal });
 
+            const detalle = {
+                resultados: relevant.map((item) => ({
+                    id_conocimiento: item.id_conocimiento,
+                    tipo: item.tipo,
+                    tema_principal: item.tema_principal,
+                    chunk_index: item.chunk_index,
+                    similarity: item.similarity,
+                    fuente_verificacion: item.fuente_verificacion,
+                    contenido: (item.respuesta_oficial || item.contenido || '').substring(0, 300),
+                })),
+                similitudMaxima: relevant.length > 0 ? relevant[0].similarity : 0,
+                umbral: threshold,
+                nResultados: relevant.length,
+                contextoIncluido: relevant.length > 0,
+            };
+
             if (relevant.length === 0) {
-                return '';
+                detalle.context = '';
+                return detalle;
             }
 
             let context = 'INFORMACIÓN RELEVANTE DE LA BASE DE CONOCIMIENTOS:\n\n';
@@ -162,10 +189,19 @@ class RAGService {
                 context += `   SIMILITUD: ${(item.similarity * 100).toFixed(1)}%\n\n`;
             });
 
-            return context;
+            detalle.context = context;
+            return detalle;
         } catch (error) {
-            console.error('Error building RAG context:', error.message);
-            return 'No se pudo acceder a la base de conocimientos en este momento.\n\n';
+            console.error('Error building RAG context detail:', error.message);
+            return {
+                context: 'No se pudo acceder a la base de conocimientos en este momento.\n\n',
+                resultados: [],
+                similitudMaxima: 0,
+                umbral: threshold,
+                nResultados: 0,
+                contextoIncluido: false,
+                error: error.message,
+            };
         }
     }
 

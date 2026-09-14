@@ -14,6 +14,7 @@ const { ChatRespuestaCanonica, ChatRespuestaCanonicaSchema } = require('./respue
 const { ChatConversacionRevision, ChatConversacionRevisionSchema } = require('./conversacion_revision.model');
 const { ChatConfiguracion, ChatConfiguracionSchema } = require('./configuracion.model');
 const { ChatRateLimit, ChatRateLimitSchema } = require('./rate_limit.model');
+const { ChatRagMonitor, ChatRagMonitorSchema } = require('./rag_monitor.model');
 
 function setupChatModels(sequelize) {
     ChatConversacion.init(ChatConversacionSchema, ChatConversacion.config(sequelize));
@@ -52,6 +53,9 @@ function setupChatModels(sequelize) {
     ChatRateLimit.init(ChatRateLimitSchema, ChatRateLimit.config(sequelize));
     sequelize.models.ChatRateLimit = ChatRateLimit;
 
+    ChatRagMonitor.init(ChatRagMonitorSchema, ChatRagMonitor.config(sequelize));
+    sequelize.models.ChatRagMonitor = ChatRagMonitor;
+
     ChatConversacion.associate(sequelize.models);
     ChatConocimiento.associate(sequelize.models);
     ChatDocumento.associate(sequelize.models);
@@ -64,6 +68,7 @@ function setupChatModels(sequelize) {
     ChatConversacionRevision.associate(sequelize.models);
     ChatConfiguracion.associate(sequelize.models);
     ChatRateLimit.associate(sequelize.models);
+    ChatRagMonitor.associate(sequelize.models);
 }
 
 module.exports = setupChatModels;

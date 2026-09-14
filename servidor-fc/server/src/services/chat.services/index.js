@@ -8,18 +8,21 @@ const KnowledgeService = require('./knowledge.service');
 const PromptsService = require('./prompts.service');
 const ConversationsService = require('./conversations.service');
 const ConfigService = require('./config.service');
+const RagMonitorService = require('./ragMonitor.service');
 
 const ragService = new RAGService();
 const guardrailsService = new GuardrailsService();
 const learningService = new LearningService(ragService);
 const configService = new ConfigService();
 const openaiService = new OpenAIService();
+const ragMonitorService = new RagMonitorService();
 
 openaiService.setDependencies({
     ragService,
     guardrailsService,
     learningService,
     configService,
+    ragMonitorService,
 });
 
 const knowledgeService = new KnowledgeService(ragService);
@@ -35,4 +38,5 @@ module.exports = {
     promptsService,
     conversationsService,
     configService,
+    ragMonitorService,
 };

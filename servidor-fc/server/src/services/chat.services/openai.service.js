@@ -15,11 +15,43 @@ class OpenAIService {
         this.configService = null;
     }
 
-    setDependencies({ ragService, guardrailsService, learningService, configService }) {
+    setDependencies({ ragService, guardrailsService, learningService, configService, ragMonitorService }) {
         this.ragService = ragService;
         this.guardrailsService = guardrailsService;
         this.learningService = learningService;
         this.configService = configService;
+        this.ragMonitorService = ragMonitorService || null;
+        this._ultimoRAGDetalle = null;
+    }
+
+    async registrarDiagnosticoRAG({ tipo, pregunta, respuesta, decision = 'responder', idConversacion = null }) {
+        if (!this.ragMonitorService || !this._ultimoRAGDetalle) {
+            return null;
+        }
+        const detalle = this._ultimoRAGDetalle;
+        this._ultimoRAGDetalle = null;
+        try {
+            await this.ragMonitorService.registrar({
+                idConversacion,
+                tipo,
+                pregunta,
+                respuesta,
+                resultados: detalle.resultados || [],
+                similitudMaxima: detalle.similitudMaxima || 0,
+                umbral: detalle.umbral || 0.7,
+                contextoIncluido: !!detalle.contextoIncluido,
+                decision,
+                modelo: chatConfig.openai.model,
+            });
+        } catch (error) {
+            console.error('Error registrando diagnóstico RAG:', error.message);
+        }
+    }
+
+    async registrarDiagnosticoRAGAsync({ tipo, pregunta, respuesta, decision = 'responder', idConversacion = null }) {
+        setImmediate(async () => {
+            await this.registrarDiagnosticoRAG({ tipo, pregunta, respuesta, decision, idConversacion });
+        });
     }
 
     async loadConfig() {
@@ -54,6 +86,7 @@ class OpenAIService {
 
         prompt += 'INSTRUCCIONES CRÍTICAS:\n';
         prompt += '- Responde ÚNICAMENTE basado en la información proporcionada en este prompt.\n';
+        prompt += '- La sección "INFORMACIÓN RELEVANTE DE LA BASE DE CONOCIMIENTOS" es tu fuente principal: si está presente, ÚSALA para responder antes que cualquier otra parte del prompt.\n';
         prompt += '- Si la pregunta no puede responderse con la información disponible, di: \'No tengo información suficiente para responder esa pregunta.\'\n';
         prompt += '- No inventes información ni uses conocimientos externos.\n';
         prompt += '- Sé amable y profesional en tus respuestas.\n\n';
@@ -99,12 +132,14 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             const threshold = config.rag_similarity_threshold !== undefined ? config.rag_similarity_threshold : 0.7;
 
             try {
-                const ragContext = await this.ragService.buildRAGContext(mensajeUsuario, maxItems, threshold, tipo);
-                if (ragContext) {
-                    prompt += ragContext + '\n\n';
+                const ragDetalle = await this.ragService.buildRAGContextDetalle(mensajeUsuario, maxItems, threshold, tipo);
+                this._ultimoRAGDetalle = ragDetalle || null;
+                if (ragDetalle?.context) {
+                    prompt += ragDetalle.context + '\n\n';
                 }
             } catch (error) {
                 console.warn('Error obteniendo contexto RAG:', error.message);
+                this._ultimoRAGDetalle = null;
                 prompt += 'No se pudo acceder a la base de conocimiento en este momento.\n\n';
             }
         }
@@ -159,7 +194,9 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             prompt += `${chatConfig.systemPrompt.instructionFormat.globalContext} ${globalInstructions.instrucciones}\n\n`;
         }
 
-        prompt += `${chatConfig.systemPrompt.userMessageFormat} ${mensajeUsuario}`;
+        prompt += `${chatConfig.systemPrompt.userMessageFormat} ${mensajeUsuario}\n\n`;
+
+        prompt += 'INSTRUCCIÓN FINAL: Responde a la pregunta basándote en el contexto RAG y la información de este prompt. Si la sección "INFORMACIÓN RELEVANTE DE LA BASE DE CONOCIMIENTOS" contiene contenido relacionado con la pregunta, haz UNA RESPUESTA BASADA EN ESE CONTENIDO, aunque parezca general, en lugar de afirmar que no tienes información suficiente.';
 
         return prompt;
     }
@@ -179,6 +216,8 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
 
         const startTime = Date.now();
         let promptCompleto;
+
+        this._ultimoRAGDetalle = null;
 
         if (promptId) {
             const promptRecord = await models.ChatPrompt.findByPk(promptId);
@@ -270,6 +309,13 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             });
         }
 
+        this.registrarDiagnosticoRAGAsync({
+            tipo: 'publico',
+            pregunta: mensaje,
+            respuesta,
+            idConversacion: conversacion?.id_conversacion || null,
+        });
+
         return {
             respuesta,
             id_conversacion: conversacion?.id_conversacion || null,
@@ -298,6 +344,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
         }
 
         const startTime = Date.now();
+        this._ultimoRAGDetalle = null;
         const promptCompleto = await this.construirPromptCompleto(mensaje, { sessionId, tipo: 'interno' });
 
         const responseFromOpenAI = await this.openai.chat.completions.create({
@@ -353,6 +400,13 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
                 console.error('Learning evaluation (async) error (interno):', e);
             }
         }
+
+        this.registrarDiagnosticoRAGAsync({
+            tipo: 'interno',
+            pregunta: mensaje,
+            respuesta,
+            idConversacion: conversacion?.id_conversacion || null,
+        });
 
         return { respuesta, id_conversacion: conversacion?.id_conversacion || null, responseTime, tokensUsed };
     }
