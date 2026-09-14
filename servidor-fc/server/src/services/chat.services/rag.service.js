@@ -63,7 +63,8 @@ class RAGService {
                     canal: { [Op.in]: ['ambos', canal] },
                     embedding: { [Op.ne]: null },
                 },
-                attributes: ['id_conocimiento', 'tipo', 'tema_principal', 'pregunta_frecuente', 'respuesta_oficial', 'contenido', 'chunk_index', 'fuente_verificacion', 'nivel_prioridad', 'embedding'],
+                attributes: ['id_conocimiento', 'tipo', 'tema_principal', 'pregunta_frecuente', 'respuesta_oficial', 'contenido', 
+                    'chunk_index', 'fuente_verificacion', 'nivel_prioridad', 'embedding'],
                 raw: true,
             });
 

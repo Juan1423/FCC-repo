@@ -74,8 +74,31 @@ const CONFIG_INFO = {
 
 const configInfo = (key) => CONFIG_INFO[key] || { label: key.replace(/_/g, ' '), descripcion: '' };
 
+const DEFAULT_CONFIG = {
+  rate_limit_autenticado_diario: 50,
+  rate_limit_visitante_diario: 5,
+  rate_limit_ventana_horas: 24,
+  off_topic_threshold: 0.65,
+  canonical_response_threshold: 0.85,
+  rag_similarity_threshold: 0.7,
+  max_contexto_rag_items: 3,
+  feedback_threshold: 2,
+  min_respuesta_length: 10,
+  max_respuesta_length: 100,
+  enable_learning_queue: true,
+  sensitive_check_first: true,
+};
+
+const NUMBER_KEYS = Object.keys(CONFIG_INFO).filter(
+  (k) => CONFIG_INFO[k].min !== undefined || CONFIG_INFO[k].max !== undefined || k.includes('threshold')
+);
+const BOOLEAN_KEYS = Object.keys(CONFIG_INFO).filter(
+  (k) => !NUMBER_KEYS.includes(k)
+);
+
 const GuardrailsConfig = () => {
   const [config, setConfig] = useState({});
+  const [inputValues, setInputValues] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -84,23 +107,65 @@ const GuardrailsConfig = () => {
     cargarConfig();
   }, []);
 
+  const seedValues = (valores) => {
+    const nextConfig = { ...valores };
+    const nextInputValues = {};
+    for (const k of NUMBER_KEYS) {
+      nextInputValues[k] = valores[k] !== undefined && valores[k] !== null ? String(valores[k]) : '';
+    }
+    setConfig(nextConfig);
+    setInputValues(nextInputValues);
+  };
+
   const cargarConfig = async () => {
     const resp = await getChatConfig();
     if (resp?.success && resp.data) {
-      setConfig(resp.data);
+      seedValues(resp.data);
     }
     setLoading(false);
   };
 
-  const handleChange = (clave, valor, isNumber = false) => {
-    setConfig({ ...config, [clave]: isNumber && valor !== '' ? Number(valor) : valor });
+  const handleRestaurarDefault = () => {
+    if (window.confirm('¿Restaurar todos los valores por defecto de los guardrails? Los cambios sin guardar se perderán.')) {
+      seedValues(DEFAULT_CONFIG);
+    }
+  };
+
+  const handleChange = (clave, valor) => {
+    setInputValues((prev) => ({ ...prev, [clave]: valor }));
+    if (valor === '') {
+      setConfig((prev) => ({ ...prev, [clave]: '' }));
+      return;
+    }
+    if (BOOLEAN_KEYS.includes(clave)) {
+      setConfig((prev) => ({ ...prev, [clave]: valor }));
+      return;
+    }
+    const num = Number(valor);
+    if (!Number.isNaN(num)) {
+      setConfig((prev) => ({ ...prev, [clave]: num }));
+    }
+  };
+
+  const handleBlur = (clave) => {
+    const raw = inputValues[clave];
+    if (raw === '' || raw === undefined) return;
+    const num = Number(raw);
+    if (Number.isNaN(num)) return;
+    const info = CONFIG_INFO[clave];
+    let clamped = num;
+    if (info.min !== undefined && clamped < info.min) clamped = info.min;
+    if (info.max !== undefined && clamped > info.max) clamped = info.max;
+    setConfig((prev) => ({ ...prev, [clave]: clamped }));
+    setInputValues((prev) => ({ ...prev, [clave]: String(clamped) }));
   };
 
   const handleGuardar = async () => {
     setSaving(true);
     setErrorMsg('');
     try {
-      for (const [clave, valor] of Object.entries(config)) {
+      const entries = Object.entries(config).filter(([, v]) => v !== '' && v !== undefined && v !== null);
+      for (const [clave, valor] of entries) {
         await updateChatConfig(clave, String(valor));
       }
     } catch (e) {
@@ -111,10 +176,6 @@ const GuardrailsConfig = () => {
       setSaving(false);
     }
   };
-
-  const configKeys = Object.keys(CONFIG_INFO);
-  const booleanKeys = configKeys.filter((k) => typeof config[k] === 'boolean');
-  const numberKeys = configKeys.filter((k) => typeof config[k] === 'number');
 
   if (loading) {
     return <Typography>Cargando configuración...</Typography>;
@@ -137,12 +198,12 @@ const GuardrailsConfig = () => {
         </Typography>
         <Box>
           <Grid container spacing={2}>
-            {booleanKeys.length === 0 && (
+            {BOOLEAN_KEYS.length === 0 && (
               <Grid item xs={12}>
                 <Typography color="text.secondary">No hay opciones booleanas disponibles.</Typography>
               </Grid>
             )}
-            {booleanKeys.map((clave) => (
+            {BOOLEAN_KEYS.map((clave) => (
               <Grid item xs={12} md={6} key={clave}>
                 <FormControlLabel
                   control={
@@ -171,12 +232,12 @@ const GuardrailsConfig = () => {
         </Typography>
         <Divider sx={{ mb: 2 }} />
         <Grid container spacing={2}>
-          {numberKeys.length === 0 && (
+          {NUMBER_KEYS.length === 0 && (
             <Grid item xs={12}>
               <Typography color="text.secondary">No hay valores numéricos disponibles.</Typography>
             </Grid>
           )}
-          {numberKeys.map((clave) => (
+          {NUMBER_KEYS.map((clave) => (
             <Grid item xs={12} sm={6} md={4} key={clave}>
               <TextField
                 label={configInfo(clave).label}
@@ -189,8 +250,9 @@ const GuardrailsConfig = () => {
                   max: configInfo(clave).max,
                   step: configInfo(clave).step || (clave.includes('threshold') ? '0.01' : '1'),
                 }}
-                value={config[clave] ?? ''}
-                onChange={(e) => handleChange(clave, e.target.value, true)}
+                value={inputValues[clave] ?? ''}
+                onChange={(e) => handleChange(clave, e.target.value)}
+                onBlur={() => handleBlur(clave)}
               />
               {configInfo(clave).descripcion && (
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
@@ -208,8 +270,21 @@ const GuardrailsConfig = () => {
         </Alert>
       )}
 
-      <Button variant="contained" disabled={saving} onClick={handleGuardar}>
+      <Button
+        variant="contained"
+        disabled={saving || loading}
+        onClick={handleGuardar}
+        sx={{ mr: 2 }}
+      >
         {saving ? 'Guardando...' : 'Guardar cambios'}
+      </Button>
+      <Button
+        variant="outlined"
+        color="warning"
+        disabled={saving || loading}
+        onClick={handleRestaurarDefault}
+      >
+        Restaurar por defecto
       </Button>
     </Box>
   );
