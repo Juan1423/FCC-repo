@@ -57,44 +57,55 @@ const enviarMensaje = async (req, res) => {
         }
 
         if (evaluacion.decision === 'off_topic') {
-            const offlineResponse = "Agradezco tu consulta, pero solo cuento con información sobre los servicios, programas y actividades de la Fundación con Cristo. Si tienes preguntas sobre nuestros servicios de salud, programas comunitarios, horarios, ubicación o cómo colaborar con nosotros, estaré encantado de ayudarte.";
+            const tieneRAG = await openaiService.tieneContextoRelevante(mensaje, 'interno');
+            if (!tieneRAG) {
+                const offlineResponse = "Agradezco tu consulta, pero solo cuento con información sobre los servicios, programas y actividades de la Fundación con Cristo. Si tienes preguntas sobre nuestros servicios de salud, programas comunitarios, horarios, ubicación o cómo colaborar con nosotros, estaré encantado de ayudarte.";
 
-            const conversacion = await models.ChatConversacion.create({
-                tipo: 'interno',
-                id_usuario: idUsuario,
-                session_id: effectiveSessionId,
-                mensaje_usuario: mensaje,
-                respuesta_bot: offlineResponse,
-                consentimiento: true,
-                metadata: { off_topic: true, matchTema: evaluacion.matchTema?.tema || null },
-                flag_revision: true,
-                motivo_revision: 'off_topic',
-                tiempo_respuesta: 0,
-                tokens_usados: 0,
-            });
+                const conversacion = await models.ChatConversacion.create({
+                    tipo: 'interno',
+                    id_usuario: idUsuario,
+                    session_id: effectiveSessionId,
+                    mensaje_usuario: mensaje,
+                    respuesta_bot: offlineResponse,
+                    consentimiento: true,
+                    metadata: { off_topic: true, matchTema: evaluacion.matchTema?.tema || null },
+                    flag_revision: true,
+                    motivo_revision: 'off_topic',
+                    tiempo_respuesta: 0,
+                    tokens_usados: 0,
+                });
 
-            setImmediate(async () => {
-                try {
-                    await learningService.addToRevision({
-                        idConversacion: conversacion.id_conversacion,
-                        triggerType: 'off_topic',
-                        mensajeUsuario: mensaje,
-                        respuestaIa: offlineResponse,
-                        sugerencia: null,
-                    });
-                } catch (e) {
-                    console.error('Learning addToRevision error (off_topic interno):', e);
-                }
-            });
+                openaiService.registrarDiagnosticoRAGAsync({
+                    tipo: 'interno',
+                    pregunta: mensaje,
+                    respuesta: offlineResponse,
+                    decision: 'off_topic',
+                    idConversacion: conversacion.id_conversacion,
+                });
 
-            return res.json({
-                success: true,
-                decision: 'off_topic',
-                respuesta: offlineResponse,
-                id_conversacion: conversacion.id_conversacion,
-                responseTime: 0,
-                tokensUsed: 0,
-            });
+                setImmediate(async () => {
+                    try {
+                        await learningService.addToRevision({
+                            idConversacion: conversacion.id_conversacion,
+                            triggerType: 'off_topic',
+                            mensajeUsuario: mensaje,
+                            respuestaIa: offlineResponse,
+                            sugerencia: null,
+                        });
+                    } catch (e) {
+                        console.error('Learning addToRevision error (off_topic interno):', e);
+                    }
+                });
+
+                return res.json({
+                    success: true,
+                    decision: 'off_topic',
+                    respuesta: offlineResponse,
+                    id_conversacion: conversacion.id_conversacion,
+                    responseTime: 0,
+                    tokensUsed: 0,
+                });
+            }
         }
 
         const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings, 'interno');

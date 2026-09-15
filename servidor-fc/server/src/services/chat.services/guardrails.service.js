@@ -92,7 +92,7 @@ class GuardrailsService {
 
     async isOnTopic(mensaje, queryEmbedding) {
         const config = await this.loadConfig();
-        const threshold = config.off_topic_threshold !== undefined ? config.off_topic_threshold : chatConfig.security.blockSuspiciousPatterns;
+        const threshold = config.off_topic_threshold !== undefined ? config.off_topic_threshold : 0.3;
 
         if (!queryEmbedding) {
             return { onTopic: true, matchedTema: null, score: 0 };

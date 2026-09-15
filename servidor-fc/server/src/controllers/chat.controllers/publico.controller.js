@@ -77,31 +77,42 @@ const enviarMensaje = async (req, res) => {
         }
 
         if (evaluacion.decision === 'off_topic') {
-            const offlineResponse = "Agradezco tu consulta, pero solo cuento con información sobre los servicios, programas y actividades de la Fundación con Cristo. Si tienes preguntas sobre nuestros servicios de salud, programas comunitarios, horarios, ubicación o cómo colaborar con nosotros, estaré encantado de ayudarte.";
+            const tieneRAG = await openaiService.tieneContextoRelevante(mensaje, 'publico');
+            if (!tieneRAG) {
+                const offlineResponse = "Agradezco tu consulta, pero solo cuento con información sobre los servicios, programas y actividades de la Fundación con Cristo. Si tienes preguntas sobre nuestros servicios de salud, programas comunitarios, horarios, ubicación o cómo colaborar con nosotros, estaré encantado de ayudarte.";
 
-            const conversacion = await models.ChatConversacion.create({
-                tipo: 'publico',
-                id_usuario: idUsuario,
-                id_usuario_anonimo: effectiveVisitorId,
-                session_id: effectiveSessionId,
-                mensaje_usuario: mensaje,
-                respuesta_bot: offlineResponse,
-                consentimiento: !!consentimiento,
-                metadata: { ...metadata, off_topic: true, matchTema: evaluacion.matchTema?.tema || null },
-                flag_revision: true,
-                motivo_revision: 'off_topic',
-                tiempo_respuesta: 0,
-                tokens_usados: 0,
-            });
+                const conversacion = await models.ChatConversacion.create({
+                    tipo: 'publico',
+                    id_usuario: idUsuario,
+                    id_usuario_anonimo: effectiveVisitorId,
+                    session_id: effectiveSessionId,
+                    mensaje_usuario: mensaje,
+                    respuesta_bot: offlineResponse,
+                    consentimiento: !!consentimiento,
+                    metadata: { ...metadata, off_topic: true, matchTema: evaluacion.matchTema?.tema || null },
+                    flag_revision: true,
+                    motivo_revision: 'off_topic',
+                    tiempo_respuesta: 0,
+                    tokens_usados: 0,
+                });
 
-            return res.json({
-                success: true,
-                decision: 'off_topic',
-                respuesta: offlineResponse,
-                id_conversacion: conversacion.id_conversacion,
-                responseTime: 0,
-                tokensUsed: 0,
-            });
+                openaiService.registrarDiagnosticoRAGAsync({
+                    tipo: 'publico',
+                    pregunta: mensaje,
+                    respuesta: offlineResponse,
+                    decision: 'off_topic',
+                    idConversacion: conversacion.id_conversacion,
+                });
+
+                return res.json({
+                    success: true,
+                    decision: 'off_topic',
+                    respuesta: offlineResponse,
+                    id_conversacion: conversacion.id_conversacion,
+                    responseTime: 0,
+                    tokensUsed: 0,
+                });
+            }
         }
 
         const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings, 'publico');

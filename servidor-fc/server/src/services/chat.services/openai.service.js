@@ -15,13 +15,59 @@ class OpenAIService {
         this.configService = null;
     }
 
-    setDependencies({ ragService, guardrailsService, learningService, configService, ragMonitorService }) {
+    setDependencies({ ragService, guardrailsService, learningService, configService, ragMonitorService, conversationsService }) {
         this.ragService = ragService;
         this.guardrailsService = guardrailsService;
         this.learningService = learningService;
         this.configService = configService;
         this.ragMonitorService = ragMonitorService || null;
+        this.conversationsService = conversationsService || null;
         this._ultimoRAGDetalle = null;
+    }
+
+    async tieneContextoRelevante(mensaje, tipo = 'publico') {
+        if (!this.ragService) return false;
+        const config = await this.loadConfig();
+        const maxItems = config.max_contexto_rag_items !== undefined ? config.max_contexto_rag_items : 3;
+        const threshold = config.rag_similarity_threshold !== undefined ? config.rag_similarity_threshold : 0.55;
+        try {
+            const detalle = await this.ragService.buildRAGContextDetalle(mensaje, maxItems, threshold, tipo);
+            this._ultimoRAGDetalle = detalle || null;
+            return !!detalle && Array.isArray(detalle.resultados) && detalle.resultados.length > 0;
+        } catch (error) {
+            console.warn('Error en pre-chequeo RAG:', error.message);
+            this._ultimoRAGDetalle = null;
+            return false;
+        }
+    }
+
+    async construirHistorialContexto({ sessionId, tipo = 'publico', consentimiento = false }) {
+        if (!this.conversationsService || !sessionId) return '';
+        const config = await this.loadConfig();
+        if (config.memory_enabled === false) return '';
+
+        let maxTurnos = config.memory_max_turnos;
+        if (typeof maxTurnos !== 'number' || maxTurnos < 1 || Number.isNaN(maxTurnos)) maxTurnos = 4;
+
+        if (tipo === 'publico' && !consentimiento) return '';
+
+        try {
+            const rows = await this.conversationsService.getRecentBySessionId(sessionId, maxTurnos);
+            if (!rows || rows.length === 0) return '';
+            rows.reverse();
+
+            let context = 'HISTORIAL RECIENTE DE LA CONVERSACIÓN:\n';
+            context += 'Si la pregunta del usuario se refiere a algo mencionado antes ("eso", "lo anterior", "ese documento"), usa este historial para responder.\n';
+            for (const r of rows) {
+                if (r.mensaje_usuario) context += `- Usuario: ${String(r.mensaje_usuario).substring(0, 500)}\n`;
+                if (r.respuesta_bot) context += `- Asistente: ${String(r.respuesta_bot).substring(0, 500)}\n`;
+            }
+            context += '\n';
+            return context;
+        } catch (error) {
+            console.warn('Error cargando historial de conversación:', error.message);
+            return '';
+        }
     }
 
     async registrarDiagnosticoRAG({ tipo, pregunta, respuesta, decision = 'responder', idConversacion = null }) {
@@ -81,7 +127,7 @@ class OpenAIService {
         }
     }
 
-    async construirPromptCompleto(mensajeUsuario, { promptId = null, sessionId, tipo = 'publico' } = {}) {
+    async construirPromptCompleto(mensajeUsuario, { promptId = null, sessionId, tipo = 'publico', consentimiento = false } = {}) {
         let prompt = chatConfig.systemPrompt.base + '\n\n';
 
         prompt += 'INSTRUCCIONES CRÍTICAS:\n';
@@ -126,10 +172,15 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
 
         prompt += informacionFundacion + '\n\n';
 
+        const historial = await this.construirHistorialContexto({ sessionId, tipo, consentimiento });
+        if (historial) {
+            prompt += historial;
+        }
+
         if (this.ragService) {
             const config = await this.loadConfig();
             const maxItems = config.max_contexto_rag_items !== undefined ? config.max_contexto_rag_items : 3;
-            const threshold = config.rag_similarity_threshold !== undefined ? config.rag_similarity_threshold : 0.7;
+            const threshold = config.rag_similarity_threshold !== undefined ? config.rag_similarity_threshold : 0.55;
 
             try {
                 const ragDetalle = await this.ragService.buildRAGContextDetalle(mensajeUsuario, maxItems, threshold, tipo);
@@ -231,7 +282,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             }
             promptCompleto += `${chatConfig.systemPrompt.userMessageFormat} ${mensaje}`;
         } else {
-            promptCompleto = await this.construirPromptCompleto(mensaje, { promptId, sessionId, tipo: 'publico' });
+            promptCompleto = await this.construirPromptCompleto(mensaje, { promptId, sessionId, tipo: 'publico', consentimiento });
         }
 
         let responseFromOpenAI;

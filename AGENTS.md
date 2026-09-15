@@ -133,10 +133,18 @@ Split across client and server:
 - **Client components**: `ChatBotIA.jsx` (public/visitor), `ChatIAServidor.jsx` (admin), `ChatAccessModal.jsx`, `HistorialUnificado.jsx`
 - **Server**: 9 service files (rag, guardrails, learning, openai, knowledge, prompts, conversations, config), 12 model files, 6 controllers
 - Two OpenAI integration patterns: legacy `openaiService.js` (node-fetch), modern `chat.services/openai.service.js` (OpenAI SDK)
-- Semantic search via cosine similarity (manual implementation, not pgvector SQL operators)
+- Semantic search via cosine similarity (manual implementation, not pgvector SQL operators). Since Fase 3: `searchSimilar` sorts by `combinedScore = coseno*(1-w) + overlapLexico*w` (config `rag_lexico_weight`, default 0.2, clamp 0-0.6)
+- Multi-turn memory (Fase 2): `conversationsService.getRecentBySessionId(sessionId, limit)` inyecta bloque `HISTORIAL RECIENTE DE LA CONVERSACIÓN` en `construirPromptCompleto`. Claves `memory_enabled`/`memory_max_turnos`. Público solo cuando `consentimiento=true`; interno siempre
+- Chunking configurable (Fase 4): `chunk_size`/`chunk_overlap` (UI GuardrailsConfig, constraints en `config.service.js` CONFIG_CONSTRAINTS). `ingestDocumento` lee la config vía `ragService.configLoader` (seteado en `chat.services/index.js`). Aplica SOLO a PDFs subidos después del cambio (no re-indexa existentes)
+- OCR (Fase 5): `src/utils/ocr.service.js` usa `pdfjs-dist` (legacy build + `@napi-rs/canvas` + `DOMMatrix` global + worker como `file://` URL) y `tesseract.js` (spa+eng). Extracción POR PÁGINA: `extraerTextoCompletoConOCR` conserva el texto nativo y hace OCR **solo en páginas sin texto** (<5 chars) cuando `ocr_enabled=true`; el checkbox del upload (`opciones.ocr`) fuerza OCR en todas las páginas. PDFs mixtos (parte texto + parte imagen) ahora indexan el contenido de las páginas-imagen. Columnas `ocr`/`paginas_ocr` en `chat_documentos`. "12345" puede leerse como "17345" por resolución del render
+- Busqueda/aceptación híbrida: `searchSimilar` admite un chunk si `max(coseno, combinedScore) >= rag_similarity_threshold` (combinedScore = coseno*(1-w) + solapamientoLéxico*w). Así una query corta como "rifa" (cos 0.53 < umbral pero solapamiento 1.0) sigue encontrando "Numero de rifa" sin subir/bajar umbrales.
+- Monitor RAG (`chat_rag_monitor`): registra decision='responder' (chatPublico/chatInterno) y también decision='off_topic' cuando el guardrail responde la plantilla offline sin RAG (los controllers llaman `registrarDiagnosticoRAGAsync` en la rama off_topic).
+- Throttle (Fase 6): `ingestDocumento` hace `setTimeout 100ms` entre generación de embeddings
 
 ## Common Pitfalls
 
+- **Embeddings: todos los modelos deben ser consistentes.** Cambiar `OPENAI_EMBEDDING_MODEL` exige regenerar NO SOLO `chat_conocimiento.embedding`, sino TAMBIÉN `chat_tema_valido.embedding` y `chat_respuesta_canonica.embedding_trigger` (Fase 1 lo olvidó → guardrails `isOnTopic` con cos≈0 → TODO se clasificaba `off_topic`, el chat respondía la plantilla y el monitor RAG quedaba vacío). Diagnóstico: coseno de una query 3-small vs un embedding almacenado ~0.7+ si coincide, ~0 si distinto modelo.
+- Off-topic NO corta si RAG tiene contexto: `tieneContextoRelevante()` (openaiService) decide. Umbrales DB actuales: `rag_similarity_threshold=0.55`, `off_topic_threshold=0.30` (subirlos demasiado vuelve a bloquear todo).
 - `selectedPaciente` from context is `id_paciente`, NOT `id_historia` — always resolve via `getHistorias()` + `.find()` when you need historia ID
 - Photo upload paths: multer saves to `/uploads/comunidad/personas/` (not `/uploads/personas/`)
 - Seeder `20240809000007-comunidad-geo.js` does NOT insert regions; use `20240809000010-comunidad-geo-regiones.js` for regions
