@@ -16,6 +16,9 @@ const learningService = new LearningService(ragService);
 const configService = new ConfigService();
 const openaiService = new OpenAIService();
 const ragMonitorService = new RagMonitorService();
+const conversationsService = new ConversationsService();
+
+ragService.configLoader = async () => configService.getConfig();
 
 openaiService.setDependencies({
     ragService,
@@ -23,11 +26,11 @@ openaiService.setDependencies({
     learningService,
     configService,
     ragMonitorService,
+    conversationsService,
 });
 
 const knowledgeService = new KnowledgeService(ragService);
 const promptsService = new PromptsService();
-const conversationsService = new ConversationsService();
 
 module.exports = {
     ragService,

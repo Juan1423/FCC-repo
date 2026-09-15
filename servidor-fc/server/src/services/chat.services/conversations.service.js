@@ -52,6 +52,15 @@ class ConversationsService {
         });
     }
 
+    async getRecentBySessionId(sessionId, limit = 4) {
+        const maxTurnos = Math.min(Math.max(parseInt(limit, 10) || 4, 1), 10);
+        return models.ChatConversacion.findAll({
+            where: { session_id: sessionId },
+            order: [['fecha_conversacion', 'DESC'], ['id_conversacion', 'DESC']],
+            limit: maxTurnos,
+        });
+    }
+
     async clearMemory(idUsuario) {
         if (idUsuario) {
             const result = await models.ChatConversacion.destroy({

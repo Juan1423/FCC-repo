@@ -16,6 +16,9 @@ const CONFIG_CONSTRAINTS = {
     rate_limit_visitante_diario: { min: 1, integer: true },
     rate_limit_autenticado_diario: { min: 1, integer: true },
     max_respuesta_length: { min: 1, integer: true },
+    memory_max_turnos: { min: 1, max: 10, integer: true },
+    chunk_size: { min: 100, integer: true },
+    chunk_overlap: { min: 0, integer: true },
 };
 
 function validationError(message) {

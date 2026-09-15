@@ -46,6 +46,11 @@ const CONFIG_INFO = {
     descripcion: 'Cuántos fragmentos de conocimiento se inyectan como contexto en el prompt.',
     min: 1,
   },
+  rag_lexico_weight: {
+    label: 'Peso de keywords en RAG',
+    descripcion: 'Peso (0-0.6) que se da a la coincidencia de palabras clave al ordenar resultados. 0 = solo similitud semántica; subirlo favorece chunks que repiten los términos exactos de la pregunta.',
+    step: '0.05',
+  },
   feedback_threshold: {
     label: 'Umbral de feedback negativo',
     descripcion: 'Calificación mínima (1-5) a partir de la cual el feedback se considera negativo y puede marcar la conversación para aprendizaje. Umbral bajo = menos revisiones; alto = más revisiones.',
@@ -70,6 +75,30 @@ const CONFIG_INFO = {
     label: 'Verificar temas sensibles primero',
     descripcion: 'Si está activo, la detección de temas sensibles (violencia, suicidio, ansiedad) se evalúa antes que la clasificación off-topic.',
   },
+  memory_enabled: {
+    label: 'Memoria de conversación',
+    descripcion: 'Incluye las últimas preguntas/respuestas de la sesión como contexto. En el chat público anónimo solo aplica si el visitante aceptó los términos (consentimiento).',
+  },
+  memory_max_turnos: {
+    label: 'Máx. turnos previos en memoria',
+    descripcion: 'Cuántos turnos anteriores (pregunta+respuesta) se inyectan como historial en el prompt. Aplica a sesiones con memoria habilitada.',
+    min: 1,
+    max: 10,
+  },
+  chunk_size: {
+    label: 'Tamaño de fragmento al indexar PDFs',
+    descripcion: 'Caracteres por fragmento al subir NUEVOS PDFs. Cambiar el valor no re-indexa los ya cargados: borre y vuelva a subir el documento para aplicar. Mín. 100.',
+    min: 100,
+  },
+  chunk_overlap: {
+    label: 'Solapamiento entre fragmentos',
+    descripcion: 'Caracteres de solape entre fragmentos consecutivos al indexar NUEVOS PDFs. Debe ser menor que chunk_size (se ajusta automáticamente).',
+    min: 0,
+  },
+  ocr_enabled: {
+    label: 'OCR automático en PDFs escaneados',
+    descripcion: 'Si un PDF no tiene texto legible al subirse, el bot intenta extraerlo con OCR (Tesseract). Desactívalo si prefieres control manual y errores explícitos.',
+  },
 };
 
 const configInfo = (key) => CONFIG_INFO[key] || { label: key.replace(/_/g, ' '), descripcion: '' };
@@ -78,15 +107,21 @@ const DEFAULT_CONFIG = {
   rate_limit_autenticado_diario: 50,
   rate_limit_visitante_diario: 5,
   rate_limit_ventana_horas: 24,
-  off_topic_threshold: 0.65,
+  off_topic_threshold: 0.3,
   canonical_response_threshold: 0.85,
-  rag_similarity_threshold: 0.7,
+  rag_similarity_threshold: 0.55,
   max_contexto_rag_items: 3,
+  rag_lexico_weight: 0.2,
   feedback_threshold: 2,
   min_respuesta_length: 10,
   max_respuesta_length: 100,
   enable_learning_queue: true,
   sensitive_check_first: true,
+  memory_enabled: true,
+  memory_max_turnos: 4,
+  chunk_size: 1000,
+  chunk_overlap: 200,
+  ocr_enabled: true,
 };
 
 const NUMBER_KEYS = Object.keys(CONFIG_INFO).filter(
