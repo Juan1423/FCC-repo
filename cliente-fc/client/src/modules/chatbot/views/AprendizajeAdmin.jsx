@@ -24,6 +24,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  TablePagination,
 } from '@mui/material';
 import { CheckCircle as CheckIcon, Cancel as CancelIcon, Visibility as ViewIcon } from '@mui/icons-material';
 import {
@@ -52,32 +53,41 @@ const AprendizajeAdmin = () => {
   const [aprobarError, setAprobarError] = useState('');
   const [aprobarOrigen, setAprobarOrigen] = useState(null);
   const [tipoFilter, setTipoFilter] = useState('');
+  const [revPagination, setRevPagination] = useState({ page: 0, limit: 5, total: 0 });
+  const [canPagination, setCanPagination] = useState({ page: 0, limit: 5, total: 0 });
   const { hasPermission } = useRoles();
   const canalLabel = { ambos: 'Ambos', publico: 'Público', interno: 'Interno' };
   const canalColor = { ambos: 'default', publico: 'info', interno: 'warning' };
 
   useEffect(() => {
-    loadRevisiones();
-    loadCanonicas();
+    loadRevisiones({});
+    loadCanonicas({});
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadRevisiones = async (tipo) => {
-    const params = {};
+  const loadRevisiones = async ({ page = 0, limit = 5, tipo = '' } = {}) => {
+    const params = { page: page + 1, limit };
     if (tipo) params.tipo = tipo;
     const resp = await getRevisiones(params);
-    if (resp?.success) setRevisiones(resp.data || []);
+    if (resp?.success) {
+      setRevisiones(resp.data || []);
+      setRevPagination({ page, limit, total: resp.count || 0 });
+    }
   };
 
   const handleTipoFilter = (e, nuevoValor) => {
     const val = nuevoValor ?? '';
     setTipoFilter(val);
-    loadRevisiones(val || undefined);
+    loadRevisiones({ page: 0, limit: revPagination.limit, tipo: val });
   };
 
-  const loadCanonicas = async () => {
-    const resp = await getCanonicas();
-    if (resp?.success) setCanonicas(resp.data || []);
+  const loadCanonicas = async ({ page = 0, limit = 5 } = {}) => {
+    const resp = await getCanonicas({ page: page + 1, limit });
+    if (resp?.success) {
+      setCanonicas(resp.data || []);
+      setCanPagination({ page, limit, total: resp.count || 0 });
+    }
   };
 
   const loadStats = async () => {
@@ -110,8 +120,8 @@ const AprendizajeAdmin = () => {
       await aprobarRevision(aprobandoId, aprobarForm);
       setOpenAprobar(false);
       setAprobandoId(null);
-      loadRevisiones();
-      loadCanonicas();
+      loadRevisiones({ page: revPagination.page, limit: revPagination.limit, tipo: tipoFilter });
+      loadCanonicas({ page: canPagination.page, limit: canPagination.limit });
       loadStats();
     } catch (error) {
       console.error('Error aprobando revision:', error);
@@ -121,7 +131,7 @@ const AprendizajeAdmin = () => {
 
   const handleRechazar = async (id) => {
     await rechazarRevision(id);
-    loadRevisiones();
+    loadRevisiones({ page: revPagination.page, limit: revPagination.limit, tipo: tipoFilter });
   };
 
   const handleCanonicaOpen = (item = null) => {
@@ -143,7 +153,7 @@ const AprendizajeAdmin = () => {
         await createCanonica(canonicaForm);
       }
       setOpenCanonica(false);
-      loadCanonicas();
+      loadCanonicas({ page: canPagination.page, limit: canPagination.limit });
     } catch (error) {
       console.error('Error guardando canonica:', error);
     }
@@ -151,7 +161,7 @@ const AprendizajeAdmin = () => {
 
   const handleCanonicaDelete = async (id) => {
     await deleteCanonica(id);
-    loadCanonicas();
+    loadCanonicas({ page: canPagination.page, limit: canPagination.limit });
   };
 
   const canManage = hasPermission('editPrompt');
@@ -240,6 +250,17 @@ const AprendizajeAdmin = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={revPagination.total}
+        page={revPagination.page}
+        onPageChange={(_e, newPage) => loadRevisiones({ page: newPage, limit: revPagination.limit, tipo: tipoFilter })}
+        rowsPerPage={revPagination.limit}
+        onRowsPerPageChange={(e) => loadRevisiones({ page: 0, limit: parseInt(e.target.value, 10), tipo: tipoFilter })}
+        rowsPerPageOptions={[5, 10, 20, 50]}
+        labelRowsPerPage="Filas por página"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+      />
 
       <Typography variant="h6" gutterBottom>
         Conocimientos Canónicos
@@ -288,6 +309,17 @@ const AprendizajeAdmin = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={canPagination.total}
+        page={canPagination.page}
+        onPageChange={(_e, newPage) => loadCanonicas({ page: newPage, limit: canPagination.limit })}
+        rowsPerPage={canPagination.limit}
+        onRowsPerPageChange={(e) => loadCanonicas({ page: 0, limit: parseInt(e.target.value, 10) })}
+        rowsPerPageOptions={[5, 10, 20, 50]}
+        labelRowsPerPage="Filas por página"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+      />
 
       <Dialog open={openCanonica} onClose={() => setOpenCanonica(false)} maxWidth="md" fullWidth>
         <DialogTitle>{editingCanonica ? 'Editar' : 'Nueva'} Conocimiento Canónico</DialogTitle>

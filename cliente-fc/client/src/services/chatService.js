@@ -455,8 +455,9 @@ export const rechazarRevision = async (id) => {
   return handleResponse(response);
 };
 
-export const getCanonicas = async () => {
-  const response = await fetch(`${API_URL}/chat/aprendizaje/canonicas`, {
+export const getCanonicas = async (params = {}) => {
+  const qs = new URLSearchParams(params).toString();
+  const response = await fetch(`${API_URL}/chat/aprendizaje/canonicas${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);

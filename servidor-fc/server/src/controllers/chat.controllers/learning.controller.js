@@ -64,11 +64,18 @@ const rejectRevision = async (req, res) => {
 const getAllCanonicas = async (req, res) => {
     try {
         const { models } = require('../../libs/sequelize');
-        const rows = await models.ChatRespuestaCanonica.findAll({
+        const { page = 1, limit = 20 } = req.query;
+        const p = parseInt(page, 10) || 1;
+        const l = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+        const offset = (p - 1) * l;
+
+        const { rows, count } = await models.ChatRespuestaCanonica.findAndCountAll({
             where: { activo: true },
             order: [['prioridad', 'DESC'], ['usos_count', 'DESC']],
+            limit: l,
+            offset,
         });
-        res.json({ success: true, data: rows });
+        res.json({ success: true, data: rows, count, pagination: { page: p, limit: l } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
