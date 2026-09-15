@@ -27,6 +27,8 @@ import {
   Select,
   Tabs,
   Tab,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Upload as UploadIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import {
@@ -68,6 +70,7 @@ const KnowledgeAdmin = () => {
   });
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadCanal, setUploadCanal] = useState('ambos');
+  const [uploadOcr, setUploadOcr] = useState(false);
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const { roles, hasPermission } = useRoles();
@@ -202,7 +205,7 @@ const KnowledgeAdmin = () => {
       if (file) {
         setLoading(true);
         try {
-          await uploadDocumento(file, file.name, uploadCanal);
+          await uploadDocumento(file, file.name, uploadCanal, uploadOcr);
           setTabValue(1);
           loadDocuments();
         } catch (error) {
@@ -370,7 +373,7 @@ const KnowledgeAdmin = () => {
                 {documents.map((doc) => (
                   <TableRow key={doc.id_documento}>
                     <TableCell>{doc.titulo}</TableCell>
-                    <TableCell>{doc.nombre_archivo}</TableCell>
+                    <TableCell>{doc.nombre_archivo}{doc.ocr ? <Chip size="small" color="secondary" label="OCR" sx={{ ml: 1 }} /> : null}</TableCell>
                     <TableCell>{doc.chunks_count}</TableCell>
                     <TableCell>
                       <Chip
@@ -439,6 +442,15 @@ const KnowledgeAdmin = () => {
               <MenuItem value="interno">Interno</MenuItem>
             </Select>
           </FormControl>
+          <FormControlLabel
+            control={<Checkbox checked={uploadOcr} onChange={(e) => setUploadOcr(e.target.checked)} />}
+            label="Este PDF es escaneado (aplicar OCR)"
+            sx={{ mt: 1 }}
+          />
+          <Typography variant="caption" display="block" sx={{ mt: 0.5, color: 'text.secondary' }}>
+            Si no marcas y el PDF no tiene texto legible, el bot intentará OCR automáticamente (si está habilitado),
+            o marcará el documento como error.
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setUploadOpen(false)}>Cancelar</Button>

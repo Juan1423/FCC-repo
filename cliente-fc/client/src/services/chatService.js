@@ -293,11 +293,12 @@ export const toggleBloqueoKnowledge = async (id) => {
   return handleResponse(response);
 };
 
-export const uploadDocumento = async (pdfFile, titulo, canal = 'ambos') => {
+export const uploadDocumento = async (pdfFile, titulo, canal = 'ambos', ocr = false) => {
   const formData = new FormData();
   formData.append('pdf', pdfFile);
   formData.append('titulo', titulo);
   formData.append('canal', canal);
+  formData.append('ocr', String(ocr));
 
   const response = await fetch(`${API_URL}/chat/knowledge/upload-documento`, {
     method: 'POST',

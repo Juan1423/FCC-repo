@@ -62,6 +62,16 @@ const ChatDocumentoSchema = {
         allowNull: false,
         defaultValue: 0,
     },
+    ocr: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    },
+    paginas_ocr: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+    },
 };
 
 module.exports = { ChatDocumento, ChatDocumentoSchema };

@@ -5,6 +5,7 @@ const path = require('path');
 const { PDFParse } = require('pdf-parse');
 const { models } = require('../../libs/sequelize');
 const { Op } = require('sequelize');
+const ocrUtils = require('../../utils/ocr.service');
 
 class KnowledgeService {
     constructor(ragService) {
@@ -181,7 +182,7 @@ class KnowledgeService {
         return result;
     }
 
-    async ingestirDocumento(file, titulo, canal = 'ambos') {
+    async ingestirDocumento(file, titulo, canal = 'ambos', opciones = {}) {
         const doc = await models.ChatDocumento.create({
             titulo,
             nombre_archivo: file.originalname,
@@ -192,19 +193,59 @@ class KnowledgeService {
 
         try {
             const dataBuffer = file.buffer || fs.readFileSync(file.path);
-            const parser = new PDFParse({ data: dataBuffer });
-            await parser.load();
-            const data = await parser.getText();
-            parser.destroy();
-            const textoLimpio = data.text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
 
-            if (textoLimpio.trim().length < 10) {
-                throw new Error('El PDF no contiene texto legible.');
+            const ocrRequested = opciones.ocr === true || opciones.ocr === 'true' || opciones.ocr === 1;
+            let ocrHabilitado = ocrRequested;
+            if (this.ragService && typeof this.ragService.obtenerConfigRAG === 'function') {
+                const cfg = await this.ragService.obtenerConfigRAG();
+                if (cfg.ocr_enabled !== false || ocrRequested) {
+                    ocrHabilitado = true;
+                }
             }
 
-            const result = await this.ragService.ingestDocumento(textoLimpio, titulo, doc.id_documento, canal);
-            await doc.update({ estado: 'LISTO', chunks_count: result.inserted });
-            return { success: true, chunks: result.inserted, documento: doc };
+            let textoFinal = '';
+            let usadoOCR = false;
+            let paginasOCR = 0;
+
+            try {
+                const extraido = await ocrUtils.extraerTextoCompletoConOCR(dataBuffer, {
+                    ocrHabilitado,
+                    ocrForzado: ocrRequested,
+                    minTextoPagina: 5,
+                });
+                textoFinal = ocrUtils.limpiarTexto(extraido.texto);
+                usadoOCR = extraido.paginasOCR > 0;
+                paginasOCR = extraido.paginasOCR;
+            } catch (pdfjsError) {
+                console.warn('Falló extracción pdfjs, usando fallback pdf-parse:', pdfjsError.message);
+                const parser = new PDFParse({ data: dataBuffer });
+                try {
+                    await parser.load();
+                    const data = await parser.getText();
+                    textoFinal = ocrUtils.limpiarTexto(data.text);
+                } finally {
+                    try { parser.destroy(); } catch (e) { /* ignore */ }
+                }
+                if (textoFinal.length < 10 && ocrHabilitado) {
+                    const ocrResult = await ocrUtils.extraerTextoConOCR(dataBuffer);
+                    if (ocrResult.texto && ocrResult.texto.length > textoFinal.length) {
+                        textoFinal = ocrResult.texto;
+                        usadoOCR = true;
+                        paginasOCR = ocrResult.paginasOCR;
+                    }
+                }
+            }
+
+            if (textoFinal.length < 10) {
+                if (!ocrHabilitado) {
+                    throw new Error('El PDF no contiene texto legible y el OCR está deshabilitado.');
+                }
+                throw new Error('El PDF no contiene texto legible, ni siquiera tras aplicar OCR.');
+            }
+
+            const result = await this.ragService.ingestDocumento(textoFinal, titulo, doc.id_documento, canal);
+            await doc.update({ estado: 'LISTO', chunks_count: result.inserted, ocr: usadoOCR, paginas_ocr: paginasOCR });
+            return { success: true, chunks: result.inserted, documento: doc, ocr: usadoOCR, paginasOCR };
         } catch (error) {
             await doc.update({ estado: 'ERROR' });
             throw error;
