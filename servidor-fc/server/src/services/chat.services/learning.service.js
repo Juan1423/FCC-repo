@@ -3,11 +3,10 @@
 const { models } = require('../../libs/sequelize');
 const { Op } = require('sequelize');
 const chatConfig = require('../../config/chatConfig');
-const RAGService = require('./rag.service');
 
 class LearningService {
-    constructor() {
-        this.ragService = new RAGService();
+    constructor(ragService) {
+        this.ragService = ragService || null;
         this.configCache = null;
         this.configExpiry = 0;
     }
@@ -207,7 +206,7 @@ class LearningService {
                 return selected;
             }
 
-            if (queryEmbedding && embeddingItems.length > 0) {
+            if (queryEmbedding && embeddingItems.length > 0 && this.ragService) {
                 const similares = await this.ragService.searchSimilarByEmbeddings(
                     queryEmbedding,
                     embeddingItems,
@@ -271,7 +270,9 @@ class LearningService {
 
         let embeddingTrigger = null;
         try {
-            embeddingTrigger = await this.ragService.generateEmbedding(patronTrigger || respuestaCanonica);
+            if (this.ragService) {
+                embeddingTrigger = await this.ragService.generateEmbedding(patronTrigger || respuestaCanonica);
+            }
         } catch (e) {
             console.warn('Could not generate embedding for trigger:', e.message);
         }
@@ -294,7 +295,9 @@ class LearningService {
             reviewed_at: new Date(),
         });
 
-        this.ragService.invalidateCache();
+        if (this.ragService) {
+            this.ragService.invalidateCache();
+        }
 
         return canonica;
     }

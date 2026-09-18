@@ -1,5 +1,3 @@
-'use strict';
-
 const RAGService = require('./rag.service');
 const GuardrailsService = require('./guardrails.service');
 const LearningService = require('./learning.service');
@@ -12,11 +10,13 @@ const RagMonitorService = require('./ragMonitor.service');
 
 const ragService = new RAGService();
 const guardrailsService = new GuardrailsService();
-const learningService = new LearningService(ragService);
 const configService = new ConfigService();
 const openaiService = new OpenAIService();
 const ragMonitorService = new RagMonitorService();
 const conversationsService = new ConversationsService();
+
+// LearningService now receives the shared ragService instance
+const learningService = new LearningService(ragService);
 
 ragService.configLoader = async () => configService.getConfig();
 
