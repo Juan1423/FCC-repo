@@ -183,6 +183,72 @@ describe('OpenAIService.tieneContextoRelevante', () => {
     });
 });
 
+describe('OpenAIService.obtenerRAGDetalle', () => {
+    test('genera el detalle una sola vez y setea _ultimoRAGDetalle', async () => {
+        const buildRAGContextDetalle = jest.fn().mockResolvedValue(DETALLE_RAG);
+        const svc = new OpenAIService();
+        svc.setDependencies({
+            ragService: { buildRAGContextDetalle },
+            configService: { getConfig: jest.fn().mockResolvedValue({ rag_similarity_threshold: 0.7, max_contexto_rag_items: 3 }) },
+        });
+        const detalle = await svc.obtenerRAGDetalle('¿qué es?', 'interno');
+        expect(buildRAGContextDetalle).toHaveBeenCalledTimes(1);
+        expect(buildRAGContextDetalle).toHaveBeenCalledWith('¿qué es?', 3, 0.7, 'interno', { queryEmbedding: null });
+        expect(svc._ultimoRAGDetalle).toBe(DETALLE_RAG);
+        expect(detalle).toBe(DETALLE_RAG);
+    });
+
+    test('reutiliza el queryEmbedding del guardrail en la búsqueda RAG', async () => {
+        const buildRAGContextDetalle = jest.fn().mockResolvedValue(DETALLE_RAG);
+        const svc = new OpenAIService();
+        svc.setDependencies({
+            ragService: { buildRAGContextDetalle },
+            configService: { getConfig: jest.fn().mockResolvedValue({ rag_similarity_threshold: 0.55, max_contexto_rag_items: 2 }) },
+        });
+        const fakeEmbedding = [0.1, 0.2, 0.3];
+        await svc.obtenerRAGDetalle('rifa', 'publico', fakeEmbedding);
+        expect(buildRAGContextDetalle).toHaveBeenCalledWith('rifa', 2, 0.55, 'publico', { queryEmbedding: fakeEmbedding });
+    });
+
+    test('construirPromptCompleto usa el ragDetalle provisto sin volver a buscar', async () => {
+        const buildRAGContextDetalle = jest.fn().mockResolvedValue(DETALLE_RAG);
+        const svc = new OpenAIService();
+        svc.setDependencies({
+            ragService: { buildRAGContextDetalle },
+            configService: { getConfig: jest.fn() },
+        });
+        const prompt = await svc.construirPromptCompleto('pregunta', { tipo: 'interno', ragDetalle: DETALLE_RAG });
+        expect(prompt).toContain('INFORMACIÓN RELEVANTE');
+        expect(buildRAGContextDetalle).not.toHaveBeenCalled();
+    });
+
+    test('chatInterno propaga el ragDetalle sin nueva búsqueda', async () => {
+        const oldKey = process.env.OPENAI_API_KEY;
+        process.env.OPENAI_API_KEY = 'test-key';
+        try {
+            const buildRAGContextDetalle = jest.fn();
+            const svc = new OpenAIService();
+            svc.setDependencies({
+                ragService: { buildRAGContextDetalle },
+                guardrailsService: { checkRateLimit: jest.fn().mockReturnValue({ allowed: true }) },
+                learningService: null,
+                configService: { getConfig: jest.fn().mockResolvedValue({ max_contexto_rag_items: 3, rag_similarity_threshold: 0.7 }) },
+                ragMonitorService: { registrar: jest.fn().mockResolvedValue({ registro: { id: 1 } }) },
+            });
+            openaiApi.__sharedCreate.mockResolvedValue({
+                choices: [{ message: { content: 'Respuesta con contexto.' } }],
+                usage: { total_tokens: 12 },
+            });
+            const result = await svc.chatInterno({ mensaje: 'm', idUsuario: 1, sessionId: 's', ragDetalle: DETALLE_RAG });
+            expect(result.respuesta).toBe('Respuesta con contexto.');
+            expect(buildRAGContextDetalle).not.toHaveBeenCalled();
+        } finally {
+            if (oldKey === undefined) delete process.env.OPENAI_API_KEY;
+            else process.env.OPENAI_API_KEY = oldKey;
+        }
+    });
+});
+
 describe('OpenAIService.chatInterno', () => {
     test('registra el diagnóstico RAG aun con respuesta insuficiente del modelo', async () => {
         const oldKey = process.env.OPENAI_API_KEY;

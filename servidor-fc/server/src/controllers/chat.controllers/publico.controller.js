@@ -76,8 +76,10 @@ const enviarMensaje = async (req, res) => {
             });
         }
 
+        const ragDetalle = await openaiService.obtenerRAGDetalle(mensaje, 'publico', evaluacion.embeddings);
+
         if (evaluacion.decision === 'off_topic') {
-            const tieneRAG = await openaiService.tieneContextoRelevante(mensaje, 'publico');
+            const tieneRAG = !!ragDetalle && Array.isArray(ragDetalle.resultados) && ragDetalle.resultados.length > 0;
             if (!tieneRAG) {
                 const offlineResponse = "Agradezco tu consulta, pero solo cuento con información sobre los servicios, programas y actividades de la Fundación con Cristo. Si tienes preguntas sobre nuestros servicios de salud, programas comunitarios, horarios, ubicación o cómo colaborar con nosotros, estaré encantado de ayudarte.";
 
@@ -148,6 +150,7 @@ const enviarMensaje = async (req, res) => {
             consentimiento,
             sessionId: effectiveSessionId,
             visitorId: effectiveVisitorId,
+            ragDetalle,
         });
 
         res.json({

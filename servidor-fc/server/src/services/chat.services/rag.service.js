@@ -40,6 +40,13 @@ class RAGService {
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OPENAI_API_KEY no está configurada');
         }
+        console.log('[DEPURA-RAG][1-ANTES-EMBEDDING] Variable enviada al modelo de embedding:', {
+            tipo: typeof text,
+            esString: typeof text === 'string',
+            esArray: Array.isArray(text),
+            longitud: typeof text === 'string' ? text.length : null,
+            valor: text,
+        });
         const response = await this.getOpenAI().embeddings.create({
             model: chatConfig.embeddingModel || 'text-embedding-ada-002',
             input: text.substring(0, 8000),
@@ -145,9 +152,9 @@ class RAGService {
         }
     }
 
-    async searchSimilarKnowledge(query, { limit = 3, threshold = 0.7, bloqueados = false, canal = 'ambos' } = {}) {
-        const queryEmbedding = await this.generateEmbedding(query);
-        return this.searchSimilar(query, queryEmbedding, { limit, threshold, canal });
+    async searchSimilarKnowledge(query, { limit = 3, threshold = 0.7, bloqueados = false, canal = 'ambos', queryEmbedding = null } = {}) {
+        const embedding = queryEmbedding || await this.generateEmbedding(query);
+        return this.searchSimilar(query, embedding, { limit, threshold, canal });
     }
 
     async searchSimilarByEmbeddings(queryEmbedding, rows, threshold = 0.7, limit = 3) {
@@ -178,9 +185,9 @@ class RAGService {
         }
     }
 
-    async buildRAGContextDetalle(query, maxItems = 3, threshold = 0.7, canal = 'ambos') {
+    async buildRAGContextDetalle(query, maxItems = 3, threshold = 0.7, canal = 'ambos', opts = {}) {
         try {
-            const relevant = await this.searchSimilarKnowledge(query, { limit: maxItems, threshold, canal });
+            const relevant = await this.searchSimilarKnowledge(query, { limit: maxItems, threshold, canal, queryEmbedding: opts.queryEmbedding });
 
             const detalle = {
                 resultados: relevant.map((item) => ({

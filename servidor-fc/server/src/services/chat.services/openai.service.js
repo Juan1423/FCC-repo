@@ -25,14 +25,19 @@ class OpenAIService {
         this._ultimoRAGDetalle = null;
     }
 
-    async tieneContextoRelevante(mensaje, tipo = 'publico') {
-        if (!this.ragService) return false;
+    async obtenerRAGDetalle(mensaje, tipo = 'publico', queryEmbedding = null) {
+        if (!this.ragService) return null;
         const config = await this.loadConfig();
         const maxItems = config.max_contexto_rag_items !== undefined ? config.max_contexto_rag_items : 3;
         const threshold = config.rag_similarity_threshold !== undefined ? config.rag_similarity_threshold : 0.55;
+        const detalle = await this.ragService.buildRAGContextDetalle(mensaje, maxItems, threshold, tipo, { queryEmbedding });
+        this._ultimoRAGDetalle = detalle || null;
+        return detalle;
+    }
+
+    async tieneContextoRelevante(mensaje, tipo = 'publico', queryEmbedding = null) {
         try {
-            const detalle = await this.ragService.buildRAGContextDetalle(mensaje, maxItems, threshold, tipo);
-            this._ultimoRAGDetalle = detalle || null;
+            const detalle = await this.obtenerRAGDetalle(mensaje, tipo, queryEmbedding);
             return !!detalle && Array.isArray(detalle.resultados) && detalle.resultados.length > 0;
         } catch (error) {
             console.warn('Error en pre-chequeo RAG:', error.message);
@@ -145,7 +150,7 @@ class OpenAIService {
         }
     }
 
-    async construirPromptCompleto(mensajeUsuario, { promptId = null, sessionId, tipo = 'publico', consentimiento = false } = {}) {
+    async construirPromptCompleto(mensajeUsuario, { promptId = null, sessionId, tipo = 'publico', consentimiento = false, ragDetalle = null, queryEmbedding = null } = {}) {
         let prompt = chatConfig.systemPrompt.base + '\n\n';
 
         prompt += 'INSTRUCCIONES CRÍTICAS:\n';
@@ -196,15 +201,11 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
         }
 
         if (this.ragService) {
-            const config = await this.loadConfig();
-            const maxItems = config.max_contexto_rag_items !== undefined ? config.max_contexto_rag_items : 3;
-            const threshold = config.rag_similarity_threshold !== undefined ? config.rag_similarity_threshold : 0.55;
-
             try {
-                const ragDetalle = await this.ragService.buildRAGContextDetalle(mensajeUsuario, maxItems, threshold, tipo);
-                this._ultimoRAGDetalle = ragDetalle || null;
-                if (ragDetalle?.context) {
-                    prompt += ragDetalle.context + '\n\n';
+                const ragDeta = ragDetalle || await this.obtenerRAGDetalle(mensajeUsuario, tipo, queryEmbedding);
+                this._ultimoRAGDetalle = ragDeta || null;
+                if (ragDeta?.context) {
+                    prompt += ragDeta.context + '\n\n';
                 }
             } catch (error) {
                 console.warn('Error obteniendo contexto RAG:', error.message);
@@ -270,7 +271,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
         return prompt;
     }
 
-    async chatPublico({ mensaje, promptId = null, idUsuario = null, idUsuarioAnonimo = null, consentimiento = false, sessionId, visitorId }) {
+    async chatPublico({ mensaje, promptId = null, idUsuario = null, idUsuarioAnonimo = null, consentimiento = false, sessionId, visitorId, ragDetalle = null, queryEmbedding = null }) {
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OPENAI_API_KEY no está configurada en .env');
         }
@@ -300,12 +301,12 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             }
             promptCompleto += `${chatConfig.systemPrompt.userMessageFormat} ${mensaje}`;
         } else {
-            promptCompleto = await this.construirPromptCompleto(mensaje, { promptId, sessionId, tipo: 'publico', consentimiento });
+            promptCompleto = await this.construirPromptCompleto(mensaje, { promptId, sessionId, tipo: 'publico', consentimiento, ragDetalle, queryEmbedding });
         }
 
         let responseFromOpenAI;
         try {
-            responseFromOpenAI = await this.openai.chat.completions.create({
+            const payloadOpenAI = {
                 model: chatConfig.openai.model,
                 messages: [
                     { role: 'system', content: chatConfig.systemPrompt.base },
@@ -316,7 +317,20 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
                 top_p: chatConfig.openai.topP,
                 frequency_penalty: chatConfig.openai.frequencyPenalty,
                 presence_penalty: chatConfig.openai.presencePenalty,
+            };
+            console.log('[DEPURA-RAG][3-ANTES-LLM][publico] Payload completo enviado al modelo:', {
+                systemPrompt: payloadOpenAI.messages[0].content,
+                promptUsuarioConContexto: payloadOpenAI.messages[1].content,
+                parametros: {
+                    model: payloadOpenAI.model,
+                    max_tokens: payloadOpenAI.max_tokens,
+                    temperature: payloadOpenAI.temperature,
+                    top_p: payloadOpenAI.top_p,
+                    frequency_penalty: payloadOpenAI.frequency_penalty,
+                    presence_penalty: payloadOpenAI.presence_penalty,
+                },
             });
+            responseFromOpenAI = await this.openai.chat.completions.create(payloadOpenAI);
         } catch (error) {
             console.error('OpenAI API error:', error.message);
             throw error;
@@ -393,7 +407,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
         };
     }
 
-    async chatInterno({ mensaje, idUsuario, sessionId }) {
+    async chatInterno({ mensaje, idUsuario, sessionId, ragDetalle = null, queryEmbedding = null }) {
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OPENAI_API_KEY no está configurada en .env');
         }
@@ -414,9 +428,9 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
 
         const startTime = Date.now();
         this._ultimoRAGDetalle = null;
-        const promptCompleto = await this.construirPromptCompleto(mensaje, { sessionId, tipo: 'interno' });
+        const promptCompleto = await this.construirPromptCompleto(mensaje, { sessionId, tipo: 'interno', ragDetalle, queryEmbedding });
 
-        const responseFromOpenAI = await this.openai.chat.completions.create({
+        const payloadOpenAI = {
             model: chatConfig.openai.model,
             messages: [
                 { role: 'system', content: 'Eres un asistente de soporte para el personal de la Fundación Con Cristo. Usa la documentación interna para responder con precisión.' },
@@ -425,7 +439,18 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             max_tokens: chatConfig.openai.maxTokens,
             temperature: 0.3,
             top_p: chatConfig.openai.topP,
+        };
+        console.log('[DEPURA-RAG][3-ANTES-LLM][interno] Payload completo enviado al modelo:', {
+            systemPrompt: payloadOpenAI.messages[0].content,
+            promptUsuarioConContexto: payloadOpenAI.messages[1].content,
+            parametros: {
+                model: payloadOpenAI.model,
+                max_tokens: payloadOpenAI.max_tokens,
+                temperature: payloadOpenAI.temperature,
+                top_p: payloadOpenAI.top_p,
+            },
         });
+        const responseFromOpenAI = await this.openai.chat.completions.create(payloadOpenAI);
 
         const respuesta = responseFromOpenAI.choices?.[0]?.message?.content || '';
         const responseTime = Date.now() - startTime;
