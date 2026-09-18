@@ -11,12 +11,6 @@ router.put('/', verifyTokenAdmin, configController.updateConfig);
 router.get('/fundacion', verifyTokenAdmin, configController.getFundacionConfig);
 router.put('/fundacion', verifyTokenAdmin, configController.updateFundacionConfig);
 
-router.get('/temas', verifyTokenAdmin, configController.getTemasValidos);
-router.post('/temas', verifyTokenAdmin, configController.createTemaValido);
-router.put('/temas/:id', verifyTokenAdmin, configController.updateTemaValido);
-router.delete('/temas/:id', verifyTokenAdmin, configController.deleteTemaValido);
-router.post('/regenerar-temas', verifyTokenAdmin, configController.regenerarTemas);
-
 router.get('/protocolos', verifyTokenAdmin, configController.getProtocolosSensibles);
 router.post('/protocolos', verifyTokenAdmin, configController.createProtocoloSensible);
 router.put('/protocolos/:id', verifyTokenAdmin, configController.updateProtocoloSensible);

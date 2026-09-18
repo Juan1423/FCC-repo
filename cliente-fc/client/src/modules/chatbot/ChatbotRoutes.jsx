@@ -6,7 +6,6 @@ import {
   CheckCircle as CheckCircleIcon,
   Shield as ShieldIcon,
   Policy as ProtocolIcon,
-  Topic as TopicIcon,
   Speed as RateLimitIcon,
   Chat as ChatIcon,
   AccountBalance as FoundationIcon,
@@ -20,7 +19,6 @@ import KnowledgeAdmin from './views/KnowledgeAdmin';
 import AprendizajeAdmin from './views/AprendizajeAdmin';
 import GuardrailsConfig from './components/GuardrailsConfig';
 import ProtocolosSensiblesEditor from './components/ProtocolosSensiblesEditor';
-import TemasValidosEditor from './components/TemasValidosEditor';
 import RateLimitConfig from './components/RateLimitConfig';
 import FundacionConfig from './components/FundacionConfig';
 
@@ -98,18 +96,6 @@ const ChatbotRoutes = () => {
               icon={<ProtocolIcon color="primary" />}
             >
               <ProtocolosSensiblesEditor />
-            </IndividualView>
-          }
-        />
-        <Route
-          path="temas"
-          element={
-            <IndividualView
-              title="Temas Válidos"
-              subtitle="Alcance on-topic del asistente"
-              icon={<TopicIcon color="primary" />}
-            >
-              <TemasValidosEditor />
             </IndividualView>
           }
         />

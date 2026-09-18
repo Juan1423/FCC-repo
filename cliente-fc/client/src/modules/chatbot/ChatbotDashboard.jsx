@@ -7,7 +7,6 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import SchoolIcon from '@mui/icons-material/School';
 import SecurityIcon from '@mui/icons-material/Security';
 import GavelIcon from '@mui/icons-material/Gavel';
-import TopicIcon from '@mui/icons-material/Topic';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import HistoryIcon from '@mui/icons-material/History';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -54,13 +53,6 @@ const dataTarjeta = [
     description: 'Respuestas para temas sensibles',
     path: 'protocolos',
     color: '#7c3aed',
-  },
-  {
-    title: 'Temas Válidos',
-    icon: <TopicIcon />,
-    description: 'Alcance on-topic del asistente',
-    path: 'temas',
-    color: '#f59e0b',
   },
   {
     title: 'Rate Limit',
