@@ -5,6 +5,8 @@ const { models } = require('../../libs/sequelize');
 const { Op } = require('sequelize');
 const chatConfig = require('../../config/chatConfig');
 
+const DEFAULT_RAG_UMBRAL_ESTRICTO = 0.55;
+
 class RAGService {
     constructor() {
         this.cache = new Map();
@@ -12,6 +14,21 @@ class RAGService {
         this.cacheExpiryMs = 5 * 60 * 1000;
         this.openai = null;
         this.configLoader = null;
+    }
+
+    async getRagUmbralEstricto() {
+        if (!this.configLoader) return DEFAULT_RAG_UMBRAL_ESTRICTO;
+        try {
+            const cfg = await this.configLoader();
+            const val = cfg?.rag_umbral_estricto;
+            if (val !== undefined && val !== null) {
+                const parsed = parseFloat(val);
+                if (!isNaN(parsed)) return parsed;
+            }
+        } catch (error) {
+            console.warn('Error reading rag_umbral_estricto from config:', error.message);
+        }
+        return DEFAULT_RAG_UMBRAL_ESTRICTO;
     }
 
     async obtenerConfigRAG() {
@@ -105,9 +122,11 @@ class RAGService {
         this.knowledgeCacheByCanal.clear();
     }
 
-    async searchSimilar(query, queryEmbedding, { limit = 3, threshold = 0.7, canal = 'ambos' }) {
+    async searchSimilar(query, queryEmbedding, { limit = 3, threshold = null, canal = 'ambos' }) {
         try {
-            const cacheKey = this.generateCacheKey('search', { query, limit, threshold, canal });
+            const umbralEstricto = await this.getRagUmbralEstricto();
+            const umbralEfectivo = Math.max(threshold ?? umbralEstricto, umbralEstricto);
+            const cacheKey = this.generateCacheKey('search', { query, limit, threshold: umbralEfectivo, canal });
             const cached = this.cache.get(cacheKey);
             if (cached && Date.now() < cached.expiry) {
                 return cached.result;
@@ -118,7 +137,7 @@ class RAGService {
             const results = [];
             for (const [id, row] of knowledgeCache.entries()) {
                 const similarity = this.cosineSimilarity(queryEmbedding, row.embedding);
-                if (similarity >= threshold) {
+                if (similarity >= umbralEfectivo) {
                     results.push({ ...row, similarity });
                 }
             }
@@ -134,7 +153,7 @@ class RAGService {
         }
     }
 
-    async searchSimilarKnowledge(query, { limit = 3, threshold = 0.7, bloqueados = false, canal = 'ambos', queryEmbedding = null } = {}) {
+    async searchSimilarKnowledge(query, { limit = 3, threshold = null, bloqueados = false, canal = 'ambos', queryEmbedding = null } = {}) {
         const embedding = queryEmbedding || await this.generateEmbedding(query);
         return this.searchSimilar(query, embedding, { limit, threshold, canal });
     }
@@ -157,7 +176,7 @@ class RAGService {
             .slice(0, limit);
     }
 
-    async buildRAGContext(query, maxItems = 3, threshold = 0.7, canal = 'ambos') {
+    async buildRAGContext(query, maxItems = 3, threshold = null, canal = 'ambos') {
         try {
             const detalle = await this.buildRAGContextDetalle(query, maxItems, threshold, canal);
             return detalle.context;
@@ -167,7 +186,7 @@ class RAGService {
         }
     }
 
-    async buildRAGContextDetalle(query, maxItems = 3, threshold = 0.7, canal = 'ambos', opts = {}) {
+    async buildRAGContextDetalle(query, maxItems = 3, threshold = null, canal = 'ambos', opts = {}) {
         try {
             const relevant = await this.searchSimilarKnowledge(query, { limit: maxItems, threshold, canal, queryEmbedding: opts.queryEmbedding });
 
@@ -214,26 +233,6 @@ class RAGService {
                 contextoIncluido: false,
                 error: error.message,
             };
-        }
-    }
-
-    async buildTemasContext() {
-        try {
-            const temas = await models.ChatTemaValido.findAll({
-                where: { activo: true },
-                attributes: ['tema', 'descripcion'],
-                raw: true,
-            });
-            if (temas.length === 0) return '';
-
-            let context = 'TEMAS VÁLIDOS QUE PUEDES CONSULTAR:\n\n';
-            temas.forEach((t, i) => {
-                context += `${i + 1}. ${t.tema}: ${t.descripcion}\n`;
-            });
-            return context;
-        } catch (error) {
-            console.error('Error building temas context:', error.message);
-            return '';
         }
     }
 

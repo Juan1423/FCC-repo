@@ -19,6 +19,8 @@ const CONFIG_CONSTRAINTS = {
     memory_max_turnos: { min: 1, max: 10, integer: true },
     chunk_size: { min: 100, integer: true },
     chunk_overlap: { min: 0, integer: true },
+    rag_similarity_threshold: { min: 0.1, max: 1.0, integer: false },
+    rag_umbral_estricto: { min: 0.1, max: 1.0, integer: false },
 };
 
 function validationError(message) {
