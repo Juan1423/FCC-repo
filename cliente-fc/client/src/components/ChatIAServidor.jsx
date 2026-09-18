@@ -47,6 +47,7 @@ export const ChatBotIA = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [internalSessionId] = useState(() => `asistente-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   const messagesEndRef = useRef(null);
   
   const location = useLocation();
@@ -117,7 +118,7 @@ export const ChatBotIA = () => {
 
       if (isInternalUser) {
         // --- MODO INTERNO ---
-        const res = await enviarMensajeInterno({ mensaje: userText });
+        const res = await enviarMensajeInterno({ mensaje: userText, sessionId: internalSessionId });
         respuesta = res?.data?.respuesta || res?.respuesta || "No encontré información en los documentos.";
       } else {
         // --- MODO PÚBLICO ---
