@@ -18,16 +18,6 @@ const enviarMensaje = async (req, res) => {
         const idUsuario = req.user.user;
         const effectiveSessionId = sessionId || `asistente-${idUsuario}-${Date.now()}`;
 
-        const rateResult = guardrailsService.checkRateLimit({ scope: 'auth', identifier: idUsuario });
-        if (!rateResult.allowed) {
-            return res.status(429).json({
-                success: false,
-                message: `Has alcanzado el límite de ${rateResult.limit} mensajes. Intenta en ${rateResult.retryAfter} segundos.`,
-                retryAfter: rateResult.retryAfter,
-                remaining: 0,
-            });
-        }
-
         const evaluacion = await guardrailsService.evaluarEntrada(mensaje);
 
         if (evaluacion.decision === 'protocolo') {
@@ -57,58 +47,6 @@ const enviarMensaje = async (req, res) => {
         }
 
         const ragDetalle = await openaiService.obtenerRAGDetalle(mensaje, 'interno', evaluacion.embeddings);
-
-        if (evaluacion.decision === 'off_topic') {
-            const tieneRAG = !!ragDetalle && Array.isArray(ragDetalle.resultados) && ragDetalle.resultados.length > 0;
-            if (!tieneRAG) {
-                const offlineResponse = "Agradezco tu consulta, pero solo cuento con información sobre los servicios, programas y actividades de la Fundación con Cristo. Si tienes preguntas sobre nuestros servicios de salud, programas comunitarios, horarios, ubicación o cómo colaborar con nosotros, estaré encantado de ayudarte.";
-
-                const conversacion = await models.ChatConversacion.create({
-                    tipo: 'interno',
-                    id_usuario: idUsuario,
-                    session_id: effectiveSessionId,
-                    mensaje_usuario: mensaje,
-                    respuesta_bot: offlineResponse,
-                    consentimiento: true,
-                    metadata: { off_topic: true, matchTema: evaluacion.matchTema?.tema || null },
-                    flag_revision: true,
-                    motivo_revision: 'off_topic',
-                    tiempo_respuesta: 0,
-                    tokens_usados: 0,
-                });
-
-                openaiService.registrarDiagnosticoRAGAsync({
-                    tipo: 'interno',
-                    pregunta: mensaje,
-                    respuesta: offlineResponse,
-                    decision: 'off_topic',
-                    idConversacion: conversacion.id_conversacion,
-                });
-
-                setImmediate(async () => {
-                    try {
-                        await learningService.addToRevision({
-                            idConversacion: conversacion.id_conversacion,
-                            triggerType: 'off_topic',
-                            mensajeUsuario: mensaje,
-                            respuestaIa: offlineResponse,
-                            sugerencia: null,
-                        });
-                    } catch (e) {
-                        console.error('Learning addToRevision error (off_topic interno):', e);
-                    }
-                });
-
-                return res.json({
-                    success: true,
-                    decision: 'off_topic',
-                    respuesta: offlineResponse,
-                    id_conversacion: conversacion.id_conversacion,
-                    responseTime: 0,
-                    tokensUsed: 0,
-                });
-            }
-        }
 
         const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings, 'interno');
         if (canonical) {
@@ -150,13 +88,6 @@ const enviarMensaje = async (req, res) => {
             tokensUsed: result.tokensUsed,
         });
     } catch (error) {
-        if (error.code === 'RATE_LIMIT_EXCEEDED') {
-            return res.status(429).json({
-                success: false,
-                message: error.message,
-                retryAfter: error.retryAfter,
-            });
-        }
         console.error('Error en chat interno:', error.message);
         res.status(500).json({
             success: false,
