@@ -73,6 +73,7 @@ const KnowledgeAdmin = () => {
   const [uploadOcr, setUploadOcr] = useState(false);
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState(null);
   const { roles, hasPermission } = useRoles();
 
   const canalLabel = { ambos: 'Ambos', publico: 'Público', interno: 'Interno' };
@@ -110,6 +111,12 @@ const KnowledgeAdmin = () => {
   useEffect(() => {
     loadDocuments();
   }, [loadDocuments]);
+
+  useEffect(() => {
+    if (!feedback) return undefined;
+    const timer = setTimeout(() => setFeedback(null), 10000);
+    return () => clearTimeout(timer);
+  }, [feedback]);
 
   const handleDocPageChange = (event, newPage) => {
     setDocPage(newPage);
@@ -221,10 +228,13 @@ const KnowledgeAdmin = () => {
 
   const handleGenerarEmbeddings = async () => {
     setLoading(true);
+    setFeedback(null);
     try {
-      await generarEmbeddings();
+      const resp = await generarEmbeddings();
+      setFeedback({ type: resp?.success ? 'success' : 'error', text: resp?.message || 'Generación de embeddings terminada' });
       loadKnowledge();
     } catch (error) {
+      setFeedback({ type: 'error', text: error.message || 'Error generando embeddings' });
       console.error('Error generando embeddings:', error);
     } finally {
       setLoading(false);
@@ -233,9 +243,14 @@ const KnowledgeAdmin = () => {
 
   const handleRegenerarMemoria = async () => {
     setLoading(true);
+    setFeedback(null);
     try {
-      await regenerarMemoria();
+      const resp = await regenerarMemoria();
+      setFeedback({ type: resp?.success ? 'success' : 'error', text: resp?.message || 'Regeneración de memoria terminada' });
+      loadKnowledge();
+      loadDocuments();
     } catch (error) {
+      setFeedback({ type: 'error', text: error.message || 'Error regenerando memoria' });
       console.error('Error regenerando memoria:', error);
     } finally {
       setLoading(false);
@@ -260,12 +275,12 @@ const KnowledgeAdmin = () => {
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Tooltip title="Generar embeddings">
             <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleGenerarEmbeddings} disabled={!canEdit || loading}>
-              Generar Embeddings
+              {loading ? 'Generando...' : 'Generar Embeddings'}
             </Button>
           </Tooltip>
           <Tooltip title="Regenerar memoria de conocimiento">
             <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleRegenerarMemoria} disabled={loading}>
-              Regenerar Memoria
+              {loading ? 'Regenerando...' : 'Regenerar Memoria'}
             </Button>
           </Tooltip>
           {tabValue === 0 && (
@@ -287,6 +302,12 @@ const KnowledgeAdmin = () => {
         <Tab label="Conocimiento" />
         <Tab label="Documentos" />
       </Tabs>
+
+      {feedback && (
+        <Alert severity={feedback.type} onClose={() => setFeedback(null)} sx={{ mb: 2 }}>
+          {feedback.text}
+        </Alert>
+      )}
 
       <Alert severity="info" sx={{ mb: 2 }}>
         La pestaña <b>Conocimiento</b> contiene las entradas manuales con las que el chatbot responde.
