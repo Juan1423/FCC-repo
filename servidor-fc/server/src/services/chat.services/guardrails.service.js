@@ -3,6 +3,8 @@
 const { models } = require('../../libs/sequelize');
 const chatConfig = require('../../config/chatConfig');
 
+const UMBRAL_GUARDRAIL_SENSIBLE = 0.45;
+
 class GuardrailsService {
     constructor() {
         this.counters = new Map();
@@ -47,7 +49,7 @@ class GuardrailsService {
             .trim();
     }
 
-    async detectSensitiveTopic(mensaje) {
+    async detectSensitiveTopic(mensaje, queryEmbedding = null) {
         const normalized = this.normalize(mensaje);
         if (!normalized) return null;
 
@@ -59,6 +61,7 @@ class GuardrailsService {
 
         if (protocolos.length === 0) return null;
 
+        // 1) Coincidencia por palabras clave (comportamiento original)
         let bestMatch = null;
         let bestScore = 0;
 
@@ -87,59 +90,53 @@ class GuardrailsService {
             }
         }
 
-        return bestMatch;
-    }
+        // 2) Coincidencia semántica por similitud coseno >= 0.45 (calibración)
+        let semanticBest = null;
+        let bestSemanticScore = UMBRAL_GUARDRAIL_SENSIBLE;
 
-    async isOnTopic(mensaje, queryEmbedding) {
-        const config = await this.loadConfig();
-        const threshold = config.off_topic_threshold !== undefined ? config.off_topic_threshold : 0.3;
-
-        if (!queryEmbedding) {
-            return { onTopic: true, matchedTema: null, score: 0 };
-        }
-
-        const temas = await models.ChatTemaValido.findAll({
-            where: { activo: true },
-            attributes: ['id_tema', 'tema', 'descripcion', 'embedding'],
-            raw: true,
-        });
-
-        let maxScore = 0;
-        let matchedTema = null;
-
-        for (const tema of temas) {
-            let temaEmbedding = null;
-            if (tema.embedding) {
-                try {
-                    temaEmbedding = typeof tema.embedding === 'string' ? JSON.parse(tema.embedding) : tema.embedding;
-                } catch (e) {
-                    continue;
+        if (queryEmbedding) {
+            for (const protocolo of protocolos) {
+                let protEmbedding = null;
+                if (protocolo.embedding_keywords) {
+                    try {
+                        protEmbedding = typeof protocolo.embedding_keywords === 'string'
+                            ? JSON.parse(protocolo.embedding_keywords)
+                            : protocolo.embedding_keywords;
+                    } catch (e) {
+                        protEmbedding = null;
+                    }
                 }
-            }
 
-            if (!temaEmbedding && tema.descripcion) {
-                try {
-                    temaEmbedding = await this.generateEmbedding(tema.descripcion);
-                    await models.ChatTemaValido.update(
-                        { embedding: JSON.stringify(temaEmbedding) },
-                        { where: { id_tema: tema.id_tema } }
-                    );
-                } catch (e) {
-                    continue;
+                if (!protEmbedding) {
+                    try {
+                        let keywords = [];
+                        try {
+                            keywords = JSON.parse(protocolo.palabras_clave);
+                        } catch (e) {
+                            keywords = [];
+                        }
+                        const textoRepresentativo = `${protocolo.categoria} ${(keywords || []).join(' ')}`.trim();
+                        protEmbedding = await this.generateEmbedding(textoRepresentativo.substring(0, 8000));
+                        await models.ChatProtocoloSensible.update(
+                            { embedding_keywords: JSON.stringify(protEmbedding) },
+                            { where: { id_protocolo: protocolo.id_protocolo } }
+                        );
+                    } catch (e) {
+                        continue;
+                    }
                 }
-            }
 
-            if (temaEmbedding) {
-                const score = this.cosineSimilarity(queryEmbedding, temaEmbedding);
-                if (score > maxScore) {
-                    maxScore = score;
-                    matchedTema = tema;
+                if (!protEmbedding) continue;
+
+                const score = this.cosineSimilarity(queryEmbedding, protEmbedding);
+                if (score >= UMBRAL_GUARDRAIL_SENSIBLE && score > bestSemanticScore) {
+                    bestSemanticScore = score;
+                    semanticBest = protocolo;
                 }
             }
         }
 
-        const onTopic = maxScore >= (typeof threshold === 'number' ? threshold : 0.65);
-        return { onTopic, matchedTema, score: maxScore };
+        return bestMatch || semanticBest;
     }
 
     cosineSimilarity(vecA, vecB) {
@@ -543,22 +540,6 @@ class GuardrailsService {
     async evaluarEntrada(mensaje) {
         const normalized = this.normalize(mensaje);
 
-        const sensitiveCheckFirst = this.getConfig().sensitive_check_first !== undefined
-            ? this.getConfig().sensitive_check_first
-            : true;
-
-        if (sensitiveCheckFirst) {
-            const protocolo = await this.detectSensitiveTopic(mensaje);
-            if (protocolo) {
-                return {
-                    decision: 'protocolo',
-                    protocolo,
-                    embeddings: null,
-                    matchTema: null,
-                };
-            }
-        }
-
         let queryEmbedding = null;
         try {
             queryEmbedding = await this.generateEmbedding(mensaje);
@@ -566,21 +547,23 @@ class GuardrailsService {
             console.error('Could not generate embedding:', e);
         }
 
-        const onTopicResult = await this.isOnTopic(mensaje, queryEmbedding);
-        if (!onTopicResult.onTopic) {
+        const protocolo = await this.detectSensitiveTopic(mensaje, queryEmbedding);
+        if (protocolo) {
             return {
-                decision: 'off_topic',
-                protocolo: null,
+                decision: 'protocolo',
+                protocolo,
                 embeddings: queryEmbedding,
-                matchTema: onTopicResult.matchedTema,
             };
         }
+
+        // Guardrail Off-Topic ELIMINADO (calibración 2026): interfería con consultas
+        // válidas. El umbral estricto del RAG (0.55) maneja las preguntas fuera de
+        // tema por omisión de resultados.
 
         return {
             decision: 'responder',
             protocolo: null,
             embeddings: queryEmbedding,
-            matchTema: onTopicResult.matchedTema,
         };
     }
 }
