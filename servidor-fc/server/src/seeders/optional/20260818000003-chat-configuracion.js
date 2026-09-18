@@ -8,7 +8,6 @@ const configKeys = [
   { clave: 'canonical_response_threshold', valor: '0.85', tipo: 'float', descripcion: 'Umbral de similitud para respuesta canónica' },
   { clave: 'rag_similarity_threshold', valor: '0.55', tipo: 'float', descripcion: 'Umbral de similitud para RAG' },
   { clave: 'max_contexto_rag_items', valor: '3', tipo: 'number', descripcion: 'Número máximo de items de contexto RAG' },
-  { clave: 'rag_lexico_weight', valor: '0.2', tipo: 'float', descripcion: 'Peso del overlap léxico (keywords) al ordenar resultados RAG (0-0.6). 0 = solo coseno' },
   { clave: 'enable_learning_queue', valor: 'true', tipo: 'boolean', descripcion: 'Habilitar cola de revisión de aprendizaje' },
   { clave: 'sensitive_check_first', valor: 'true', tipo: 'boolean', descripcion: 'Verificar temas sensibles antes que off-topic' },
   { clave: 'feedback_threshold', valor: '2', tipo: 'number', descripcion: 'Calificación mínima para considerar feedback negativo (1-5)' },

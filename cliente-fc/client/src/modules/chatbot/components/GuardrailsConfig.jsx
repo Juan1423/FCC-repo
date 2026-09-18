@@ -46,11 +46,6 @@ const CONFIG_INFO = {
     descripcion: 'Cuántos fragmentos de conocimiento se inyectan como contexto en el prompt.',
     min: 1,
   },
-  rag_lexico_weight: {
-    label: 'Peso de keywords en RAG',
-    descripcion: 'Peso (0-0.6) que se da a la coincidencia de palabras clave al ordenar resultados. 0 = solo similitud semántica; subirlo favorece chunks que repiten los términos exactos de la pregunta.',
-    step: '0.05',
-  },
   feedback_threshold: {
     label: 'Umbral de feedback negativo',
     descripcion: 'Calificación mínima (1-5) a partir de la cual el feedback se considera negativo y puede marcar la conversación para aprendizaje. Umbral bajo = menos revisiones; alto = más revisiones.',
@@ -111,7 +106,6 @@ const DEFAULT_CONFIG = {
   canonical_response_threshold: 0.85,
   rag_similarity_threshold: 0.55,
   max_contexto_rag_items: 3,
-  rag_lexico_weight: 0.2,
   feedback_threshold: 2,
   min_respuesta_length: 10,
   max_respuesta_length: 100,

@@ -12,7 +12,6 @@ class RAGService {
         this.cacheExpiryMs = 5 * 60 * 1000;
         this.openai = null;
         this.configLoader = null;
-        this.ragLexicoWeight = 0.2;
     }
 
     async obtenerConfigRAG() {
@@ -24,36 +23,6 @@ class RAGService {
             console.warn('Error cargando config RAG desde loader:', error.message);
             return {};
         }
-    }
-
-    tokenizar(texto) {
-        if (!texto) return new Set();
-        const stopwords = new Set([
-            'de', 'la', 'el', 'los', 'las', 'del', 'y', 'a', 'al', 'en', 'es', 'para', 'por',
-            'con', 'un', 'una', 'que', 'se', 'su', 'lo', 'como', 'mas', 'hay', 'son', 'cual',
-            'esta', 'este', 'estos', 'para', 'porque', 'documento', 'informacion', 'pagina',
-            'dice', 'tener', 'hacer', 'sobre', 'entre', 'usted', 'apoya',
-        ]);
-        const tokens = String(texto)
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9\s]/g, ' ')
-            .split(/\s+/)
-            .filter(Boolean);
-        return new Set(tokens.filter((t) => t.length > 2 && !stopwords.has(t)));
-    }
-
-    calcularOverlapLexico(query, contenido) {
-        const q = this.tokenizar(query);
-        if (q.size === 0) return 0;
-        const c = this.tokenizar(contenido);
-        if (c.size === 0) return 0;
-        let hits = 0;
-        for (const token of q) {
-            if (c.has(token)) hits++;
-        }
-        return hits / q.size;
     }
 
     getOpenAI() {
@@ -144,32 +113,28 @@ class RAGService {
                 return cached.result;
             }
 
-            let weight = this.ragLexicoWeight;
-            const cfg = await this.obtenerConfigRAG();
-            if (cfg.rag_lexico_weight !== undefined && cfg.rag_lexico_weight !== null) {
-                const parsed = parseFloat(cfg.rag_lexico_weight);
-                if (!isNaN(parsed)) weight = Math.min(Math.max(parsed, 0), 0.6);
-            }
-
             const knowledgeCache = await this.loadKnowledgeIntoCache(canal);
 
             const results = [];
             for (const [id, row] of knowledgeCache.entries()) {
                 const similarity = this.cosineSimilarity(queryEmbedding, row.embedding);
-                const contenidoTexto = `${row.pregunta_frecuente || ''} ${row.respuesta_oficial || ''} ${row.contenido || ''} ${row.tema_principal || ''}`;
-                const overlapLexico = this.calcularOverlapLexico(query, contenidoTexto);
-                const combinedScore = similarity * (1 - weight) + overlapLexico * weight;
-                if (Math.max(similarity, combinedScore) >= threshold) {
-                    results.push({
-                        ...row,
-                        similarity,
-                        overlapLexico,
-                        combinedScore,
-                    });
+                if (similarity >= threshold) {
+                    results.push({ ...row, similarity });
                 }
             }
 
-            results.sort((a, b) => b.combinedScore - a.combinedScore);
+            console.log('[DEPURA-RAG][2-BUSQUEDA-VECTORIAL] Candidatos con puntaje (ANTES del filtro por umbral):', {
+                query,
+                threshold,
+                totalCandidatos: results.length,
+                candidatos: results.map((r) => ({
+                    id_conocimiento: r.id_conocimiento,
+                    texto: `${r.pregunta_frecuente || ''} ${r.respuesta_oficial || ''} ${r.contenido || ''} ${r.tema_principal || ''}`,
+                    similarity: r.similarity,
+                })),
+            });
+
+            results.sort((a, b) => b.similarity - a.similarity);
             const sliced = results.slice(0, limit);
 
             this.cache.set(cacheKey, { result: sliced, expiry: Date.now() + this.cacheExpiryMs });
