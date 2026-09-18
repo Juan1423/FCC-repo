@@ -213,7 +213,7 @@ const KnowledgeAdmin = () => {
         setLoading(true);
         try {
           await uploadDocumento(file, file.name, uploadCanal, uploadOcr);
-          setTabValue(1);
+          setTabValue(0);
           loadDocuments();
         } catch (error) {
           console.error('Error subiendo PDF:', error);
@@ -284,23 +284,23 @@ const KnowledgeAdmin = () => {
             </Button>
           </Tooltip>
           {tabValue === 0 && (
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()} disabled={!canEdit}>
-              Nuevo
-            </Button>
-          )}
-          {tabValue === 1 && (
             <Tooltip title="Subir PDF">
               <Button variant="contained" startIcon={<UploadIcon />} onClick={() => setUploadOpen(true)} disabled={!canEdit || loading}>
                 Subir Documento
               </Button>
             </Tooltip>
           )}
+          {tabValue === 1 && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()} disabled={!canEdit}>
+              Nuevo
+            </Button>
+          )}
         </Box>
       </Box>
 
       <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 2 }}>
-        <Tab label="Conocimiento" />
         <Tab label="Documentos" />
+        <Tab label="Conocimiento" />
       </Tabs>
 
       {feedback && (
@@ -310,12 +310,12 @@ const KnowledgeAdmin = () => {
       )}
 
       <Alert severity="info" sx={{ mb: 2 }}>
-        La pestaña <b>Conocimiento</b> contiene las entradas manuales con las que el chatbot responde.
         La pestaña <b>Documentos</b> lista los PDFs subidos: cada documento se fragmenta internamente
         en segmentos con embeddings para la búsqueda semántica, pero se administra como un solo archivo.
+        La pestaña <b>Conocimiento</b> contiene las entradas manuales con las que el chatbot responde.
       </Alert>
 
-      {tabValue === 0 && (
+      {tabValue === 1 && (
         <>
           <TableContainer component={Paper}>
             <Table>
@@ -375,7 +375,7 @@ const KnowledgeAdmin = () => {
         </>
       )}
 
-      {tabValue === 1 && (
+      {tabValue === 0 && (
         <>
           <TableContainer component={Paper}>
             <Table>

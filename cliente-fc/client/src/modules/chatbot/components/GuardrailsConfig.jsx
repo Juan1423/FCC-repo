@@ -29,10 +29,6 @@ const CONFIG_INFO = {
     descripcion: 'Período en horas dentro del cual se cuenta el consumo del límite diario (cada visitante/identificador).',
     min: 1,
   },
-  off_topic_threshold: {
-    label: 'Umbral off-topic',
-    descripcion: 'Similitud mínima (0-1) para considerar que la pregunta trata de la Fundación. Muy bajo = casi todo se responde; muy alto = el bot se declara incapaz con frecuencia.',
-  },
   canonical_response_threshold: {
     label: 'Umbral de respuesta canónica',
     descripcion: 'Similitud mínima (0-1) usada solo en el fallback por embeddings de respuestas canónicas. El patrón regex (patron_trigger) siempre tiene prioridad sobre este umbral.',
@@ -64,11 +60,7 @@ const CONFIG_INFO = {
   },
   enable_learning_queue: {
     label: 'Habilitar cola de aprendizaje',
-    descripcion: 'Si está activo, el chatbot marca conversaciones (off-topic, respuestas cortas/largas, temas sensibles) para revisarlas en la pestaña Aprendizaje. Apagado = no se generan revisiones nuevas.',
-  },
-  sensitive_check_first: {
-    label: 'Verificar temas sensibles primero',
-    descripcion: 'Si está activo, la detección de temas sensibles (violencia, suicidio, ansiedad) se evalúa antes que la clasificación off-topic.',
+    descripcion: 'Si está activo, el chatbot marca conversaciones (temas sensibles, respuestas cortas/largas) para revisarlas en la pestaña Aprendizaje. Apagado = no se generan revisiones nuevas.',
   },
   memory_enabled: {
     label: 'Memoria de conversación',
@@ -102,7 +94,6 @@ const DEFAULT_CONFIG = {
   rate_limit_autenticado_diario: 50,
   rate_limit_visitante_diario: 5,
   rate_limit_ventana_horas: 24,
-  off_topic_threshold: 0.3,
   canonical_response_threshold: 0.85,
   rag_similarity_threshold: 0.55,
   max_contexto_rag_items: 3,
@@ -110,7 +101,6 @@ const DEFAULT_CONFIG = {
   min_respuesta_length: 10,
   max_respuesta_length: 100,
   enable_learning_queue: true,
-  sensitive_check_first: true,
   memory_enabled: true,
   memory_max_turnos: 4,
   chunk_size: 1000,
@@ -217,8 +207,9 @@ const GuardrailsConfig = () => {
       </Typography>
 
       <Alert severity="info" sx={{ mb: 2 }}>
-        Los guardrails controlan el comportamiento del chatbot: detección de temas sensibles,
-        clasificación off-topic y sistema de aprendizaje. Los umbrales determinan la sensibilidad de cada filtro.
+        Los guardrails controlan el comportamiento del chatbot: detección de temas sensibles
+        (incluidos intentos de jailbreak, hacking y extracción de datos personales) y el sistema
+        de aprendizaje. Los umbrales determinan la sensibilidad de cada filtro.
       </Alert>
 
       <Paper sx={{ p: 3, mb: 3 }}>
