@@ -40,13 +40,6 @@ class RAGService {
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OPENAI_API_KEY no está configurada');
         }
-        console.log('[DEPURA-RAG][1-ANTES-EMBEDDING] Variable enviada al modelo de embedding:', {
-            tipo: typeof text,
-            esString: typeof text === 'string',
-            esArray: Array.isArray(text),
-            longitud: typeof text === 'string' ? text.length : null,
-            valor: text,
-        });
         const response = await this.getOpenAI().embeddings.create({
             model: chatConfig.embeddingModel || 'text-embedding-ada-002',
             input: text.substring(0, 8000),
@@ -129,17 +122,6 @@ class RAGService {
                     results.push({ ...row, similarity });
                 }
             }
-
-            console.log('[DEPURA-RAG][2-BUSQUEDA-VECTORIAL] Candidatos con puntaje (ANTES del filtro por umbral):', {
-                query,
-                threshold,
-                totalCandidatos: results.length,
-                candidatos: results.map((r) => ({
-                    id_conocimiento: r.id_conocimiento,
-                    texto: `${r.pregunta_frecuente || ''} ${r.respuesta_oficial || ''} ${r.contenido || ''} ${r.tema_principal || ''}`,
-                    similarity: r.similarity,
-                })),
-            });
 
             results.sort((a, b) => b.similarity - a.similarity);
             const sliced = results.slice(0, limit);

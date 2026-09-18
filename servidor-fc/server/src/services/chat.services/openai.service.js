@@ -318,18 +318,6 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
                 frequency_penalty: chatConfig.openai.frequencyPenalty,
                 presence_penalty: chatConfig.openai.presencePenalty,
             };
-            console.log('[DEPURA-RAG][3-ANTES-LLM][publico] Payload completo enviado al modelo:', {
-                systemPrompt: payloadOpenAI.messages[0].content,
-                promptUsuarioConContexto: payloadOpenAI.messages[1].content,
-                parametros: {
-                    model: payloadOpenAI.model,
-                    max_tokens: payloadOpenAI.max_tokens,
-                    temperature: payloadOpenAI.temperature,
-                    top_p: payloadOpenAI.top_p,
-                    frequency_penalty: payloadOpenAI.frequency_penalty,
-                    presence_penalty: payloadOpenAI.presence_penalty,
-                },
-            });
             responseFromOpenAI = await this.openai.chat.completions.create(payloadOpenAI);
         } catch (error) {
             console.error('OpenAI API error:', error.message);
@@ -440,16 +428,6 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             temperature: 0.3,
             top_p: chatConfig.openai.topP,
         };
-        console.log('[DEPURA-RAG][3-ANTES-LLM][interno] Payload completo enviado al modelo:', {
-            systemPrompt: payloadOpenAI.messages[0].content,
-            promptUsuarioConContexto: payloadOpenAI.messages[1].content,
-            parametros: {
-                model: payloadOpenAI.model,
-                max_tokens: payloadOpenAI.max_tokens,
-                temperature: payloadOpenAI.temperature,
-                top_p: payloadOpenAI.top_p,
-            },
-        });
         const responseFromOpenAI = await this.openai.chat.completions.create(payloadOpenAI);
 
         const respuesta = responseFromOpenAI.choices?.[0]?.message?.content || '';
