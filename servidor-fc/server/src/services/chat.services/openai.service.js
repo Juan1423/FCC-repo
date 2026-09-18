@@ -52,13 +52,17 @@ class OpenAIService {
         if (tipo === 'publico' && !consentimiento) return '';
 
         try {
-            const rows = await this.conversationsService.getRecentBySessionId(sessionId, maxTurnos);
+            const fetchLimit = Math.min(maxTurnos * 3, 10);
+            const rows = await this.conversationsService.getRecentBySessionId(sessionId, fetchLimit);
             if (!rows || rows.length === 0) return '';
-            rows.reverse();
+
+            const confiables = rows.filter((r) => !this.esTurnoNoConfiable(r)).slice(0, maxTurnos);
+            if (confiables.length === 0) return '';
+            confiables.reverse();
 
             let context = 'HISTORIAL RECIENTE DE LA CONVERSACIÓN:\n';
             context += 'Si la pregunta del usuario se refiere a algo mencionado antes ("eso", "lo anterior", "ese documento"), usa este historial para responder.\n';
-            for (const r of rows) {
+            for (const r of confiables) {
                 if (r.mensaje_usuario) context += `- Usuario: ${String(r.mensaje_usuario).substring(0, 500)}\n`;
                 if (r.respuesta_bot) context += `- Asistente: ${String(r.respuesta_bot).substring(0, 500)}\n`;
             }
@@ -68,6 +72,20 @@ class OpenAIService {
             console.warn('Error cargando historial de conversación:', error.message);
             return '';
         }
+    }
+
+    esTurnoNoConfiable(registro) {
+        if (!registro) return true;
+        if (registro.motivo_revision === 'off_topic') return true;
+        const respuesta = String(registro.respuesta_bot || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+        if (!respuesta) return true;
+        return (
+            respuesta.includes('no tengo informacion suficiente') ||
+            respuesta.includes('solo cuento con informacion sobre los servicios')
+        );
     }
 
     async registrarDiagnosticoRAG({ tipo, pregunta, respuesta, decision = 'responder', idConversacion = null }) {

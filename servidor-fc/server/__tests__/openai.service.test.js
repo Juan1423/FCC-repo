@@ -127,6 +127,25 @@ describe('OpenAIService.construirHistorialContexto', () => {
         expect(ctx).toBe('');
     });
 
+    test('excluye turnos off_topic y respuestas insuficientes del historial', async () => {
+        const svc = new OpenAIService();
+        svc.setDependencies({
+            configService: { getConfig: jest.fn().mockResolvedValue({ memory_enabled: true, memory_max_turnos: 4 }) },
+            conversationsService: {
+                getRecentBySessionId: jest.fn().mockResolvedValue([
+                    { mensaje_usuario: '¿y la rifa?', respuesta_bot: 'El número para participar es 140586.' },
+                    { mensaje_usuario: 'otro tema', respuesta_bot: 'No tengo información suficiente para responder esa pregunta.', motivo_revision: null },
+                    { mensaje_usuario: 'fuera de tema', respuesta_bot: 'Agradezco tu consulta, pero solo cuento con información sobre los servicios...', motivo_revision: 'off_topic' },
+                ]),
+            },
+        });
+        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'interno', consentimiento: true });
+        expect(ctx).toContain('HISTORIAL RECIENTE DE LA CONVERSACIÓN');
+        expect(ctx).toContain('140586');
+        expect(ctx).not.toContain('No tengo información suficiente');
+        expect(ctx).not.toContain('solo cuento con información');
+    });
+
     test('construirPromptCompleto inyecta el bloque de historial', async () => {
         const svc = withHistory();
         const prompt = await svc.construirPromptCompleto('¿y en qué horario es eso?', { sessionId: 's-1', tipo: 'publico', consentimiento: true });
