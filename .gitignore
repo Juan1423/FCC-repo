@@ -17,3 +17,4 @@ doc_para_pruebas/
 .opencode/index/
 .opencode/schema/
 .opencode/test-*.mjs
+.opencode/codebase-index.json
