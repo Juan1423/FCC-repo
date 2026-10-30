@@ -188,6 +188,11 @@ class RAGService {
 
     async buildRAGContextDetalle(query, maxItems = 3, threshold = null, canal = 'ambos', opts = {}) {
         try {
+            const umbralEstricto = await this.getRagUmbralEstricto();
+            const umbralEfectivo = threshold !== null && threshold !== undefined
+                ? Math.max(threshold, umbralEstricto)
+                : umbralEstricto;
+
             const relevant = await this.searchSimilarKnowledge(query, { limit: maxItems, threshold, canal, queryEmbedding: opts.queryEmbedding });
 
             const detalle = {
@@ -201,7 +206,7 @@ class RAGService {
                     contenido: (item.respuesta_oficial || item.contenido || '').substring(0, 300),
                 })),
                 similitudMaxima: relevant.length > 0 ? relevant[0].similarity : 0,
-                umbral: threshold,
+                umbral: umbralEfectivo,
                 nResultados: relevant.length,
                 contextoIncluido: relevant.length > 0,
             };
