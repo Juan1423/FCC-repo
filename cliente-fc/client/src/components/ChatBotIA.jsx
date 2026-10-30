@@ -2,7 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { enviarMensajePublico, enviarFeedback, getVisitorId, getLimitesPublico } from '../services/chatService';
 import { login, getUserInfo, getAuthToken } from '../services/authServices';
-import { Modal, Box, TextField, Button, Typography, Alert } from '@mui/material';
+import { Modal, Box, TextField, Button, Typography, Alert, Fab } from '@mui/material';
+import ChatIcon from '@mui/icons-material/Chat';
 import { createPortal } from 'react-dom';
 import chatConfig from '../modules/chatbot/config/chatConfig';
 import './ChatBotIA.css';
@@ -277,32 +278,16 @@ export const ChatBotIA = ({
 
   return (
     <>
-      {/* Ícono flotante para restaurar cuando está minimizado */}
+      {/* Único FAB para restaurar cuando está minimizado (mismo icono que el lanzador) */}
       {isMinimized && (
-        <div
+        <Fab
+          color="primary"
+          aria-label="restaurar chatbot"
           onClick={() => setIsMinimized(false)}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            backgroundColor: '#1976d2',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '28px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            zIndex: 999,
-            transition: 'transform 0.3s ease',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 2000 }}
         >
-          💬
-        </div>
+          <ChatIcon />
+        </Fab>
       )}
       {/* Chatbot modal - solo mostrar si no está minimizado */}
       {!isMinimized && (

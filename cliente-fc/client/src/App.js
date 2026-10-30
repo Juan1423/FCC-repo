@@ -1,10 +1,10 @@
 import './styles/App.css';
-import React, { useState, useEffect } from 'react';
-import { isAuthenticated } from './services/authServices';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { isAuthenticated, AUTH_CHANGE_EVENT } from './services/authServices';
 import { Fab } from '@mui/material';
 import { Chat as ChatIcon } from '@mui/icons-material';
 import ChatAccessModal from './components/ChatAccessModal';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import PrivateRoute from './routes/PrivateRoute'
 import Login from './modules/sistema/auth/views/Login';
 import MenuPrincipal from './components/MenuPrincipal';
@@ -53,22 +53,53 @@ const CombinedProviders = ({ children }) => (
   </MenuProvider>
 );
 
-function App() {
+const PUBLIC_ROUTES = ['/', '/accessdenied', '/donacion-nacional', '/donacion-internacional'];
+
+const ChatWidgets = () => {
+  const { pathname } = useLocation();
   const [showChatbot, setShowChatbot] = useState(false);
   const [showChatbotAsVisitor, setShowChatbotAsVisitor] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [chatbotKey, setChatbotKey] = useState(0);
-  const [userAuthenticated, setUserAuthenticated] = useState(false);
+  const [userAuthenticated, setUserAuthenticated] = useState(() => isAuthenticated());
   const [wantsLogin, setWantsLogin] = useState(false);
+  const wasAuthenticatedRef = useRef(isAuthenticated());
 
-  // Sincronizar estado de autenticación periódicamente
-  useEffect(() => {
-    setUserAuthenticated(isAuthenticated());
-    const interval = setInterval(() => {
-      setUserAuthenticated(isAuthenticated());
-    }, 30000);
-    return () => clearInterval(interval);
+  // Relee la cookie y resetea las burbujas cuando cambia el estado de sesión
+  const syncAuth = useCallback(() => {
+    const authenticated = isAuthenticated();
+    setUserAuthenticated(authenticated);
+    if (wasAuthenticatedRef.current !== authenticated) {
+      setShowChatbot(false);
+      setShowChatbotAsVisitor(false);
+      setShowLoginModal(false);
+      setWantsLogin(false);
+      setChatbotKey((key) => key + 1);
+    }
+    wasAuthenticatedRef.current = authenticated;
   }, []);
+
+  // Login/logout en la misma pestaña, en otra pestaña o al recuperar el foco
+  useEffect(() => {
+    window.addEventListener(AUTH_CHANGE_EVENT, syncAuth);
+    window.addEventListener('storage', syncAuth);
+    window.addEventListener('focus', syncAuth);
+    const interval = setInterval(syncAuth, 30000);
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, syncAuth);
+      window.removeEventListener('storage', syncAuth);
+      window.removeEventListener('focus', syncAuth);
+      clearInterval(interval);
+    };
+  }, [syncAuth]);
+
+  // Cada navegación SPA (p. ej. login -> ruta privada) revalida la sesión
+  useEffect(() => {
+    syncAuth();
+  }, [pathname, syncAuth]);
+
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  const showVisitorFab = !userAuthenticated && isPublicRoute && !showChatbotAsVisitor;
 
   const handleChatbotClick = () => {
     if (isAuthenticated()) {
@@ -82,65 +113,72 @@ function App() {
       setWantsLogin(false);
     }
   };
+
+  return (
+    <>
+      {/* Único FAB del visitante: solo sin sesión y en rutas públicas */}
+      {showVisitorFab && (
+        <Fab
+          color="primary"
+          aria-label="chatbot"
+          sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 2000 }}
+          onClick={handleChatbotClick}
+        >
+          <ChatIcon />
+        </Fab>
+      )}
+
+      {/* Chatbot interno: solo con sesión iniciada (esquina inferior izquierda) */}
+      {userAuthenticated && <ChatIAServidor />}
+
+      {/* Modal para elegir entre login o visitante */}
+      <ChatAccessModal
+        open={showChatbot}
+        onClose={() => setShowChatbot(false)}
+        onContinueAsVisitor={() => {
+          setShowChatbot(false);
+          setShowChatbotAsVisitor(true);
+          setWantsLogin(false);
+        }}
+        onLoginClick={() => {
+          setShowChatbot(false);
+          setShowLoginModal(true);
+          setShowChatbotAsVisitor(true);
+          setWantsLogin(true);
+        }}
+      />
+
+      {/* Chatbot para visitantes: nunca con sesión activa */}
+      {showChatbotAsVisitor && !userAuthenticated && (
+        <ChatBotIA
+          key={`chatbot-${chatbotKey}-${wantsLogin}`}
+          onClose={() => setShowChatbotAsVisitor(false)}
+          selectedPrompt={null}
+          forceClearMemory={chatbotKey}
+          maxQuestions={30}
+          isVisitor={!wantsLogin && !userAuthenticated}
+          showLoginModalInitially={showLoginModal}
+          onLoginModalClose={() => setShowLoginModal(false)}
+          onLoginSuccess={() => {
+            // Al autenticarse, el chat de visitante se cierra y deja paso al chat interno
+            setShowChatbot(false);
+            setShowLoginModal(false);
+            setShowChatbotAsVisitor(false);
+            setUserAuthenticated(true);
+            setWantsLogin(false);
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+function App() {
   return (
     <div className="App">
       <BrowserRouter>
       <CombinedProviders>
-        {/* FAB global del chatbot - Solo cuando no está abierto ningún chatbot */}
-        {!userAuthenticated && !showChatbotAsVisitor && (
-          <Fab
-            color="primary"
-            aria-label="chatbot"
-            sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 2000 }}
-            onClick={handleChatbotClick}
-          >
-            <ChatIcon />
-          </Fab>
-        )}
-
-        {/* Chatbot Servidor - Esquina inferior izquierda */}
-        <ChatIAServidor />
-
-        {/* Modal para elegir entre login o visitante */}
-        <ChatAccessModal 
-          open={showChatbot} 
-          onClose={() => setShowChatbot(false)}
-          onContinueAsVisitor={() => {
-            setShowChatbot(false);
-            setShowChatbotAsVisitor(true);
-            setWantsLogin(false);
-          }}
-          onLoginClick={() => {
-            console.log('Clic en Iniciar Sesión');
-            setShowChatbot(false);
-            setShowLoginModal(true);
-            setShowChatbotAsVisitor(true);
-            setWantsLogin(true);
-            console.log('Estado: showChatbotAsVisitor=true, wantsLogin=true, showLoginModal=true');
-          }}
-        />
-
-        {/* Chatbot para visitantes (30 preguntas) o usuarios autenticados */}
-        {showChatbotAsVisitor && (
-          <ChatBotIA
-            key={`chatbot-${chatbotKey}-${wantsLogin}`}
-            onClose={() => setShowChatbotAsVisitor(false)}
-            selectedPrompt={null}
-            forceClearMemory={chatbotKey}
-            maxQuestions={30}
-            isVisitor={!wantsLogin && !isAuthenticated()}
-            showLoginModalInitially={showLoginModal}
-            onLoginModalClose={() => setShowLoginModal(false)}
-            onLoginSuccess={() => {
-              console.log('Login exitoso, chatbot se mantiene visible...');
-              setShowChatbot(false);
-              // NO cerrar el chatbot, solo cerrar el modal de login
-              setShowLoginModal(false);
-              setUserAuthenticated(true);
-              setWantsLogin(false);
-            }}
-          />
-        )}
+        <ChatWidgets />
         <Routes>
             <Route exact path="/" element={<Login />} />
             <Route path="/donacion-nacional" element={<DonacionNacionalForm />} />

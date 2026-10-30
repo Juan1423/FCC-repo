@@ -4,6 +4,11 @@ import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
 const TOKEN_COOKIE_NAME = 'auth_token';
+export const AUTH_CHANGE_EVENT = 'auth-change';
+
+const notifyAuthChange = () => {
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+};
 
 // Interceptor global de axios: adjunta el token de la cookie en cada request
 axios.interceptors.request.use(
@@ -33,6 +38,7 @@ export const login = async (user) => {
 
 export const logout = () => {
     setAuthToken(null);
+    localStorage.removeItem('user');
 };
 
 export const verifyToken = async () => {
@@ -59,6 +65,7 @@ export const setAuthToken = (token) => {
     } else {
         Cookies.remove(TOKEN_COOKIE_NAME);
     }
+    notifyAuthChange();
 };
 
 export const getAuthToken = () => {
