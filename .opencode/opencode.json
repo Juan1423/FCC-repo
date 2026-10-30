@@ -3,5 +3,10 @@
 
   "plugin": [
     "open-codebase-index"
-  ]
+  ],
+  "agents": {
+    "rag-expert": ".opencode/agents/rag-expert.md",
+    "security-auditor": ".opencode/agents/security-auditor.md",
+    "ui-debugger": ".opencode/agents/ui-debugger.md"
+  }
 }
