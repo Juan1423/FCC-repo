@@ -1,5 +1,6 @@
 const UsuarioService = require('../../services/historiaclinica.services/usuario.service');
 const { AUTH_COOKIE_NAME } = require('../../middleware/verifyToken');
+const { JWT_EXPIRES_IN_MS } = require('../../utils/jwt.util');
 const service = new UsuarioService();
 
 const ROLES_VALIDOS = ['admin', 'personal_salud', 'doctor', 'personal_administrativo'];
@@ -34,7 +35,7 @@ const login = async ( req, res ) => {
         if (response.success && response.token) {
             res.cookie(AUTH_COOKIE_NAME, response.token, {
                 ...COOKIE_OPTIONS,
-                maxAge: 2 * 60 * 60 * 1000,
+                maxAge: JWT_EXPIRES_IN_MS,
             });
             return res.json(response);
         }
