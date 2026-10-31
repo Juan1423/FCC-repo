@@ -3,6 +3,41 @@
 const { openaiService, guardrailsService, learningService } = require('../../services/chat.services');
 const { models } = require('../../libs/sequelize');
 const { v4: uuidv4 } = require('uuid');
+const { getRequestIp, hashIdentifier } = require('../../utils/request.util');
+
+const LIMITE_VISITANTE_POR_IP = parseInt(process.env.RATE_LIMIT_VISITANTE_IP_DIARIO || '50', 10);
+
+const resolveSessionId = async ({ sessionId, idUsuario, visitorId }) => {
+    if (!sessionId) return null;
+
+    const last = await models.ChatConversacion.findOne({
+        where: { session_id: sessionId },
+        order: [['id_conversacion', 'DESC']],
+    });
+
+    if (!last) return sessionId;
+
+    if (idUsuario) {
+        return last.id_usuario != null && String(last.id_usuario) === String(idUsuario) ? sessionId : null;
+    }
+
+    if (last.id_usuario_anonimo != null && visitorId && String(last.id_usuario_anonimo) === String(visitorId)) {
+        return sessionId;
+    }
+
+    return null;
+};
+
+const ownsConversation = (conversacion, { idUsuario, visitorId }) => {
+    if (!conversacion) return false;
+    if (idUsuario) {
+        return conversacion.id_usuario != null && String(conversacion.id_usuario) === String(idUsuario);
+    }
+    if (visitorId) {
+        return conversacion.id_usuario_anonimo != null && String(conversacion.id_usuario_anonimo) === String(visitorId);
+    }
+    return false;
+};
 
 const enviarMensaje = async (req, res) => {
     try {
@@ -18,8 +53,9 @@ const enviarMensaje = async (req, res) => {
         const isVisitor = req.isVisitor || req.user?.isVisitor || false;
         const idUsuario = isVisitor ? null : (req.user?.user || null);
         const effectiveVisitorId = visitorId || req.user?.visitorId || null;
+        const ipHash = hashIdentifier(getRequestIp(req)) || 'sin-ip';
 
-        let effectiveSessionId = sessionId;
+        let effectiveSessionId = await resolveSessionId({ sessionId, idUsuario, visitorId: effectiveVisitorId });
         if (!effectiveSessionId) {
             if (idUsuario) {
                 effectiveSessionId = `user-${idUsuario}-${Date.now()}`;
@@ -32,7 +68,7 @@ const enviarMensaje = async (req, res) => {
         }
 
         const scope = idUsuario ? 'auth' : 'anon';
-        const identifier = (idUsuario || effectiveVisitorId || `anon-${uuidv4()}`).toString();
+        const identifier = (idUsuario ? `u:${idUsuario}` : `v:${effectiveVisitorId || ipHash}`).toString();
 
         const rateResult = await guardrailsService.checkAndIncrement({ scope, identifier });
         if (!rateResult.allowed) {
@@ -45,6 +81,22 @@ const enviarMensaje = async (req, res) => {
                 retryAfter: rateResult.retryAfter,
                 rate: rateResult,
             });
+        }
+
+        if (!idUsuario) {
+            const ipLimit = await guardrailsService.checkAndIncrement({
+                scope: 'anon_ip',
+                identifier: ipHash,
+                limitOverride: LIMITE_VISITANTE_POR_IP,
+                windowHoursOverride: 24,
+            });
+            if (!ipLimit.allowed) {
+                return res.status(429).json({
+                    success: false,
+                    message: `Límite de ${ipLimit.limit} preguntas alcanzado por dirección de red. Intenta en ${ipLimit.retryAfter} segundos.`,
+                    retryAfter: ipLimit.retryAfter,
+                });
+            }
         }
 
         const evaluacion = await guardrailsService.evaluarEntrada(mensaje);
@@ -147,8 +199,16 @@ const enviarFeedback = async (req, res) => {
             return res.status(400).json({ success: false, message: 'id_conversacion es requerido' });
         }
 
+        const isVisitor = req.isVisitor || req.user?.isVisitor || false;
+        const idUsuario = isVisitor ? null : (req.user?.user || null);
+        const effectiveVisitorId = req.user?.visitorId || req.headers?.['visitor-id'] || null;
+
         const conversacion = await models.ChatConversacion.findByPk(id_conversacion);
         if (!conversacion) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        if (!ownsConversation(conversacion, { idUsuario, visitorId: effectiveVisitorId })) {
             return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
         }
 
@@ -194,7 +254,6 @@ const enviarFeedback = async (req, res) => {
 const registrarAnonimo = async (req, res) => {
     try {
         const { cedula, nombre } = req.body;
-        const { models: seqModels } = require('../../libs/sequelize');
 
         if (!cedula || !nombre) {
             return res.status(400).json({
@@ -203,28 +262,44 @@ const registrarAnonimo = async (req, res) => {
             });
         }
 
-        const existing = await seqModels.ChatUsuarioAnonimo.findOne({ where: { cedula } });
+        const existing = await models.ChatUsuarioAnonimo.findOne({ where: { cedula } });
+
         if (existing) {
             return res.json({
                 success: true,
-                data: existing,
+                data: {
+                    id_usuario_anonimo: existing.id_usuario_anonimo,
+                    nombre: nombre,
+                },
                 isUpdate: false,
             });
         }
 
-        const usuario = await seqModels.ChatUsuarioAnonimo.create({ cedula, nombre });
-        res.status(201).json({
-            success: true,
-            data: usuario,
-        });
-    } catch (error) {
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            const { cedula, nombre } = req.body;
-            const existing = await models.ChatUsuarioAnonimo.findOne({ where: { cedula } });
-            return res.json({ success: true, data: existing });
+        try {
+            const usuario = await models.ChatUsuarioAnonimo.create({ cedula, nombre });
+            return res.status(201).json({
+                success: true,
+                data: {
+                    id_usuario_anonimo: usuario.id_usuario_anonimo,
+                    nombre: nombre,
+                },
+            });
+        } catch (createError) {
+            if (createError.name === 'SequelizeUniqueConstraintError') {
+                const race = await models.ChatUsuarioAnonimo.findOne({ where: { cedula } });
+                return res.json({
+                    success: true,
+                    data: {
+                        id_usuario_anonimo: race ? race.id_usuario_anonimo : null,
+                        nombre: nombre,
+                    },
+                });
+            }
+            throw createError;
         }
+    } catch (error) {
         console.error('Error registrando anónimo:', error.message);
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: 'No fue posible registrar al usuario anónimo' });
     }
 };
 
@@ -258,10 +333,11 @@ const getLimits = async (req, res) => {
     try {
         const isVisitor = req.isVisitor || req.user?.isVisitor || false;
         const idUsuario = isVisitor ? null : (req.user?.user || null);
-        const effectiveVisitorId = req.headers['visitor-id'] || req.user?.visitorId || null;
+        const effectiveVisitorId = req.user?.visitorId || req.headers?.['visitor-id'] || null;
+        const ipHash = hashIdentifier(getRequestIp(req)) || 'sin-ip';
 
         const scope = idUsuario ? 'auth' : 'anon';
-        const identifier = (idUsuario || effectiveVisitorId || `anon-${uuidv4()}`).toString();
+        const identifier = (idUsuario ? `u:${idUsuario}` : `v:${effectiveVisitorId || ipHash}`).toString();
 
         const rate = await guardrailsService.getRateLimitStatus({ scope, identifier });
 

@@ -1,12 +1,19 @@
 const UsuarioService = require('../../services/historiaclinica.services/usuario.service');
+const { AUTH_COOKIE_NAME } = require('../../middleware/verifyToken');
+const { JWT_EXPIRES_IN_MS } = require('../../utils/jwt.util');
 const service = new UsuarioService();
 
 const ROLES_VALIDOS = ['admin', 'personal_salud', 'doctor', 'personal_administrativo'];
 
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.COOKIE_SAME_SITE || 'lax',
+    path: '/',
+};
+
 const create = async ( req, res ) => {
     try {
-        console.log(req.body);
-
         if (req.body.rol_usuario && !ROLES_VALIDOS.includes(req.body.rol_usuario)) {
             return res.status(400).json({ success: false, message: 'Rol inválido' });
         }
@@ -23,13 +30,26 @@ const create = async ( req, res ) => {
 const login = async ( req, res ) => {
     try {
         const { correo_usuario, password_usuario } = req.body;
-        console.log(correo_usuario, password_usuario);
         const response = await service.login(correo_usuario, password_usuario);
-        res.json(response);
+
+        if (response.success && response.token) {
+            res.cookie(AUTH_COOKIE_NAME, response.token, {
+                ...COOKIE_OPTIONS,
+                maxAge: JWT_EXPIRES_IN_MS,
+            });
+            return res.json(response);
+        }
+
+        return res.status(401).json(response);
     } catch (error) {
         res.status(500).send({ success: false, message: error.message });
     }
 }
+
+const logout = async (req, res) => {
+    res.clearCookie(AUTH_COOKIE_NAME, COOKIE_OPTIONS);
+    res.json({ success: true, message: 'Sesión cerrada' });
+};
 
 const get = async ( req, res ) => {
     try {
@@ -83,7 +103,7 @@ const changePassword = async (req, res, next) => {
 };
 
 module.exports = {
-    create, get, getById, update, _delete, login, changePassword
+    create, get, getById, update, _delete, login, logout, changePassword
 };
 
 

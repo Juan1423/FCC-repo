@@ -37,6 +37,23 @@ import {
 import { useRoles } from '../utils/useRoles';
 import { AdminOnly } from '../components/ProtectedComponent';
 
+const TIPOS_PROMPT = {
+  instrucciones: 'instrucciones',
+  contexto_pdf: 'contexto_pdf',
+  global: 'global',
+};
+
+const normalizarTipoPrompt = (valor) => {
+  const clave = String(valor || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  return TIPOS_PROMPT[clave] || 'instrucciones';
+};
+
+const ETIQUETA_TIPO = {
+  instrucciones: 'Instrucciones',
+  contexto_pdf: 'Contexto PDF',
+  global: 'Global',
+};
+
 const PromptsAdmin = () => {
   const [prompts, setPrompts] = useState([]);
   const [open, setOpen] = useState(false);
@@ -45,7 +62,7 @@ const PromptsAdmin = () => {
     titulo: '',
     descripcion: '',
     instrucciones: '',
-    tipo_prompt: 'INSTRUCCIONES',
+    tipo_prompt: 'instrucciones',
     activo: true,
     canal: 'ambos',
   });
@@ -70,7 +87,7 @@ const PromptsAdmin = () => {
         titulo: prompt.titulo,
         descripcion: prompt.descripcion,
         instrucciones: prompt.instrucciones,
-        tipo_prompt: prompt.tipo_prompt,
+        tipo_prompt: normalizarTipoPrompt(prompt.tipo_prompt),
         activo: prompt.activo,
         canal: prompt.canal || 'ambos',
       });
@@ -80,7 +97,7 @@ const PromptsAdmin = () => {
         titulo: '',
         descripcion: '',
         instrucciones: '',
-        tipo_prompt: 'INSTRUCCIONES',
+        tipo_prompt: 'instrucciones',
         activo: true,
         canal: 'ambos',
       });
@@ -164,7 +181,7 @@ const PromptsAdmin = () => {
             {prompts.map((prompt) => (
               <TableRow key={prompt.id_prompt}>
                 <TableCell>{prompt.titulo}</TableCell>
-                <TableCell>{prompt.tipo_prompt}</TableCell>
+                <TableCell>{ETIQUETA_TIPO[normalizarTipoPrompt(prompt.tipo_prompt)]}</TableCell>
                 <TableCell>{prompt.instrucciones?.substring(0, 100)}...</TableCell>
                 <TableCell>
                   <Chip size="small" label={canalLabel[prompt.canal] || 'Ambos'} color={canalColor[prompt.canal] || 'default'} />
@@ -246,9 +263,9 @@ const PromptsAdmin = () => {
             onChange={(e) => setFormData({ ...formData, tipo_prompt: e.target.value })}
             SelectProps={{ native: true }}
           >
-            <option value="INSTRUCCIONES">Instrucciones</option>
-            <option value="CONTEXTO_PDF">Contexto PDF</option>
-            <option value="GLOBAL">Global</option>
+            <option value="instrucciones">Instrucciones</option>
+            <option value="contexto_pdf">Contexto PDF</option>
+            <option value="global">Global</option>
           </TextField>
           <TextField
             type="file"

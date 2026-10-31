@@ -1,15 +1,10 @@
-const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const { verifyAuthToken } = require('../utils/jwt.util');
+const { getRequestIp } = require('../utils/request.util');
 
 dotenv.config();
 
-const getRequestIp = (req) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-  return req.ip || (req.connection && req.connection.remoteAddress) || null;
-};
+const AUTH_COOKIE_NAME = 'auth_token';
 
 const isIpBlocked = async (ip) => {
   if (!ip) return false;
@@ -22,77 +17,76 @@ const isIpBlocked = async (ip) => {
   }
 };
 
+const extractToken = (req) => {
+  const headerToken = req.headers && req.headers['token'];
+  if (typeof headerToken === 'string') {
+    const trimmed = headerToken.trim();
+    if (trimmed && trimmed !== 'null' && trimmed !== 'undefined') return trimmed;
+  }
+  if (req.cookies && req.cookies[AUTH_COOKIE_NAME]) return req.cookies[AUTH_COOKIE_NAME];
+  return null;
+};
+
 const verifyToken = async (req, res, next) => {
   const ip = getRequestIp(req);
   if (await isIpBlocked(ip)) {
     return res.status(403).json({ mensaje: 'Acceso denegado desde esta IP' });
   }
 
-  const token = req.headers["token"]; // Ensure the header key matches the client-side
-  console.info('Token recibido (enmascarado):', token ? `...${token.slice(-4)}` : '(ausente)');
-  const secret = process.env.JWT_SECRET;
-  if (token) {
-    jwt.verify(token, secret, (error, data) => {
-      if (error) {
-        return res.status(401).json({ mensaje: "Token inválido" }); // Use 401 for unauthorized
-      } else {
-        req.user = data;
-        next();
-      }
-    });
-  } else {
-    res.status(400).json({ mensaje: "Verificación de token errónea, debes enviar un token" });
+  const token = extractToken(req);
+  if (!token) {
+    return res.status(400).json({ mensaje: "Verificación de token errónea, debes enviar un token" });
   }
-};
 
-const getUserDataFromToken = (req,res) => {
-  const token = req.headers["token"];
-  const secret = process.env.JWT_SECRET;
   try {
-    const data = jwt.verify(token, secret);
-    return res.status(200).json({data});
+    req.user = verifyAuthToken(token);
+    return next();
   } catch (error) {
-    res.status(400).json({ mensaje: "Token invalido AQUI" });
+    return res.status(401).json({ mensaje: "Token inválido" });
   }
 };
 
-const validateAndReturnUserData = (req,res) => {
-  const token = req.headers["token"];
-  const secret = process.env.JWT_SECRET;
+const getUserDataFromToken = (req, res) => {
   try {
-    const data = jwt.verify(token, secret);
-    return res.status(200).json({data : data, isValid: true});
+    const data = verifyAuthToken(extractToken(req));
+    return res.status(200).json({ data });
   } catch (error) {
-    return res.status(400).json({ mensaje: "Token invalido", isValid: false });
+    return res.status(401).json({ mensaje: "Token inválido" });
   }
 };
 
-const verifyTokenAdmin = async (req,res,next) => {
+const validateAndReturnUserData = (req, res) => {
+  try {
+    const data = verifyAuthToken(extractToken(req));
+    return res.status(200).json({ data: data, isValid: true });
+  } catch (error) {
+    return res.status(400).json({ mensaje: "Token inválido", isValid: false });
+  }
+};
+
+const verifyTokenAdmin = async (req, res, next) => {
   const ip = getRequestIp(req);
   if (await isIpBlocked(ip)) {
     return res.status(403).json({ mensaje: 'Acceso denegado desde esta IP' });
   }
 
-  const token = req.headers["token"];
-  const secret = process.env.JWT_SECRET;
-  if (token) {
-    jwt.verify(token, secret
-    , (error, data) => {
-      if (error) return res.status(400).json({ mensaje: "Token invalido" });
-      else {
-        req.user = data;
-        // Aceptar tanto rol 'admin' como 'administrador' por compatibilidad
-        const userRol = String(req.user.rol || '').toLowerCase();
-        if (userRol !== 'admin' && userRol !== 'administrador') {
-          return res.status(400).json({ mensaje: 'No tienes permisos para realizar esta acción' });
-        }
-        next();
-      }
-    });
-  } else {
-    res.status(400).json({ mensaje: "Debes enviar un token" });
+  const token = extractToken(req);
+  if (!token) {
+    return res.status(400).json({ mensaje: "Debes enviar un token" });
   }
-}
+
+  try {
+    req.user = verifyAuthToken(token);
+  } catch (error) {
+    return res.status(400).json({ mensaje: "Token inválido" });
+  }
+
+  const userRol = String(req.user.rol || '').toLowerCase();
+  if (userRol !== 'admin' && userRol !== 'administrador') {
+    return res.status(403).json({ mensaje: 'No tienes permisos para realizar esta acción' });
+  }
+  return next();
+};
 
 const verifyTokenOrVisitor = async (req, res, next) => {
   const ip = getRequestIp(req);
@@ -100,38 +94,30 @@ const verifyTokenOrVisitor = async (req, res, next) => {
     return res.status(403).json({ mensaje: 'Acceso denegado desde esta IP' });
   }
 
-  const token = req.headers["token"];
-  const visitorId = req.headers["visitor-id"];
-  const secret = process.env.JWT_SECRET;
-  
-  // Aceptar usuarios autenticados con token
+  const token = extractToken(req);
+
   if (token) {
-    jwt.verify(token, secret, (error, data) => {
-      if (error) {
-        return res.status(401).json({ mensaje: "Token inválido" });
-      } else {
-        req.user = data;
-        req.isVisitor = false;
-        next();
-      }
-    });
-  } 
-  // Aceptar visitantes con visitor-id
-  else if (visitorId) {
-    // Para visitantes, usar el ID único del usuario anónimo (uuid)
+    try {
+      req.user = verifyAuthToken(token);
+      req.isVisitor = false;
+      return next();
+    } catch (error) {
+      return res.status(401).json({ mensaje: "Token inválido" });
+    }
+  }
+
+  const visitorId = req.headers && req.headers['visitor-id'];
+  if (visitorId) {
     req.user = {
       user: visitorId,
       isVisitor: true,
       visitorId: visitorId
     };
     req.isVisitor = true;
-    console.log('Visitante detectado:', visitorId);
-    next();
+    return next();
   }
-  // Si no hay token ni visitor-id, denegar acceso
-  else {
-    res.status(401).json({ mensaje: "Se requiere token o ID de visitante" });
-  }
+
+  return res.status(401).json({ mensaje: "Se requiere token o ID de visitante" });
 };
 
 const requireRole = (roles) => {
@@ -148,4 +134,13 @@ const requireRole = (roles) => {
   };
 };
 
-module.exports = { verifyToken, getUserDataFromToken, verifyTokenAdmin , validateAndReturnUserData, verifyTokenOrVisitor, requireRole};
+module.exports = {
+  verifyToken,
+  getUserDataFromToken,
+  verifyTokenAdmin,
+  validateAndReturnUserData,
+  verifyTokenOrVisitor,
+  requireRole,
+  extractToken,
+  AUTH_COOKIE_NAME,
+};

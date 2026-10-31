@@ -32,11 +32,12 @@ const multerConfig = {
       cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-      const extension = file.originalname.split('.').pop();
+      const originalName = path.basename(String(file.originalname || ''));
+      const extension = path.extname(originalName).slice(1);
+      const stem = extension ? originalName.slice(0, originalName.length - extension.length - 1) : originalName;
+      const safeStem = stem.slice(0, 29).replace(/[^A-Za-z0-9._-]/g, '_');
       const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const baseName = file.originalname.substring(0, file.originalname.lastIndexOf('.'));
-      const shortName = baseName.slice(0, 30 - extension.length - 1); // Ajusta el nombre base
-      const uniqueFilename = `${currentDate}-${shortName}.${extension}`; // Incluye la extensión
+      const uniqueFilename = extension ? `${currentDate}-${safeStem}.${extension}` : `${currentDate}-${safeStem}`;
       cb(null, uniqueFilename);
     }
   }),
@@ -56,6 +57,10 @@ const multerConfig = {
     } else {
       cb(new Error('Campo de archivo no reconocido.'));
     }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1,
   },
 };
 

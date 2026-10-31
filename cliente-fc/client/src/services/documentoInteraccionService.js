@@ -1,4 +1,4 @@
-import { API_URL } from './apiConfig';
+import { API_URL, fetchWithAuth } from './apiConfig';
 import { getAuthToken } from './authServices';
 
 const authHeaders = () => {
@@ -7,7 +7,7 @@ const authHeaders = () => {
 };
 
 const getByInteraccion = async (interaccionId) => {
-  const response = await fetch(`${API_URL}/comunidad/documentos/interaccion/${interaccionId}`, {
+  const response = await fetchWithAuth(`${API_URL}/comunidad/documentos/interaccion/${interaccionId}`, {
     headers: authHeaders()
   });
   return response.json();
@@ -15,7 +15,7 @@ const getByInteraccion = async (interaccionId) => {
 
 const create = async (interaccionId, formData) => {
   const headers = authHeaders();
-  const response = await fetch(`${API_URL}/comunidad/documentos/interaccion/${interaccionId}`, {
+  const response = await fetchWithAuth(`${API_URL}/comunidad/documentos/interaccion/${interaccionId}`, {
     method: 'POST',
     headers,
     body: formData,
@@ -24,7 +24,7 @@ const create = async (interaccionId, formData) => {
 };
 
 const deleteDoc = async (id) => {
-    const response = await fetch(`${API_URL}/comunidad/documentos/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/comunidad/documentos/${id}`, {
         method: 'DELETE',
         headers: authHeaders()
     });

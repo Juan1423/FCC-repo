@@ -1,21 +1,21 @@
 import {API_URL} from './apiConfig';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
-const TOKEN_COOKIE_NAME = 'auth_token';
 export const AUTH_CHANGE_EVENT = 'auth-change';
 
 const notifyAuthChange = () => {
     window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 };
 
-// Interceptor global de axios: adjunta el token de la cookie en cada request
+const USER_STORAGE_KEY = 'user';
+
+let authToken = null;
+
 axios.interceptors.request.use(
   (config) => {
-    const token = Cookies.get(TOKEN_COOKIE_NAME);
-    if (token) {
-      config.headers['token'] = token;
+    if (authToken) {
+      config.headers['token'] = authToken;
     }
     return config;
   },
@@ -25,9 +25,12 @@ axios.interceptors.request.use(
 export const login = async (user) => {
     try {
         const response = await axios.post(`${API_URL}/users/login`, user);
-        const { token } = response.data;
+        const { token, data } = response.data;
         if (token) {
             setAuthToken(token);
+        }
+        if (data) {
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data));
         }
         return response.data;
     } catch (error) {
@@ -38,20 +41,13 @@ export const login = async (user) => {
 
 export const logout = () => {
     setAuthToken(null);
-    localStorage.removeItem('user');
+    localStorage.removeItem(USER_STORAGE_KEY);
+    axios.post(`${API_URL}/users/logout`).catch(() => {});
 };
 
 export const verifyToken = async () => {
-    const token = getAuthToken();
-    if (!token) {
-        return { isValid: false };
-    }
     try {
-        const response = await axios.post(`${API_URL}/auth`, {}, {
-            headers: {
-                'token': token
-            }
-        });
+        const response = await axios.post(`${API_URL}/auth`, {});
         return response.data;
     } catch (error) {
         console.error('Error verifying token:', error);
@@ -60,16 +56,12 @@ export const verifyToken = async () => {
 };
 
 export const setAuthToken = (token) => {
-    if (token) {
-        Cookies.set(TOKEN_COOKIE_NAME, token, { expires: 1 });
-    } else {
-        Cookies.remove(TOKEN_COOKIE_NAME);
-    }
+    authToken = token || null;
     notifyAuthChange();
 };
 
 export const getAuthToken = () => {
-    return Cookies.get(TOKEN_COOKIE_NAME);
+    return authToken;
 };
 
 export const decodeToken = (token) => {
@@ -82,31 +74,31 @@ export const decodeToken = (token) => {
 };
 
 export const getUserInfo = () => {
-    const token = getAuthToken();
-    if (!token) return null;
-    
-    const decodedToken = decodeToken(token);
-    if (!decodedToken) return null;
-
-    return {
-        user: decodedToken.user,
-        rol: decodedToken.rol
-    };
+    try {
+        const user = JSON.parse(localStorage.getItem(USER_STORAGE_KEY));
+        if (!user) return null;
+        return {
+            user: user.id_usuario,
+            rol: user.rol_usuario
+        };
+    } catch (error) {
+        console.error('Error getting user info:', error);
+        return null;
+    }
 };
 
 export const isAuthenticated = () => {
-    const token = getAuthToken();
-    return !!token;
+    if (authToken) return true;
+    try {
+        return !!localStorage.getItem(USER_STORAGE_KEY);
+    } catch (error) {
+        return false;
+    }
 };
 
 export const changePassword = async (passwords) => {
     try {
-        const token = getAuthToken();
-        const response = await axios.post(`${API_URL}/auth/change-password`, passwords, {
-            headers: {
-                'token': token
-            }
-        });
+        const response = await axios.post(`${API_URL}/change-password`, passwords);
         return response.data;
     } catch (error) {
         console.error('Error changing password:', error);

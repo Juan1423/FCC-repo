@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const cie11Service = require('../services/cie11.service');
+const { requireRole } = require('../middleware/verifyToken');
+
+const CIE11_ROLES = ['admin', 'doctor', 'personal_salud'];
 
 /**
  * @swagger
@@ -49,7 +52,7 @@ const cie11Service = require('../services/cie11.service');
  *                   type: string
  */
 function cie11Routes(router){
-router.get('cie11/search', async (req, res) => {
+router.get('cie11/search', requireRole(CIE11_ROLES), async (req, res) => {
   try {
     const { query } = req.query;
     const results = await cie11Service.searchDiseases(query);
@@ -107,7 +110,7 @@ router.get('cie11/search', async (req, res) => {
  *                 error:
  *                   type: string
  */
-router.get('cie11/details/:code', async (req, res) => {
+router.get('cie11/details/:code', requireRole(CIE11_ROLES), async (req, res) => {
   try {
     const { code } = req.params;
     const { language } = req.query;

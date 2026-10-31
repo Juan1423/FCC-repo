@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const auditoriaController = require("../../controllers/historiaclinica.controllers/auditoria.controller");
+const { requireRole } = require("../../middleware/verifyToken");
 const multer = require("multer");
 const upload = multer();
 
@@ -27,7 +28,7 @@ const upload = multer();
  *               items:
  *                 $ref: '#/components/schemas/Auditoria'
  */
-router.get("/", auditoriaController.get);
+router.get("/", requireRole(["admin"]), auditoriaController.get);
 
 /**
  * @swagger
@@ -52,7 +53,7 @@ router.get("/", auditoriaController.get);
  *       404:
  *         description: Auditoria no encontrada
  */
-router.get("/:id", auditoriaController.getById);
+router.get("/:id", requireRole(["admin"]), auditoriaController.getById);
 
 /**
  * @swagger
@@ -99,7 +100,7 @@ router.post("/", auditoriaController.create);
  *       404:
  *         description: Auditoria no encontrada
  */
-router.put("/:id", upload.none(), auditoriaController.update);
+router.put("/:id", requireRole(["admin"]), upload.none(), auditoriaController.update);
 
 /**
  * @swagger
@@ -120,6 +121,6 @@ router.put("/:id", upload.none(), auditoriaController.update);
  *       404:
  *         description: Auditoria no encontrada
  */
-router.delete("/:id", auditoriaController._delete);
+router.delete("/:id", requireRole(["admin"]), auditoriaController._delete);
 
 module.exports = router;

@@ -213,17 +213,21 @@ class GuardrailsService {
         };
     }
 
-    async checkAndIncrement({ scope, identifier }) {
+    async checkAndIncrement({ scope, identifier, limitOverride = null, windowHoursOverride = null }) {
         const config = await this.loadConfig();
         const limitKey = scope === 'auth'
             ? 'rate_limit_autenticado_diario'
             : 'rate_limit_visitante_diario';
         const windowKey = 'rate_limit_ventana_horas';
 
-        const limit = config[limitKey] !== undefined
-            ? config[limitKey]
-            : (scope === 'auth' ? 50 : 5);
-        const windowHours = config[windowKey] !== undefined ? config[windowKey] : 24;
+        const limit = limitOverride !== null && limitOverride !== undefined
+            ? limitOverride
+            : (config[limitKey] !== undefined
+                ? config[limitKey]
+                : (scope === 'auth' ? 50 : 5));
+        const windowHours = windowHoursOverride !== null && windowHoursOverride !== undefined
+            ? windowHoursOverride
+            : (config[windowKey] !== undefined ? config[windowKey] : 24);
         const windowMs = windowHours * 60 * 60 * 1000;
 
         if (limit < 1) {

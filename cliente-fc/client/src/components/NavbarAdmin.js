@@ -27,7 +27,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import logo from "../assets/img/logo-fcc.png";
-import { logout, getAuthToken, decodeToken } from '../services/authServices';
+import { logout, getAuthToken, decodeToken, getUserInfo } from '../services/authServices';
 import { getUsuario } from '../services/usuarioServices';
 import { useMenu } from './base/MenuContext';
 import { getPersonalSaludId } from '../services/personalsaludServices';
@@ -60,17 +60,16 @@ function NavbarAdmin({ onDrawerToggle }) {
     const fetchUserData = async () => {
       setIsLoading(true);
       const token = getAuthToken();
-      if (token) {
-        const decodedToken = decodeToken(token);
-        if (decodedToken && decodedToken.user) {
-          try {
-            const user = await getUsuario(decodedToken.user);
-            setUserData(user);
-            const personal = await getPersonalSaludId(user.id_personal_salud);
-            setPersonalData(personal);
-          } catch (error) {
-            console.error('Error fetching user data:', error);
-          }
+      const decodedToken = token ? decodeToken(token) : null;
+      const userId = decodedToken?.user || getUserInfo()?.user;
+      if (userId) {
+        try {
+          const user = await getUsuario(userId);
+          setUserData(user);
+          const personal = await getPersonalSaludId(user.id_personal_salud);
+          setPersonalData(personal);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
         }
       }
       setIsLoading(false);
