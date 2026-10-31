@@ -52,10 +52,16 @@ const downloadFile = async (req, res) => {
     const { filename } = req.params;
     const path = require('path');
     const fs = require('fs');
-    
-    
-    const filePath = path.join(__dirname, '../../../uploads/documentos_interaccion', filename);
-    
+
+    const baseDir = path.join(__dirname, '../../uploads/comunidad/documentos_interaccion');
+    const resolvedBase = path.resolve(baseDir);
+    const safeName = path.basename(String(filename || ''));
+    const filePath = path.resolve(resolvedBase, safeName);
+
+    if (!filePath.startsWith(resolvedBase + path.sep)) {
+        return res.status(400).json({ message: 'Ruta de archivo no válida' });
+    }
+
     if (fs.existsSync(filePath)) {
         res.download(filePath);
     } else {
