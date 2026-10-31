@@ -18,7 +18,8 @@ const storage = multer.diskStorage({
         // Generamos un nombre único: fecha-nombreOriginal
         // Ej: 170568999-normativa_2025.pdf
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + '-' + file.originalname);
+        const safeName = path.basename(String(file.originalname || '')).replace(/[^A-Za-z0-9._-]/g, '_');
+        cb(null, uniqueSuffix + '-' + safeName);
     }
 });
 

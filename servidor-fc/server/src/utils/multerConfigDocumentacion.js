@@ -26,11 +26,33 @@ const createStorage = (subdir) =>
     },
   });
 
-const uploadIndicador = multer({ storage: createStorage('indicadores'), fileFilter: (req, file, cb) => cb(null, true) });
-const uploadInstitucion = multer({ storage: createStorage('instituciones'), fileFilter: (req, file, cb) => cb(null, true) });
-const uploadNormativa = multer({ storage: createStorage('normativas'), fileFilter: (req, file, cb) => cb(null, true) });
-const uploadProceso = multer({ storage: createStorage('procesos'), fileFilter: (req, file, cb) => cb(null, true) });
-const uploadDocumento = multer({ storage: createStorage('documentos'), fileFilter: (req, file, cb) => cb(null, true) });
+const ALLOWED_DOC_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'text/plain',
+]);
+
+const docFileFilter = (req, file, cb) => {
+  if (ALLOWED_DOC_TYPES.has(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Tipo de archivo no soportado. Solo PDF, Word, Excel, Imágenes y Texto.'), false);
+  }
+};
+
+const DOC_LIMITS = { fileSize: 10 * 1024 * 1024, files: 1 };
+
+const uploadIndicador = multer({ storage: createStorage('indicadores'), fileFilter: docFileFilter, limits: DOC_LIMITS });
+const uploadInstitucion = multer({ storage: createStorage('instituciones'), fileFilter: docFileFilter, limits: DOC_LIMITS });
+const uploadNormativa = multer({ storage: createStorage('normativas'), fileFilter: docFileFilter, limits: DOC_LIMITS });
+const uploadProceso = multer({ storage: createStorage('procesos'), fileFilter: docFileFilter, limits: DOC_LIMITS });
+const uploadDocumento = multer({ storage: createStorage('documentos'), fileFilter: docFileFilter, limits: DOC_LIMITS });
 
 ensureDirExists(path.join(basePath, 'indicadores'));
 ensureDirExists(path.join(basePath, 'instituciones'));

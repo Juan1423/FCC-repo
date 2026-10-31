@@ -41,6 +41,10 @@ const multerConfigTerapia = {
       cb(null, uniqueFilename);
     }
   }),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1,
+  },
   fileFilter(req, file, cb) {
     if (file.mimetype === 'application/pdf') {
       cb(null, true);

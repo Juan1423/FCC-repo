@@ -27,15 +27,19 @@ const multerConfig = {
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-      // Obtener la extensión del archivo
-      const extension = file.originalname.split('.').pop();
+      const originalName = path.basename(String(file.originalname || ''));
+      const extension = path.extname(originalName).slice(1);
+      const stem = extension ? originalName.slice(0, originalName.length - extension.length - 1) : originalName;
+      const safeStem = stem.slice(0, 29).replace(/[^A-Za-z0-9._-]/g, '_');
       const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const shortName = file.originalname.slice(0, 30 - extension.length);
-      // Generar un nombre de archivo único con la fecha, nombre acortado y extensión
-      const uniqueFilename = `${currentDate}-${shortName}`;
+      const uniqueFilename = extension ? `${currentDate}-${safeStem}.${extension}` : `${currentDate}-${safeStem}`;
       cb(null, uniqueFilename);
     }
   }),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1,
+  },
   fileFilter(req, file, cb) {
     if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'application/pdf') {
       cb(null, true);

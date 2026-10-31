@@ -32,8 +32,24 @@ const multerConfigInteraccion = {
     }
   }),
   fileFilter(req, file, cb) {
-    // Allow any file type for now, can be restricted later
-    cb(null, true);
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'text/plain',
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo de archivo no soportado. Solo PDF, Word, Imágenes y Texto.'), false);
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1,
   },
 };
 
