@@ -9,6 +9,7 @@ router
     .post('/', usuarioController.create)
     .put('/:id', usuarioController.update)
     .delete('/:id', usuarioController._delete)
-    .post('/login', usuarioController.login);
+    .post('/login', usuarioController.login)
+    .post('/logout', usuarioController.logout);
 
 module.exports = router;

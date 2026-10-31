@@ -1,9 +1,13 @@
 const { models } = require('../libs/sequelize');
-const jwt = require('jsonwebtoken');
+const { verifyAuthToken } = require('../utils/jwt.util');
+const { getRequestIp } = require('../utils/request.util');
+const { extractToken } = require('./verifyToken');
 
 const PUBLIC_ROUTES = [
   { method: 'POST', path: '/auth' },
+  { method: 'POST', path: '/auth/logout' },
   { method: 'POST', path: '/users/login' },
+  { method: 'POST', path: '/users/logout' },
   { method: 'POST', path: '/chat/publico/usuario-anonimo/register' },
   { method: 'POST', path: '/chat/publico/mensaje' },
   { method: 'POST', path: '/chat/publico/feedback' },
@@ -53,14 +57,6 @@ const MODULE_OVERRIDES = {
   'feedback-usuario': 'FeedbackUsuario',
   'cie11': 'Cie11',
   'chat': 'Chat',
-};
-
-const getRequestIp = (req) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-  return req.ip || (req.connection && req.connection.remoteAddress) || null;
 };
 
 const isIpBlocked = async (ip) => {
@@ -171,7 +167,7 @@ const securityAuditMiddleware = async (req, res, next) => {
     return res.status(403).json({ mensaje: 'Acceso denegado desde esta IP' });
   }
 
-  const token = req.headers["token"];
+  const token = extractToken(req);
   const visitorId = req.headers["visitor-id"];
 
   if (!token && visitorId) {
@@ -185,7 +181,7 @@ const securityAuditMiddleware = async (req, res, next) => {
   }
 
   try {
-    const data = jwt.verify(token, process.env.JWT_SECRET);
+    const data = verifyAuthToken(token);
     req.user = data;
 
     if (req.method === 'POST' && (req.path === '/auditoria' || req.path === '/auditoria/')) {

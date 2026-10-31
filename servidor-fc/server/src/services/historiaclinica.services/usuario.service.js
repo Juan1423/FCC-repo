@@ -1,21 +1,25 @@
 const { models } = require('../../libs/sequelize');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const { signAuthToken } = require('../../utils/jwt.util');
 const saltRounds = 10;
 require('dotenv').config();
-
-const JWT_SECRET = process.env.JWT_SECRET;
 
 class UsuarioService  {
 
     constructor() {}
 
+    toSafeUser(user) {
+        if (!user) return null;
+        const plain = typeof user.toJSON === 'function' ? user.toJSON() : { ...user };
+        delete plain.password_usuario;
+        return plain;
+    }
+
     async find() {
         const res = await models.Usuario.findAll();
-        return res;
+        return res.map((user) => this.toSafeUser(user));
     }
     async encryptPassword(password) {
-        console.log('password', password);
         const newpassword = bcrypt.hashSync(password, saltRounds);
         return newpassword;
     }
@@ -32,17 +36,20 @@ class UsuarioService  {
             }
         });
         if (!user) {
-            return { success: false, message: 'Usuario no encontrado' };
+            return { success: false, message: 'Credenciales incorrectas' };
         }
 
         const match = await bcrypt.compare(password, user.password_usuario);
         if (!match) {
-            return { success: false, message: 'Contraseña incorrecta' };
+            return { success: false, message: 'Credenciales incorrectas' };
         }
-        const token = jwt.sign({ user: user.id_usuario, rol:user.rol_usuario }, JWT_SECRET, {
-            expiresIn: "23h",
-          });
-        return { success: true, data: user, token: token };
+
+        if (user.estado_usuario === false) {
+            return { success: false, message: 'El usuario se encuentra deshabilitado. Contacte al administrador.' };
+        }
+
+        const token = signAuthToken({ user: user.id_usuario, rol: user.rol_usuario });
+        return { success: true, data: this.toSafeUser(user), token: token };
     }
 
     async create(data) {

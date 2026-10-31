@@ -1,4 +1,4 @@
-import { API_URL } from './apiConfig';
+import { API_URL, fetchWithAuth } from './apiConfig';
 import { getAuthToken } from './authServices';
 
 const handleResponse = async (response) => {
@@ -31,6 +31,11 @@ const getHeaders = (includeAuth = true) => {
   return headers;
 };
 
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return token ? { token } : {};
+};
+
 const getVisitorId = () => {
   const storedId = localStorage.getItem('visitorId');
   if (storedId) {
@@ -43,7 +48,7 @@ const getVisitorId = () => {
 
 // === CHAT PÚBLICO ===
 export const enviarMensajePublico = async (data) => {
-  const response = await fetch(`${API_URL}/chat/publico/mensaje`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/publico/mensaje`, {
     method: 'POST',
     headers: getHeaders(),
     
@@ -53,7 +58,7 @@ export const enviarMensajePublico = async (data) => {
 };
 
 export const enviarFeedback = async (data) => {
-  const response = await fetch(`${API_URL}/chat/publico/feedback`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/publico/feedback`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -62,7 +67,7 @@ export const enviarFeedback = async (data) => {
 };
 
 export const getLimitesPublico = async () => {
-  const response = await fetch(`${API_URL}/chat/publico/config`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/publico/config`, {
     method: 'GET',
     headers: getHeaders(),
   });
@@ -70,7 +75,7 @@ export const getLimitesPublico = async () => {
 };
 
 export const registrarUsuarioAnonimo = async (data) => {
-  const response = await fetch(`${API_URL}/chat/publico/usuario-anonimo/register`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/publico/usuario-anonimo/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -79,7 +84,7 @@ export const registrarUsuarioAnonimo = async (data) => {
 };
 
 export const crearPreguntaAnonima = async (data) => {
-  const response = await fetch(`${API_URL}/chat/publico/pregunta-anonima`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/publico/pregunta-anonima`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -89,7 +94,7 @@ export const crearPreguntaAnonima = async (data) => {
 
 // === CHAT INTERNO ===
 export const enviarMensajeInterno = async (data) => {
-  const response = await fetch(`${API_URL}/chat/interno/mensaje`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/interno/mensaje`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -99,14 +104,14 @@ export const enviarMensajeInterno = async (data) => {
 
 export const getHistorialInterno = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/interno/historial${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/interno/historial${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const enviarFeedbackInterno = async (data) => {
-  const response = await fetch(`${API_URL}/chat/interno/feedback`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/interno/feedback`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -116,9 +121,8 @@ export const enviarFeedbackInterno = async (data) => {
 
 export const getHistorialReporte = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const token = getAuthToken();
-  const response = await fetch(`${API_URL}/chat/interno/historial/reporte?${qs}`, {
-    headers: { token },
+  const response = await fetchWithAuth(`${API_URL}/chat/interno/historial/reporte?${qs}`, {
+    headers: getAuthHeaders(),
     responseType: 'blob',
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -128,7 +132,7 @@ export const getHistorialReporte = async (params = {}) => {
 // === ADMIN PROMPTS ===
 export const getPrompts = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/admin/prompts${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
@@ -145,15 +149,15 @@ export const createPrompt = async (data, pdfFile = null) => {
     formData.append('canal', data.canal || 'ambos');
     formData.append('pdf', pdfFile);
 
-    const response = await fetch(`${API_URL}/chat/admin/prompts`, {
+    const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts`, {
       method: 'POST',
-      headers: { token: getAuthToken() },
+      headers: getAuthHeaders(),
       body: formData,
     });
     return handleResponse(response);
   }
 
-  const response = await fetch(`${API_URL}/chat/admin/prompts`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -172,15 +176,15 @@ export const updatePrompt = async (id, data, pdfFile = null) => {
     formData.append('canal', data.canal || 'ambos');
     formData.append('pdf', pdfFile);
 
-    const response = await fetch(`${API_URL}/chat/admin/prompts/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts/${id}`, {
       method: 'PUT',
-      headers: { token: getAuthToken() },
+      headers: getAuthHeaders(),
       body: formData,
     });
     return handleResponse(response);
   }
 
-  const response = await fetch(`${API_URL}/chat/admin/prompts/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -189,7 +193,7 @@ export const updatePrompt = async (id, data, pdfFile = null) => {
 };
 
 export const deletePrompt = async (id) => {
-  const response = await fetch(`${API_URL}/chat/admin/prompts/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -197,7 +201,7 @@ export const deletePrompt = async (id) => {
 };
 
 export const activatePrompt = async (id) => {
-  const response = await fetch(`${API_URL}/chat/admin/prompts/${id}/activate`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts/${id}/activate`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -208,9 +212,9 @@ export const uploadPromptPdf = async (pdfFile) => {
   const formData = new FormData();
   formData.append('file', pdfFile);
 
-  const response = await fetch(`${API_URL}/chat/admin/prompts/upload-pdf`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts/upload-pdf`, {
     method: 'POST',
-    headers: { token: getAuthToken() },
+    headers: getAuthHeaders(),
     body: formData,
   });
   return handleResponse(response);
@@ -218,8 +222,8 @@ export const uploadPromptPdf = async (pdfFile) => {
 
 export const downloadPromptPdf = async (archivo) => {
   const token = getAuthToken();
-  const response = await fetch(`${API_URL}/chat/admin/prompts/download/${encodeURIComponent(archivo)}`, {
-    headers: { token, Authorization: `Bearer ${token}` },
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/prompts/download/${encodeURIComponent(archivo)}`, {
+    headers: token ? { token, Authorization: `Bearer ${token}` } : {},
     responseType: 'blob',
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -229,7 +233,7 @@ export const downloadPromptPdf = async (archivo) => {
 // === ADMIN KNOWLEDGE ===
 export const getKnowledge = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/knowledge${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
@@ -237,14 +241,14 @@ export const getKnowledge = async (params = {}) => {
 
 export const getDocuments = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/knowledge/documents${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/documents${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const deleteDocument = async (id) => {
-  const response = await fetch(`${API_URL}/chat/knowledge/documents/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/documents/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -252,7 +256,7 @@ export const deleteDocument = async (id) => {
 };
 
 export const toggleBloqueoDocumento = async (id, bloqueado) => {
-  const response = await fetch(`${API_URL}/chat/knowledge/documents/${id}/${bloqueado ? 'bloquear' : 'desbloquear'}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/documents/${id}/${bloqueado ? 'bloquear' : 'desbloquear'}`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -260,7 +264,7 @@ export const toggleBloqueoDocumento = async (id, bloqueado) => {
 };
 
 export const createKnowledge = async (data) => {
-  const response = await fetch(`${API_URL}/chat/knowledge`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -269,7 +273,7 @@ export const createKnowledge = async (data) => {
 };
 
 export const updateKnowledge = async (id, data) => {
-  const response = await fetch(`${API_URL}/chat/knowledge/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -278,7 +282,7 @@ export const updateKnowledge = async (id, data) => {
 };
 
 export const deleteKnowledge = async (id) => {
-  const response = await fetch(`${API_URL}/chat/knowledge/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -286,7 +290,7 @@ export const deleteKnowledge = async (id) => {
 };
 
 export const toggleBloqueoKnowledge = async (id) => {
-  const response = await fetch(`${API_URL}/chat/knowledge/${id}/toggle-bloqueo`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/${id}/toggle-bloqueo`, {
     method: 'PATCH',
     headers: getHeaders(),
   });
@@ -300,16 +304,16 @@ export const uploadDocumento = async (pdfFile, titulo, canal = 'ambos', ocr = fa
   formData.append('canal', canal);
   formData.append('ocr', String(ocr));
 
-  const response = await fetch(`${API_URL}/chat/knowledge/upload-documento`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/upload-documento`, {
     method: 'POST',
-    headers: { token: getAuthToken() },
+    headers: getAuthHeaders(),
     body: formData,
   });
   return handleResponse(response);
 };
 
 export const generarEmbeddings = async () => {
-  const response = await fetch(`${API_URL}/chat/knowledge/generate-embeddings`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/generate-embeddings`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -317,7 +321,7 @@ export const generarEmbeddings = async () => {
 };
 
 export const regenerarMemoria = async () => {
-  const response = await fetch(`${API_URL}/chat/knowledge/regenerar-memoria`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/regenerar-memoria`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -325,7 +329,7 @@ export const regenerarMemoria = async () => {
 };
 
 export const bloquearTodosKnowledge = async () => {
-  const response = await fetch(`${API_URL}/chat/knowledge/bloquear-todos`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/bloquear-todos`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -333,7 +337,7 @@ export const bloquearTodosKnowledge = async () => {
 };
 
 export const desbloquearTodosKnowledge = async () => {
-  const response = await fetch(`${API_URL}/chat/knowledge/desbloquear-todos`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/desbloquear-todos`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -341,7 +345,7 @@ export const desbloquearTodosKnowledge = async () => {
 };
 
 export const ejecutarBloqueadasKnowledge = async () => {
-  const response = await fetch(`${API_URL}/chat/knowledge/ejecutar-bloqueadas`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/knowledge/ejecutar-bloqueadas`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -351,14 +355,14 @@ export const ejecutarBloqueadasKnowledge = async () => {
 // === ADMIN USUARIOS / PREGUNTAS ANÓNIMOS ===
 export const getUsuariosAnonimos = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/admin/usuarios-anonimos${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/usuarios-anonimos${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const updateUsuarioAnonimo = async (id, data) => {
-  const response = await fetch(`${API_URL}/chat/admin/usuarios-anonimos/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/usuarios-anonimos/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -367,7 +371,7 @@ export const updateUsuarioAnonimo = async (id, data) => {
 };
 
 export const deleteUsuarioAnonimo = async (id) => {
-  const response = await fetch(`${API_URL}/chat/admin/usuarios-anonimos/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/usuarios-anonimos/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -375,7 +379,7 @@ export const deleteUsuarioAnonimo = async (id) => {
 };
 
 export const blockAnonUser = async (id) => {
-  const response = await fetch(`${API_URL}/chat/admin/usuarios-anonimos/${id}/block`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/usuarios-anonimos/${id}/block`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -383,7 +387,7 @@ export const blockAnonUser = async (id) => {
 };
 
 export const unblockAnonUser = async (id) => {
-  const response = await fetch(`${API_URL}/chat/admin/usuarios-anonimos/${id}/unblock`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/usuarios-anonimos/${id}/unblock`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -392,7 +396,7 @@ export const unblockAnonUser = async (id) => {
 
 export const getPreguntasAnonimas = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/admin/preguntas-anonimas${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/preguntas-anonimas${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
@@ -401,28 +405,28 @@ export const getPreguntasAnonimas = async (params = {}) => {
 // === ADMIN CONVERSACIONES & STATS ===
 export const getConversaciones = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/admin/conversaciones${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/conversaciones${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const getConversacionesByUser = async (userId) => {
-  const response = await fetch(`${API_URL}/chat/admin/conversaciones?tipo=publico`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/conversaciones?tipo=publico`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const getStats = async () => {
-  const response = await fetch(`${API_URL}/chat/admin/stats`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/stats`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const clearMemory = async () => {
-  const response = await fetch(`${API_URL}/chat/admin/conversaciones/clear-memory`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/conversaciones/clear-memory`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -432,14 +436,14 @@ export const clearMemory = async () => {
 // === APRENDIZAJE ===
 export const getRevisiones = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/aprendizaje/revisiones${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/aprendizaje/revisiones${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const aprobarRevision = async (id, data) => {
-  const response = await fetch(`${API_URL}/chat/aprendizaje/revisiones/${id}/aprobar`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/aprendizaje/revisiones/${id}/aprobar`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -448,7 +452,7 @@ export const aprobarRevision = async (id, data) => {
 };
 
 export const rechazarRevision = async (id) => {
-  const response = await fetch(`${API_URL}/chat/aprendizaje/revisiones/${id}/rechazar`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/aprendizaje/revisiones/${id}/rechazar`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -457,14 +461,14 @@ export const rechazarRevision = async (id) => {
 
 export const getCanonicas = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/aprendizaje/canonicas${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/aprendizaje/canonicas${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const createCanonica = async (data) => {
-  const response = await fetch(`${API_URL}/chat/aprendizaje/canonicas`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/aprendizaje/canonicas`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -473,7 +477,7 @@ export const createCanonica = async (data) => {
 };
 
 export const updateCanonica = async (id, data) => {
-  const response = await fetch(`${API_URL}/chat/aprendizaje/canonicas/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/aprendizaje/canonicas/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -482,7 +486,7 @@ export const updateCanonica = async (id, data) => {
 };
 
 export const deleteCanonica = async (id) => {
-  const response = await fetch(`${API_URL}/chat/aprendizaje/canonicas/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/aprendizaje/canonicas/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -490,7 +494,7 @@ export const deleteCanonica = async (id) => {
 };
 
 export const getLearningStats = async () => {
-  const response = await fetch(`${API_URL}/chat/aprendizaje/stats`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/aprendizaje/stats`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
@@ -498,14 +502,14 @@ export const getLearningStats = async () => {
 
 // === CONFIG ===
 export const getChatConfig = async () => {
-  const response = await fetch(`${API_URL}/chat/config`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const updateChatConfig = async (clave, valor) => {
-  const response = await fetch(`${API_URL}/chat/config`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify({ clave, valor }),
@@ -514,14 +518,14 @@ export const updateChatConfig = async (clave, valor) => {
 };
 
 export const getFundacionConfig = async () => {
-  const response = await fetch(`${API_URL}/chat/config/fundacion`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/fundacion`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const updateFundacionConfig = async (perfil) => {
-  const response = await fetch(`${API_URL}/chat/config/fundacion`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/fundacion`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify({ perfil }),
@@ -530,7 +534,7 @@ export const updateFundacionConfig = async (perfil) => {
 };
 
 export const regenerarTemas = async () => {
-  const response = await fetch(`${API_URL}/chat/config/regenerar-temas`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/regenerar-temas`, {
     method: 'POST',
     headers: getHeaders(),
   });
@@ -539,14 +543,14 @@ export const regenerarTemas = async () => {
 
 // === TEMAS VALIDOS ===
 export const getTemasValidos = async () => {
-  const response = await fetch(`${API_URL}/chat/config/temas`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/temas`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const createTema = async (data) => {
-  const response = await fetch(`${API_URL}/chat/config/temas`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/temas`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -555,7 +559,7 @@ export const createTema = async (data) => {
 };
 
 export const updateTema = async (id, data) => {
-  const response = await fetch(`${API_URL}/chat/config/temas/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/temas/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -564,7 +568,7 @@ export const updateTema = async (id, data) => {
 };
 
 export const deleteTema = async (id) => {
-  const response = await fetch(`${API_URL}/chat/config/temas/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/temas/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -573,14 +577,14 @@ export const deleteTema = async (id) => {
 
 // === PROTOCOLOS SENSIBLES ===
 export const getProtocolos = async () => {
-  const response = await fetch(`${API_URL}/chat/config/protocolos`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/protocolos`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const createProtocolo = async (data) => {
-  const response = await fetch(`${API_URL}/chat/config/protocolos`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/protocolos`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -589,7 +593,7 @@ export const createProtocolo = async (data) => {
 };
 
 export const updateProtocolo = async (id, data) => {
-  const response = await fetch(`${API_URL}/chat/config/protocolos/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/protocolos/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -598,7 +602,7 @@ export const updateProtocolo = async (id, data) => {
 };
 
 export const deleteProtocolo = async (id) => {
-  const response = await fetch(`${API_URL}/chat/config/protocolos/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/config/protocolos/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -608,14 +612,14 @@ export const deleteProtocolo = async (id) => {
 // === RATE LIMIT ===
 export const getRateLimitLogs = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const response = await fetch(`${API_URL}/chat/admin/rate-limit-logs${qs ? `?${qs}` : ''}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/rate-limit-logs${qs ? `?${qs}` : ''}`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 };
 
 export const clearRateLimit = async (identifier) => {
-  const response = await fetch(`${API_URL}/chat/admin/rate-limit/clear`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/rate-limit/clear`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ identifier }),
@@ -624,7 +628,7 @@ export const clearRateLimit = async (identifier) => {
 };
 
 export const blockRateLimitIdentifier = async (identifier) => {
-  const response = await fetch(`${API_URL}/chat/admin/rate-limit/block`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/rate-limit/block`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ identifier }),
@@ -633,7 +637,7 @@ export const blockRateLimitIdentifier = async (identifier) => {
 };
 
 export const unblockRateLimitIdentifier = async (identifier) => {
-  const response = await fetch(`${API_URL}/chat/admin/rate-limit/unblock`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/rate-limit/unblock`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ identifier }),
@@ -642,7 +646,7 @@ export const unblockRateLimitIdentifier = async (identifier) => {
 };
 
 export const updateConversacion = async (id, data) => {
-  const response = await fetch(`${API_URL}/chat/admin/conversaciones/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/conversaciones/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -651,7 +655,7 @@ export const updateConversacion = async (id, data) => {
 };
 
 export const deleteConversacion = async (id) => {
-  const response = await fetch(`${API_URL}/chat/admin/conversaciones/${id}`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/conversaciones/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -659,7 +663,7 @@ export const deleteConversacion = async (id) => {
 };
 
 export const blockUser = async (userId) => {
-  const response = await fetch(`${API_URL}/chat/admin/seguridad/block-user`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/seguridad/block-user`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ userId }),
@@ -668,7 +672,7 @@ export const blockUser = async (userId) => {
 };
 
 export const unblockUser = async (userId) => {
-  const response = await fetch(`${API_URL}/chat/admin/seguridad/unblock-user`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/seguridad/unblock-user`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ userId }),
@@ -677,7 +681,7 @@ export const unblockUser = async (userId) => {
 };
 
 export const blockIP = async (ip) => {
-  const response = await fetch(`${API_URL}/chat/admin/seguridad/block-ip`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/seguridad/block-ip`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ ip }),
@@ -686,7 +690,7 @@ export const blockIP = async (ip) => {
 };
 
 export const unblockIP = async (ip) => {
-  const response = await fetch(`${API_URL}/chat/admin/seguridad/unblock-ip`, {
+  const response = await fetchWithAuth(`${API_URL}/chat/admin/seguridad/unblock-ip`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ ip }),

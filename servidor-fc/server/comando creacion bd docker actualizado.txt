@@ -1,1 +1,3 @@
-docker run --name bdd_fcc_v1 -p 5433:5432 -e POSTGRES_USER=fundacionconcristo -e POSTGRES_PASSWORD=Fundacioncc.2023 -e POSTGRES_DB=base_fcc_v1 -d pgvector/pgvector:pg17
+docker run --name bdd_fcc_v1 -p 5433:5432 -e POSTGRES_USER=fundacionconcristo -e POSTGRES_PASSWORD=<CONTRASENA_SEGURA_DEFINA_EN_SU_ENTORNO> -e POSTGRES_DB=base_fcc_v1 -d pgvector/pgvector:pg17
+
+La contrasena ya no se versiona. Defina POSTGRES_PASSWORD en su gestor de secretos o en un archivo .env local ignorado por git y rotela si fue expuesta en el historial.

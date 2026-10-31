@@ -60,7 +60,6 @@ const Login = () => {
     };
     try {
       const response = await login(user);
-      console.log('Login response:', response);
       if (response.success) {
         const loginTime = new Date();
         const ecuadorTime = new Intl.DateTimeFormat('es-EC', {
@@ -71,8 +70,6 @@ const Login = () => {
           hour12: false
         }).format(loginTime);
 
-        localStorage.setItem("token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.data));
         localStorage.setItem("loginTime", loginTime);
         setAlertMessage("Inicio de sesión exitoso");
         setAlertSeverity("success");
@@ -94,7 +91,8 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Error during login:', error);
-      setAlertMessage("Error al iniciar sesión");
+      const message = error?.response?.data?.message || 'Error al iniciar sesión';
+      setAlertMessage(message);
       setAlertSeverity("error");
       setOpenAlert(true);
     } finally {
@@ -121,9 +119,7 @@ const Login = () => {
       console.log('Error al crear auditoría de cierre de sesión:', error);
     }
   // Clear local storage and navigate to login
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  localStorage.removeItem("loginTime");
+  authService.logout();
   navigate("/login");
 };
 

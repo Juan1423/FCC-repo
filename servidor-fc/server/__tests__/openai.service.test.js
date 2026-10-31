@@ -311,6 +311,7 @@ describe('OpenAIService.chatPublico', () => {
             const { svc } = makeService();
             models.ChatPrompt.findByPk.mockResolvedValue({
                 canal: 'publico',
+                activo: true,
                 instrucciones: 'Instrucción del prompt guardado',
                 archivo_pdf: null,
             });

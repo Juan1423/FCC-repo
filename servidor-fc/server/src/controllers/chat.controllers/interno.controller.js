@@ -4,6 +4,19 @@ const { openaiService, guardrailsService, learningService, conversationsService 
 const { models } = require('../../libs/sequelize');
 const { v4: uuidv4 } = require('uuid');
 
+const resolveInternalSessionId = async ({ sessionId, idUsuario }) => {
+    if (!sessionId) return null;
+
+    const last = await models.ChatConversacion.findOne({
+        where: { session_id: sessionId },
+        order: [['id_conversacion', 'DESC']],
+    });
+
+    if (!last) return sessionId;
+
+    return last.id_usuario != null && String(last.id_usuario) === String(idUsuario) ? sessionId : null;
+};
+
 const enviarMensaje = async (req, res) => {
     try {
         const { mensaje, sessionId = null } = req.body;
@@ -16,7 +29,8 @@ const enviarMensaje = async (req, res) => {
         }
 
         const idUsuario = req.user.user;
-        const effectiveSessionId = sessionId || `asistente-${idUsuario}-${Date.now()}`;
+        const validatedSessionId = await resolveInternalSessionId({ sessionId, idUsuario });
+        const effectiveSessionId = validatedSessionId || `asistente-${idUsuario}-${Date.now()}`;
 
         const evaluacion = await guardrailsService.evaluarEntrada(mensaje);
 
@@ -164,6 +178,9 @@ const enviarFeedback = async (req, res) => {
         }
         if (conversacion.tipo !== 'interno') {
             return res.status(400).json({ success: false, message: 'La conversación no pertenece al canal interno' });
+        }
+        if (conversacion.id_usuario == null || String(conversacion.id_usuario) !== String(req.user.user)) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
         }
 
         const { configService } = require('../../services/chat.services');
