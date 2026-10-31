@@ -14,7 +14,7 @@ const LOGS_DIR = path.join(__dirname, '..', '..', 'logs');
 const LOG_FILE = path.join(LOGS_DIR, 'app.log');
 const MAX_BYTES = (parseInt(process.env.LOGGING_MAX_MB, 10) || 5) * 1024 * 1024;
 
-const SENSITIVE_FIELDS = ['token', 'password', 'newPassword', 'confirmPassword', 'oldPassword', 'authorization', 'jwt'];
+const SENSITIVE_FIELDS = ['token', 'password', 'password_usuario', 'newPassword', 'confirmPassword', 'oldPassword', 'authorization', 'jwt', 'apiKey', 'apikey', 'secret', 'client_secret'];
 
 const LEVELS = {
     debug: 10,
@@ -52,6 +52,13 @@ function rotateIfNeeded() {
     }
 }
 
+function redactString(value) {
+    if (typeof value !== 'string') return value;
+    return value
+        .replace(/(password(?:_usuario)?|newPassword|confirmPassword|oldPassword|token|authorization|jwt|apiKey|apikey|secret|client_secret)\s*[:=]\s*\S+/gi, '$1=[REDACTADO]')
+        .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[JWT_REDACTADO]');
+}
+
 function redactValue(value, seen) {
     if (value === null || value === undefined) return value;
     if (typeof value === 'object') {
@@ -71,7 +78,7 @@ function redactValue(value, seen) {
         }
         return result;
     }
-    return value;
+    return redactString(value);
 }
 
 function redact(value) {
@@ -88,10 +95,10 @@ function serializeForFile(args) {
             try {
                 return JSON.stringify(redact(arg), null, 2);
             } catch (err2) {
-                return String(arg);
+                return redactString(String(arg));
             }
         }
-        return String(arg);
+        return redactString(String(arg));
     }).join(' ');
 }
 

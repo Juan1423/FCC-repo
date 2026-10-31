@@ -8,6 +8,14 @@ class Usuario extends Model {
       modelName: "Usuario",
       schema: "fcc_historiaclinica",
       timestamps: true,
+      defaultScope: {
+        attributes: { exclude: ['password_usuario'] },
+      },
+      scopes: {
+        withPassword: {
+          attributes: { include: ['password_usuario'] },
+        },
+      },
     };
   }
 

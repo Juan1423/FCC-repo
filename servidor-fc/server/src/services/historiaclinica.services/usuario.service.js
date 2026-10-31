@@ -29,8 +29,12 @@ class UsuarioService  {
         return res;
     }
 
+    async findOneWithPassword(id) {
+        return models.Usuario.scope('withPassword').findByPk(id);
+    }
+
     async login(correo, password) {
-        const user = await models.Usuario.findOne({
+        const user = await models.Usuario.scope('withPassword').findOne({
             where: {
                 correo_usuario: correo
             }
@@ -54,12 +58,12 @@ class UsuarioService  {
 
     async create(data) {
         const res = await models.Usuario.create(data);
-        return res;
+        return this.toSafeUser(res);
     }
     async update(id, data) {
         const model = await this.findOne(id);
         const res = await model.update(data);
-        return res;
+        return this.toSafeUser(res);
     }
     async delete(id) {
         const model = await this.findOne(id);
@@ -68,7 +72,7 @@ class UsuarioService  {
     }
 
     async changePassword(id, oldPassword, newPassword) {
-        const user = await this.findOne(id);
+        const user = await this.findOneWithPassword(id);
         if (!user) {
             return { success: false, message: 'Usuario no encontrado' };
         }
