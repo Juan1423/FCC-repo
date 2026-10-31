@@ -1,4 +1,7 @@
 const express = require("express");
+const { requireRole } = require("../../middleware/verifyToken");
+
+const CLINIC_ROLES = ["admin", "doctor", "personal_salud"];
 
 const enfermedadesRouter = require("./enfermedades.routes");
 const examenRouter = require("./examen.routes");
@@ -55,7 +58,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Lista de enfermedades
    */
-  router.use("/enfermedades", enfermedadesRouter);
+  router.use("/enfermedades", requireRole(CLINIC_ROLES), enfermedadesRouter);
 
   /**
    * @swagger
@@ -67,7 +70,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Lista de exámenes
    */
-  router.use("/examen", examenRouter);
+  router.use("/examen", requireRole(CLINIC_ROLES), examenRouter);
 
   /**
    * @swagger
@@ -79,7 +82,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Lista de especialidades
    */
-  router.use("/especialidad", especialidadRouter);
+  router.use("/especialidad", requireRole(CLINIC_ROLES), especialidadRouter);
 
   /**
    * @swagger
@@ -91,7 +94,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Lista de tipos de especialidades
    */
-  router.use("/tipo_especialidad", tipo_especialidadRouter);
+  router.use("/tipo_especialidad", requireRole(CLINIC_ROLES), tipo_especialidadRouter);
 
   /**
    * @swagger
@@ -103,7 +106,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Información de atención
    */
-  router.use("/atencion", apsRouter);
+  router.use("/atencion", requireRole(CLINIC_ROLES), apsRouter);
 
   /**
    * @swagger
@@ -139,7 +142,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Historias clínicas
    */
-  router.use("/historia", historiaRouter);
+  router.use("/historia", requireRole(CLINIC_ROLES), historiaRouter);
 
   /**
    * @swagger
@@ -151,7 +154,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Información de pacientes
    */
-  router.use("/paciente", pacienteRouter);
+  router.use("/paciente", requireRole(CLINIC_ROLES), pacienteRouter);
 
   /**
    * @swagger
@@ -163,7 +166,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Información de signos vitales
    */
-  router.use("/signos_vitales", signosvitalesRouter);
+  router.use("/signos_vitales", requireRole(CLINIC_ROLES), signosvitalesRouter);
 
   /**
    * @swagger
@@ -175,7 +178,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Información de terapias
    */
-  router.use("/terapias", terapiasRouter);
+  router.use("/terapias", requireRole(CLINIC_ROLES), terapiasRouter);
 
   /**
    * @swagger
@@ -187,7 +190,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Tipos de terapias
    */
-  router.use("/tipo_terapia", tipo_terapiaRouter);
+  router.use("/tipo_terapia", requireRole(CLINIC_ROLES), tipo_terapiaRouter);
 
   /**
    * @swagger
@@ -199,7 +202,7 @@ function setupHistoriaClinicaRoutes(router) {
    *       200:
    *         description: Información de CIE-11
    */
-  router.use("/cie11", cie11Router);
+  router.use("/cie11", requireRole(CLINIC_ROLES), cie11Router);
 
   /**
    * @swagger

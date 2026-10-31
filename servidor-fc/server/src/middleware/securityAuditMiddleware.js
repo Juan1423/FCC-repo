@@ -12,6 +12,9 @@ const PUBLIC_ROUTES = [
   { method: 'POST', path: '/chat/publico/mensaje' },
   { method: 'POST', path: '/chat/publico/feedback' },
   { method: 'POST', path: '/chat/publico/pregunta-anonima' },
+  { method: 'GET', path: '/chat/publico/config' },
+  { method: 'POST', path: '/donacion_nacional' },
+  { method: 'POST', path: '/donacion_internacional' },
   { method: 'GET', path: '/region' },
   { method: 'GET', path: '/provincia' },
   { method: 'GET', path: '/canton' },
@@ -168,13 +171,6 @@ const securityAuditMiddleware = async (req, res, next) => {
   }
 
   const token = extractToken(req);
-  const visitorId = req.headers["visitor-id"];
-
-  if (!token && visitorId) {
-    req.user = { user: visitorId, isVisitor: true, visitorId };
-    req.isVisitor = true;
-    return next();
-  }
 
   if (!token) {
     return res.status(400).json({ mensaje: "Verificación de token errónea, debes enviar un token" });

@@ -1,3 +1,7 @@
+const { requireRole } = require('../../middleware/verifyToken');
+
+const DOC_ROLES = ['admin', 'personal_administrativo'];
+
 const tipoDocumentoRoutes = require('./tipo_documento.route');
 const documentoRoutes = require('./documento.route');
 const tipoIndicadorRoutes = require('./tipo_indicador.route');
@@ -12,18 +16,18 @@ const institucionRoutes = require('./institucion.route');
 const registrarProcesosRoutes = require('./registrar_procesos.route');
 
 function setupDocumentacionRoutes(router) {
-    router.use('/tipo_documento', tipoDocumentoRoutes);
-    router.use('/documento', documentoRoutes);
-    router.use('/tipo_indicador', tipoIndicadorRoutes);
-    router.use('/tipo_institucion', tipoInstitucionRoutes);
-    router.use('/tipo_normativa', docTipoNormativaRoutes);
-    router.use('/tipo_proceso', docTipoProcesoRoutes);
-    router.use('/modulo', moduloRoutes);
-    router.use('/proceso', procesoRoutes);
-    router.use('/normativa', docNormativaRoutes);
-    router.use('/indicador', indicadorRoutes);
-    router.use('/institucion', institucionRoutes);
-    router.use('/registrar_procesos', registrarProcesosRoutes);
+    router.use('/tipo_documento', requireRole(DOC_ROLES), tipoDocumentoRoutes);
+    router.use('/documento', requireRole(DOC_ROLES), documentoRoutes);
+    router.use('/tipo_indicador', requireRole(DOC_ROLES), tipoIndicadorRoutes);
+    router.use('/tipo_institucion', requireRole(DOC_ROLES), tipoInstitucionRoutes);
+    router.use('/tipo_normativa', requireRole(DOC_ROLES), docTipoNormativaRoutes);
+    router.use('/tipo_proceso', requireRole(DOC_ROLES), docTipoProcesoRoutes);
+    router.use('/modulo', requireRole(DOC_ROLES), moduloRoutes);
+    router.use('/proceso', requireRole(DOC_ROLES), procesoRoutes);
+    router.use('/normativa', requireRole(DOC_ROLES), docNormativaRoutes);
+    router.use('/indicador', requireRole(DOC_ROLES), indicadorRoutes);
+    router.use('/institucion', requireRole(DOC_ROLES), institucionRoutes);
+    router.use('/registrar_procesos', requireRole(DOC_ROLES), registrarProcesosRoutes);
 }
 
 module.exports = setupDocumentacionRoutes;
