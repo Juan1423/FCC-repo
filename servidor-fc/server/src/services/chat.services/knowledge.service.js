@@ -13,7 +13,23 @@ class KnowledgeService {
     }
 
     async create(data) {
-        const conocimiento = await models.ChatConocimiento.create(data);
+        const payload = { ...(data || {}) };
+        // Si el llamador ya trae un embedding, se etiqueta con el modelo actual
+        // para poder detectar deriva de modelos en el futuro.
+        if (payload.embedding && !payload.embedding_model && this.ragService.getEmbeddingModel) {
+            payload.embedding_model = this.ragService.getEmbeddingModel();
+        }
+        let conocimiento;
+        try {
+            conocimiento = await models.ChatConocimiento.create(payload);
+        } catch (error) {
+            if (payload.embedding_model && /embedding_model/i.test(String(error.message))) {
+                delete payload.embedding_model;
+                conocimiento = await models.ChatConocimiento.create(payload);
+            } else {
+                throw error;
+            }
+        }
         this.ragService.invalidateCache();
         return conocimiento;
     }
@@ -71,6 +87,9 @@ class KnowledgeService {
             where: { id_documento: idDocumento },
         });
         this.ragService.invalidateCache();
+        if (!bloqueado) {
+            await this.regenerarEmbeddingsPendientes({ id_documento: idDocumento });
+        }
         return affected;
     }
 
@@ -108,7 +127,25 @@ class KnowledgeService {
 
         await conocimiento.update(updateData);
         this.ragService.invalidateCache();
+        if (!newBloqueado) {
+            await this.regenerarEmbeddingsPendientes({ id_conocimiento: id });
+        }
         return await this.findById(id);
+    }
+
+    async regenerarEmbeddingsPendientes(whereExtra = {}) {
+        const rows = await models.ChatConocimiento.findAll({
+            where: {
+                ...whereExtra,
+                estado_vigencia: true,
+                bloqueado: false,
+                embedding: null,
+            },
+            attributes: ['id_conocimiento'],
+        });
+        const ids = rows.map((row) => row.id_conocimiento);
+        if (ids.length === 0) return { total: 0, processed: 0, errors: 0 };
+        return this.generarEmbeddings(ids);
     }
 
     async bloquearTodos(ids = null) {
@@ -117,7 +154,7 @@ class KnowledgeService {
             where.id_conocimiento = ids;
         }
         const [affectedCount] = await models.ChatConocimiento.update(
-            { bloqueado: true },
+            { bloqueado: true, embedding: null },
             { where }
         );
         this.ragService.invalidateCache();
@@ -134,10 +171,11 @@ class KnowledgeService {
             { where }
         );
         this.ragService.invalidateCache();
+        await this.regenerarEmbeddingsPendientes(where);
         return { count: affectedCount };
     }
 
-    async generarEmbeddings(ids = null) {
+    async generarEmbeddings(ids = null, { soloFaltantes = true } = {}) {
         let where = {
             estado_vigencia: true,
             bloqueado: false,
@@ -146,21 +184,33 @@ class KnowledgeService {
             where.id_conocimiento = ids;
         }
 
+        // `soloFaltantes=false` regenera también vectores existentes: necesario
+        // para corregir deriva de modelo (misma dimensión, modelo distinto).
+        if (soloFaltantes) where.embedding = null;
+
         const items = await models.ChatConocimiento.findAll({
-            where: { ...where, embedding: null },
-            attributes: ['id_conocimiento', 'pregunta_frecuente', 'respuesta_oficial', 'contenido', 'tema_principal'],
+            where,
+            attributes: ['id_conocimiento', 'tipo', 'pregunta_frecuente', 'respuesta_oficial', 'contenido', 'tema_principal'],
         });
 
         let processed = 0;
         let errors = 0;
+        const modelo = this.ragService.getEmbeddingModel();
 
         for (const item of items) {
             try {
-                const textToEmbed = `${item.pregunta_frecuente || ''} ${item.respuesta_oficial || ''} ${item.contenido || ''}`.substring(0, 8000);
+                // Mismo builder que usa la ingesta: evita que la regeneración
+                // genere vectores con un texto distinto al original.
+                const textToEmbed = this.ragService.construirTextoEmbedding(item);
                 if (!textToEmbed.trim()) continue;
 
                 const embedding = await this.ragService.generateEmbedding(textToEmbed);
-                await item.update({ embedding: JSON.stringify(embedding) });
+                try {
+                    await item.update({ embedding: JSON.stringify(embedding), embedding_model: modelo });
+                } catch (updateError) {
+                    if (!/embedding_model/i.test(String(updateError.message))) throw updateError;
+                    await item.update({ embedding: JSON.stringify(embedding) });
+                }
                 processed++;
             } catch (error) {
                 console.error(`Error generating embedding for ${item.id_conocimiento}:`, error.message);
@@ -170,7 +220,38 @@ class KnowledgeService {
         }
 
         this.ragService.invalidateCache();
-        return { total: items.length, processed, errors };
+        return { total: items.length, processed, errors, modelo };
+    }
+
+    /**
+     * Regenera los embeddings cuyo modelo no coincide con el configurado.
+     * Cubre el caso en que 3-small y ada-002 comparten dimensión (1536) y la
+     * detección por dimensión no alcanza a detectar la deriva.
+     */
+    async regenerarEmbeddingsIncompatibles() {
+        const modelo = this.ragService.getEmbeddingModel();
+        let items = [];
+        try {
+            items = await models.ChatConocimiento.findAll({
+                where: {
+                    estado_vigencia: true,
+                    bloqueado: false,
+                    [Op.or]: [
+                        { embedding_model: null },
+                        { embedding_model: { [Op.ne]: modelo } },
+                    ],
+                },
+                attributes: ['id_conocimiento'],
+            });
+        } catch (error) {
+            if (!/embedding_model/i.test(String(error.message))) throw error;
+            return { total: 0, processed: 0, errors: 0, modelo, aviso: 'Columna embedding_model ausente' };
+        }
+
+        const ids = items.map((item) => item.id_conocimiento);
+        if (ids.length === 0) return { total: 0, processed: 0, errors: 0, modelo };
+        const result = await this.generarEmbeddings(ids, { soloFaltantes: false });
+        return { ...result, modelo };
     }
 
     async regenerarMemoria() {

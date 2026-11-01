@@ -2,8 +2,17 @@
 
 const { models } = require('../../libs/sequelize');
 const chatConfig = require('../../config/chatConfig');
+const vectorMath = require('../../utils/vector.math');
 
 const UMBRAL_GUARDRAIL_SENSIBLE = 0.45;
+// Bandas de coseno recomendadas por modelo. El guardrail sensible usa 0.45 por
+// defecto, pero con ada-002 ese valor produce falsos positivos (su coseno está
+// comprimido) y con 3-small puede quedar alto. El valor configurado en BD manda.
+const UMBRAL_GUARDRAIL_POR_MODELO = {
+    'text-embedding-3-small': 0.45,
+    'text-embedding-3-large': 0.45,
+    'text-embedding-ada-002': 0.82,
+};
 
 class GuardrailsService {
     constructor() {
@@ -11,6 +20,7 @@ class GuardrailsService {
         this.configCache = null;
         this.configExpiry = 0;
         this.blockedIdentifiers = new Set();
+        this._avisoUmbralEmitido = new Set();
         this._loadBlockedIdentifiers();
     }
 
@@ -49,15 +59,59 @@ class GuardrailsService {
             .trim();
     }
 
+    getEmbeddingModel() {
+        return chatConfig.embeddingModel || 'text-embedding-ada-002';
+    }
+
+    async getUmbralSensible() {
+        const recomendado = UMBRAL_GUARDRAIL_POR_MODELO[this.getEmbeddingModel()] || UMBRAL_GUARDRAIL_SENSIBLE;
+        try {
+            const config = await this.loadConfig();
+            const configurado = config ? config.guardrail_sensible_threshold : undefined;
+            const parsed = parseFloat(configurado);
+            if (!Number.isNaN(parsed) && parsed > 0) {
+                // Un valor por debajo del piso del modelo (p. ej. 0.45 con
+                // ada-002) dispara el guardrail con casi cualquier mensaje.
+                // Se eleva al piso para no inundar de falsos positivos.
+                if (parsed < recomendado) {
+                    const clave = `${this.getEmbeddingModel()}:${parsed}`;
+                    if (!this._avisoUmbralEmitido.has(clave)) {
+                        this._avisoUmbralEmitido.add(clave);
+                        console.warn(
+                            `[Guardrails] guardrail_sensible_threshold=${parsed} está por debajo del piso ` +
+                            `recomendado (${recomendado}) para ${this.getEmbeddingModel()}; se usa ${recomendado}.`
+                        );
+                    }
+                    return recomendado;
+                }
+                return parsed;
+            }
+        } catch (error) {
+            console.warn('Error leyendo guardrail_sensible_threshold:', error.message);
+        }
+        return recomendado;
+    }
+
     async detectSensitiveTopic(mensaje, queryEmbedding = null) {
         const normalized = this.normalize(mensaje);
         if (!normalized) return null;
 
-        const protocolos = await models.ChatProtocoloSensible.findAll({
-            where: { activo: true },
-            attributes: ['id_protocolo', 'categoria', 'palabras_clave', 'embedding_keywords', 'respuesta_canonica', 'accion_requerida', 'prioridad'],
-            raw: true,
-        });
+        let protocolos = [];
+        try {
+            protocolos = await models.ChatProtocoloSensible.findAll({
+                where: { activo: true },
+                attributes: ['id_protocolo', 'categoria', 'palabras_clave', 'embedding_keywords', 'embedding_model', 'respuesta_canonica', 'accion_requerida', 'prioridad'],
+                raw: true,
+            });
+        } catch (error) {
+            if (!/embedding_model/i.test(String(error.message))) throw error;
+            // Migración de embedding_model pendiente: se opera sin la columna.
+            protocolos = await models.ChatProtocoloSensible.findAll({
+                where: { activo: true },
+                attributes: ['id_protocolo', 'categoria', 'palabras_clave', 'embedding_keywords', 'respuesta_canonica', 'accion_requerida', 'prioridad'],
+                raw: true,
+            });
+        }
 
         if (protocolos.length === 0) return null;
 
@@ -90,14 +144,18 @@ class GuardrailsService {
             }
         }
 
-        // 2) Coincidencia semántica por similitud coseno >= 0.45 (calibración)
+        // 2) Coincidencia semántica por similitud coseno (calibración)
         let semanticBest = null;
-        let bestSemanticScore = UMBRAL_GUARDRAIL_SENSIBLE;
+        const umbralSensible = await this.getUmbralSensible();
+        let bestSemanticScore = umbralSensible;
 
         if (queryEmbedding) {
             for (const protocolo of protocolos) {
                 let protEmbedding = null;
-                if (protocolo.embedding_keywords) {
+                const modeloActual = this.getEmbeddingModel();
+                const modeloGuardado = protocolo.embedding_model || null;
+                const modeloIncompatible = modeloGuardado && modeloGuardado !== modeloActual;
+                if (protocolo.embedding_keywords && !modeloIncompatible) {
                     try {
                         protEmbedding = typeof protocolo.embedding_keywords === 'string'
                             ? JSON.parse(protocolo.embedding_keywords)
@@ -117,10 +175,18 @@ class GuardrailsService {
                         }
                         const textoRepresentativo = `${protocolo.categoria} ${(keywords || []).join(' ')}`.trim();
                         protEmbedding = await this.generateEmbedding(textoRepresentativo.substring(0, 8000));
-                        await models.ChatProtocoloSensible.update(
-                            { embedding_keywords: JSON.stringify(protEmbedding) },
-                            { where: { id_protocolo: protocolo.id_protocolo } }
-                        );
+                        try {
+                            await models.ChatProtocoloSensible.update(
+                                { embedding_keywords: JSON.stringify(protEmbedding), embedding_model: modeloActual },
+                                { where: { id_protocolo: protocolo.id_protocolo } }
+                            );
+                        } catch (updateError) {
+                            if (!/embedding_model/i.test(String(updateError.message))) throw updateError;
+                            await models.ChatProtocoloSensible.update(
+                                { embedding_keywords: JSON.stringify(protEmbedding) },
+                                { where: { id_protocolo: protocolo.id_protocolo } }
+                            );
+                        }
                     } catch (e) {
                         continue;
                     }
@@ -129,7 +195,7 @@ class GuardrailsService {
                 if (!protEmbedding) continue;
 
                 const score = this.cosineSimilarity(queryEmbedding, protEmbedding);
-                if (score >= UMBRAL_GUARDRAIL_SENSIBLE && score > bestSemanticScore) {
+                if (score >= umbralSensible && score > bestSemanticScore) {
                     bestSemanticScore = score;
                     semanticBest = protocolo;
                 }
@@ -140,25 +206,19 @@ class GuardrailsService {
     }
 
     cosineSimilarity(vecA, vecB) {
-        if (!vecA || !vecB || vecA.length !== vecB.length) return 0;
-        let dot = 0, normA = 0, normB = 0;
-        for (let i = 0; i < vecA.length; i++) {
-            dot += vecA[i] * vecB[i];
-            normA += vecA[i] * vecA[i];
-            normB += vecB[i] * vecB[i];
-        }
-        if (normA === 0 || normB === 0) return 0;
-        return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+        return vectorMath.cosineSimilarity(vecA, vecB);
     }
 
     async generateEmbedding(text) {
         const { OpenAI } = require('openai');
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
         const response = await openai.embeddings.create({
-            model: chatConfig.embeddingModel || 'text-embedding-ada-002',
-            input: text.substring(0, 8000),
+            model: this.getEmbeddingModel(),
+            input: String(text || '').substring(0, 8000),
         });
-        return response.data[0].embedding;
+        const embedding = vectorMath.parseEmbedding(response.data[0].embedding);
+        if (!embedding) throw new Error('El proveedor devolvió un embedding inválido');
+        return Array.from(embedding);
     }
 
     checkRateLimit({ scope, identifier }) {
@@ -543,10 +603,13 @@ class GuardrailsService {
 
     async evaluarEntrada(mensaje) {
         const normalized = this.normalize(mensaje);
+        // Se enmascara antes de embeber/persistir: evita enviar PII al proveedor
+        // de embeddings/LLM y almacenarla en claro en chat_conversaciones.
+        const mensajeSeguro = this.maskPII(mensaje);
 
         let queryEmbedding = null;
         try {
-            queryEmbedding = await this.generateEmbedding(mensaje);
+            queryEmbedding = await this.generateEmbedding(mensajeSeguro);
         } catch (e) {
             console.error('Could not generate embedding:', e);
         }
@@ -557,6 +620,7 @@ class GuardrailsService {
                 decision: 'protocolo',
                 protocolo,
                 embeddings: queryEmbedding,
+                mensajeSeguro,
             };
         }
 
@@ -568,6 +632,7 @@ class GuardrailsService {
             decision: 'responder',
             protocolo: null,
             embeddings: queryEmbedding,
+            mensajeSeguro,
         };
     }
 }

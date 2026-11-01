@@ -52,10 +52,21 @@ class ConversationsService {
         });
     }
 
-    async getRecentBySessionId(sessionId, limit = 4) {
+    async getRecentBySessionId(sessionId, limit = 4, { tipo = null, idUsuario = null, visitorId = null } = {}) {
+        if (!sessionId) return [];
         const maxTurnos = Math.min(Math.max(parseInt(limit, 10) || 4, 1), 10);
+        const where = { session_id: sessionId };
+        if (tipo) where.tipo = tipo;
+        if (idUsuario) {
+            where.id_usuario = idUsuario;
+        } else if (visitorId) {
+            where.id_usuario = null;
+            where.id_usuario_anonimo = visitorId;
+        } else {
+            return [];
+        }
         return models.ChatConversacion.findAll({
-            where: { session_id: sessionId },
+            where,
             order: [['fecha_conversacion', 'DESC'], ['id_conversacion', 'DESC']],
             limit: maxTurnos,
         });

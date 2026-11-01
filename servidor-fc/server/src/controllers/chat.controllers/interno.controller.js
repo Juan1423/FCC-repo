@@ -2,6 +2,7 @@
 
 const { openaiService, guardrailsService, learningService, conversationsService } = require('../../services/chat.services');
 const { models } = require('../../libs/sequelize');
+const chatConfig = require('../../config/chatConfig');
 const { v4: uuidv4 } = require('uuid');
 
 const resolveInternalSessionId = async ({ sessionId, idUsuario }) => {
@@ -21,10 +22,17 @@ const enviarMensaje = async (req, res) => {
     try {
         const { mensaje, sessionId = null } = req.body;
 
-        if (!mensaje || !mensaje.trim()) {
+        if (!mensaje || typeof mensaje !== 'string' || !mensaje.trim()) {
             return res.status(400).json({
                 success: false,
                 message: 'El mensaje es requerido',
+            });
+        }
+
+        if (mensaje.length > chatConfig.chat.maxMessageLength) {
+            return res.status(400).json({
+                success: false,
+                message: `El mensaje no puede exceder ${chatConfig.chat.maxMessageLength} caracteres`,
             });
         }
 
@@ -33,6 +41,7 @@ const enviarMensaje = async (req, res) => {
         const effectiveSessionId = validatedSessionId || `asistente-${idUsuario}-${Date.now()}`;
 
         const evaluacion = await guardrailsService.evaluarEntrada(mensaje);
+        const mensajeProcesado = evaluacion.mensajeSeguro || mensaje;
 
         if (evaluacion.decision === 'protocolo') {
             const protocolo = evaluacion.protocolo;
@@ -40,7 +49,7 @@ const enviarMensaje = async (req, res) => {
                 tipo: 'interno',
                 id_usuario: idUsuario,
                 session_id: effectiveSessionId,
-                mensaje_usuario: mensaje,
+                mensaje_usuario: mensajeProcesado,
                 respuesta_bot: protocolo.respuesta_canonica,
                 consentimiento: true,
                 metadata: { protocolo_categoria: protocolo.categoria },
@@ -60,15 +69,15 @@ const enviarMensaje = async (req, res) => {
             });
         }
 
-        const ragDetalle = await openaiService.obtenerRAGDetalle(mensaje, 'interno', evaluacion.embeddings);
+        const ragDetalle = await openaiService.obtenerRAGDetalle(mensajeProcesado, 'interno', evaluacion.embeddings);
 
-        const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings, 'interno');
+        const canonical = await learningService.findCanonicalResponse(mensajeProcesado, evaluacion.embeddings, 'interno');
         if (canonical) {
             const conversacion = await models.ChatConversacion.create({
                 tipo: 'interno',
                 id_usuario: idUsuario,
                 session_id: effectiveSessionId,
-                mensaje_usuario: mensaje,
+                mensaje_usuario: mensajeProcesado,
                 respuesta_bot: canonical.respuesta_canonica,
                 consentimiento: true,
                 metadata: { canonical_match: true, id_canonica: canonical.id_canonica },
@@ -87,7 +96,7 @@ const enviarMensaje = async (req, res) => {
         }
 
         const result = await openaiService.chatInterno({
-            mensaje,
+            mensaje: mensajeProcesado,
             idUsuario,
             sessionId: effectiveSessionId,
             ragDetalle,
@@ -168,16 +177,16 @@ const enviarFeedback = async (req, res) => {
         if (!Number.isInteger(calificacion) || calificacion < 1 || calificacion > 5) {
             return res.status(400).json({
                 success: false,
-                message: 'La calificación debe ser un entero entre 1 y 5',
+                message: 'La calificaciÃ³n debe ser un entero entre 1 y 5',
             });
         }
 
         const conversacion = await models.ChatConversacion.findByPk(id_conversacion);
         if (!conversacion) {
-            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+            return res.status(404).json({ success: false, message: 'ConversaciÃ³n no encontrada' });
         }
         if (conversacion.tipo !== 'interno') {
-            return res.status(400).json({ success: false, message: 'La conversación no pertenece al canal interno' });
+            return res.status(400).json({ success: false, message: 'La conversaciÃ³n no pertenece al canal interno' });
         }
         if (conversacion.id_usuario == null || String(conversacion.id_usuario) !== String(req.user.user)) {
             return res.status(404).json({ success: false, message: 'Conversación no encontrada' });

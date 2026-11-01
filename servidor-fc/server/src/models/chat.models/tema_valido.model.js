@@ -37,6 +37,10 @@ const ChatTemaValidoSchema = {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    embedding_model: {
+        type: DataTypes.STRING(80),
+        allowNull: true,
+    },
     activo: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

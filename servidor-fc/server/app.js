@@ -89,7 +89,14 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
 });
 
-app.listen(port, () => {
-    console.log(`Servidor escuchando en el puerto ${port}`);
-    console.log(`Documentación Swagger disponible en ${baseUrl}/api-docs`);
-});
+// Solo se abre el puerto cuando se ejecuta como entrypoint (`node app.js`).
+// Al requerirlo desde tests de integración se obtiene la app sin side effects
+// de red, lo que permite usar supertest contra el mismo stack de middlewares.
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`Servidor escuchando en el puerto ${port}`);
+        console.log(`Documentación Swagger disponible en ${baseUrl}/api-docs`);
+    });
+}
+
+module.exports = app;

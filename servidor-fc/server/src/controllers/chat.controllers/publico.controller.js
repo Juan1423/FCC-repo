@@ -2,6 +2,7 @@
 
 const { openaiService, guardrailsService, learningService } = require('../../services/chat.services');
 const { models } = require('../../libs/sequelize');
+const chatConfig = require('../../config/chatConfig');
 const { v4: uuidv4 } = require('uuid');
 const { getRequestIp, hashIdentifier } = require('../../utils/request.util');
 
@@ -43,16 +44,25 @@ const enviarMensaje = async (req, res) => {
     try {
         const { mensaje, promptId = null, consentimiento = false, metadata = {}, sessionId = null, visitorId = null } = req.body;
 
-        if (!mensaje || !mensaje.trim()) {
+        if (!mensaje || typeof mensaje !== 'string' || !mensaje.trim()) {
             return res.status(400).json({
                 success: false,
                 message: 'El mensaje es requerido',
             });
         }
 
+        // ValidaciÃ³n temprana: evita gastar una llamada de embedding + LLM en
+        // mensajes que el servicio rechazarÃ¡ igualmente por longitud.
+        if (mensaje.length > chatConfig.chat.maxMessageLength) {
+            return res.status(400).json({
+                success: false,
+                message: `El mensaje no puede exceder ${chatConfig.chat.maxMessageLength} caracteres`,
+            });
+        }
+
         const isVisitor = req.isVisitor || req.user?.isVisitor || false;
         const idUsuario = isVisitor ? null : (req.user?.user || null);
-        const effectiveVisitorId = visitorId || req.user?.visitorId || null;
+        let effectiveVisitorId = visitorId || req.user?.visitorId || null;
         const ipHash = hashIdentifier(getRequestIp(req)) || 'sin-ip';
 
         let effectiveSessionId = await resolveSessionId({ sessionId, idUsuario, visitorId: effectiveVisitorId });
@@ -62,6 +72,7 @@ const enviarMensaje = async (req, res) => {
             } else {
                 effectiveSessionId = effectiveVisitorId || `anon-${uuidv4()}`;
                 if (!effectiveVisitorId) {
+                    effectiveVisitorId = effectiveSessionId;
                     req.user = { ...(req.user || {}), visitorId: effectiveSessionId };
                 }
             }
@@ -76,8 +87,8 @@ const enviarMensaje = async (req, res) => {
                 success: false,
                 blocked: !!rateResult.manuallyBlocked,
                 message: rateResult.manuallyBlocked
-                    ? 'El uso del chat no está disponible desde este dispositivo. Si crees que es un error, contáctanos.'
-                    : `Límite de ${rateResult.limit} preguntas alcanzado. Intenta en ${rateResult.retryAfter} segundos.`,
+                    ? 'El uso del chat no estÃ¡ disponible desde este dispositivo. Si crees que es un error, contÃ¡ctanos.'
+                    : `LÃ­mite de ${rateResult.limit} preguntas alcanzado. Intenta en ${rateResult.retryAfter} segundos.`,
                 retryAfter: rateResult.retryAfter,
                 rate: rateResult,
             });
@@ -100,6 +111,8 @@ const enviarMensaje = async (req, res) => {
         }
 
         const evaluacion = await guardrailsService.evaluarEntrada(mensaje);
+        // Mensaje con PII enmascarada: es el que se envÃ­a al LLM y se persiste.
+        const mensajeProcesado = evaluacion.mensajeSeguro || mensaje;
 
         if (evaluacion.decision === 'protocolo') {
             const protocolo = evaluacion.protocolo;
@@ -108,7 +121,7 @@ const enviarMensaje = async (req, res) => {
                 id_usuario: idUsuario,
                 id_usuario_anonimo: effectiveVisitorId,
                 session_id: effectiveSessionId,
-                mensaje_usuario: mensaje,
+                mensaje_usuario: mensajeProcesado,
                 respuesta_bot: protocolo.respuesta_canonica,
                 consentimiento: !!consentimiento,
                 metadata: { ...metadata, protocolo_categoria: protocolo.categoria },
@@ -128,16 +141,16 @@ const enviarMensaje = async (req, res) => {
             });
         }
 
-        const ragDetalle = await openaiService.obtenerRAGDetalle(mensaje, 'publico', evaluacion.embeddings);
+        const ragDetalle = await openaiService.obtenerRAGDetalle(mensajeProcesado, 'publico', evaluacion.embeddings);
 
-        const canonical = await learningService.findCanonicalResponse(mensaje, evaluacion.embeddings, 'publico');
+        const canonical = await learningService.findCanonicalResponse(mensajeProcesado, evaluacion.embeddings, 'publico');
         if (canonical) {
             const conversacion = await models.ChatConversacion.create({
                 tipo: 'publico',
                 id_usuario: idUsuario,
                 id_usuario_anonimo: effectiveVisitorId,
                 session_id: effectiveSessionId,
-                mensaje_usuario: mensaje,
+                mensaje_usuario: mensajeProcesado,
                 respuesta_bot: canonical.respuesta_canonica,
                 consentimiento: !!consentimiento,
                 metadata: { ...metadata, canonical_match: true, id_canonica: canonical.id_canonica },
@@ -156,7 +169,7 @@ const enviarMensaje = async (req, res) => {
         }
 
         const result = await openaiService.chatPublico({
-            mensaje,
+            mensaje: mensajeProcesado,
             promptId,
             idUsuario,
             idUsuarioAnonimo: effectiveVisitorId,
@@ -205,7 +218,7 @@ const enviarFeedback = async (req, res) => {
 
         const conversacion = await models.ChatConversacion.findByPk(id_conversacion);
         if (!conversacion) {
-            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+            return res.status(404).json({ success: false, message: 'ConversaciÃ³n no encontrada' });
         }
 
         if (!ownsConversation(conversacion, { idUsuario, visitorId: effectiveVisitorId })) {
@@ -217,7 +230,7 @@ const enviarFeedback = async (req, res) => {
         if (!feedbackValido) {
             return res.status(400).json({
                 success: false,
-                message: 'La calificación debe estar entre 1 y 5',
+                message: 'La calificaciÃ³n debe estar entre 1 y 5',
             });
         }
 
@@ -320,11 +333,11 @@ const crearPreguntaAnonima = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'Pregunta anónima enviada exitosamente',
+            message: 'Pregunta anÃ³nima enviada exitosamente',
             data: preguntaAn,
         });
     } catch (error) {
-        console.error('Error creando pregunta anónima:', error.message);
+        console.error('Error creando pregunta anÃ³nima:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -354,7 +367,7 @@ const getLimits = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error('Error obteniendo límites:', error.message);
+        console.error('Error obteniendo lÃ­mites:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 };

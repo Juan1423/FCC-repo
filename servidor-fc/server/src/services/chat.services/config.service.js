@@ -17,10 +17,14 @@ const CONFIG_CONSTRAINTS = {
     rate_limit_autenticado_diario: { min: 1, integer: true },
     max_respuesta_length: { min: 1, integer: true },
     memory_max_turnos: { min: 1, max: 10, integer: true },
-    chunk_size: { min: 100, integer: true },
+    chunk_size: { min: 100, max: 8000, integer: true },
     chunk_overlap: { min: 0, integer: true },
     rag_similarity_threshold: { min: 0.1, max: 1.0, integer: false },
     rag_umbral_estricto: { min: 0.1, max: 1.0, integer: false },
+    rag_umbral_alto: { min: 0.1, max: 1.0, integer: false },
+    rag_margen_top2: { min: 0, max: 1.0, integer: false },
+    rag_lexical_rescue_floor: { min: 0.1, max: 1.0, integer: false },
+    guardrail_sensible_threshold: { min: 0.1, max: 1.0, integer: false },
 };
 
 function validationError(message) {

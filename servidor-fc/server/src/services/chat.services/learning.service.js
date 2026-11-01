@@ -168,11 +168,32 @@ class LearningService {
                 ? config.canonical_response_threshold
                 : 0.85;
 
-            const items = await models.ChatRespuestaCanonica.findAll({
-                where: { activo: true, canal: { [Op.in]: ['ambos', canal] } },
-                attributes: ['id_canonica', 'patron_trigger', 'embedding_trigger', 'respuesta_canonica', 'categoria', 'prioridad', 'usos_count', 'canal'],
-                raw: true,
-            });
+            // NOTA: cuando canal === 'ambos' el filtro histórico
+            // `[Op.in]: ['ambos', canal]` colapsaba a ['ambos','ambos'] y
+            // excluía las canónicas de canal público/interno. Se expande.
+            const canales = !canal || canal === 'ambos'
+                ? ['ambos', 'publico', 'interno']
+                : ['ambos', canal];
+
+            let items = [];
+            try {
+                items = await models.ChatRespuestaCanonica.findAll({
+                    where: { activo: true, canal: { [Op.in]: canales } },
+                    attributes: ['id_canonica', 'patron_trigger', 'embedding_trigger', 'embedding_model', 'respuesta_canonica', 'categoria', 'prioridad', 'usos_count', 'canal'],
+                    raw: true,
+                });
+            } catch (error) {
+                if (!/embedding_model/i.test(String(error.message))) throw error;
+                items = await models.ChatRespuestaCanonica.findAll({
+                    where: { activo: true, canal: { [Op.in]: canales } },
+                    attributes: ['id_canonica', 'patron_trigger', 'embedding_trigger', 'respuesta_canonica', 'categoria', 'prioridad', 'usos_count', 'canal'],
+                    raw: true,
+                });
+            }
+
+            const modeloActual = this.ragService && this.ragService.getEmbeddingModel
+                ? this.ragService.getEmbeddingModel()
+                : (chatConfig.embeddingModel || 'text-embedding-ada-002');
 
             if (items.length === 0) return null;
 
@@ -192,7 +213,7 @@ class LearningService {
                     }
                 }
 
-                if (item.embedding_trigger) {
+                if (item.embedding_trigger && (!item.embedding_model || item.embedding_model === modeloActual)) {
                     embeddingItems.push(item);
                 }
             }
@@ -277,7 +298,7 @@ class LearningService {
             console.warn('Could not generate embedding for trigger:', e.message);
         }
 
-        const canonica = await models.ChatRespuestaCanonica.create({
+        const datosCanonica = {
             patron_trigger: patronTrigger || respuestaCanonica,
             embedding_trigger: embeddingTrigger ? JSON.stringify(embeddingTrigger) : null,
             respuesta_canonica: respuestaCanonica,
@@ -287,7 +308,22 @@ class LearningService {
             creado_por: adminId,
             creado_desde_revision: idRevision,
             canal,
-        });
+        };
+        if (embeddingTrigger && this.ragService && this.ragService.getEmbeddingModel) {
+            datosCanonica.embedding_model = this.ragService.getEmbeddingModel();
+        }
+
+        let canonica;
+        try {
+            canonica = await models.ChatRespuestaCanonica.create(datosCanonica);
+        } catch (error) {
+            if (datosCanonica.embedding_model && /embedding_model/i.test(String(error.message))) {
+                delete datosCanonica.embedding_model;
+                canonica = await models.ChatRespuestaCanonica.create(datosCanonica);
+            } else {
+                throw error;
+            }
+        }
 
         await revision.update({
             status: 'aprobado',

@@ -45,7 +45,6 @@ class OpenAIService {
         this.configService = configService;
         this.ragMonitorService = ragMonitorService || null;
         this.conversationsService = conversationsService || null;
-        this._ultimoRAGDetalle = null;
     }
 
     async obtenerRAGDetalle(mensaje, tipo = 'publico', queryEmbedding = null) {
@@ -53,9 +52,7 @@ class OpenAIService {
         const config = await this.loadConfig();
         const maxItems = config.max_contexto_rag_items !== undefined ? config.max_contexto_rag_items : 3;
         const threshold = config.rag_similarity_threshold !== undefined ? config.rag_similarity_threshold : 0.55;
-        const detalle = await this.ragService.buildRAGContextDetalle(mensaje, maxItems, threshold, tipo, { queryEmbedding });
-        this._ultimoRAGDetalle = detalle || null;
-        return detalle;
+        return this.ragService.buildRAGContextDetalle(mensaje, maxItems, threshold, tipo, { queryEmbedding });
     }
 
     async tieneContextoRelevante(mensaje, tipo = 'publico', queryEmbedding = null) {
@@ -64,12 +61,11 @@ class OpenAIService {
             return !!detalle && Array.isArray(detalle.resultados) && detalle.resultados.length > 0;
         } catch (error) {
             console.warn('Error en pre-chequeo RAG:', error.message);
-            this._ultimoRAGDetalle = null;
             return false;
         }
     }
 
-    async construirHistorialContexto({ sessionId, tipo = 'publico', consentimiento = false }) {
+    async construirHistorialContexto({ sessionId, tipo = 'publico', consentimiento = false, idUsuario = null, visitorId = null }) {
         if (!this.conversationsService || !sessionId) return '';
         const config = await this.loadConfig();
         if (config.memory_enabled === false) return '';
@@ -79,9 +75,15 @@ class OpenAIService {
 
         if (tipo === 'publico' && !consentimiento) return '';
 
+        if (!idUsuario && !visitorId) return '';
+
         try {
             const fetchLimit = Math.min(maxTurnos * 3, 10);
-            const rows = await this.conversationsService.getRecentBySessionId(sessionId, fetchLimit);
+            const rows = await this.conversationsService.getRecentBySessionId(sessionId, fetchLimit, {
+                tipo,
+                idUsuario,
+                visitorId,
+            });
             if (!rows || rows.length === 0) return '';
 
             const confiables = rows.filter((r) => !this.esTurnoNoConfiable(r)).slice(0, maxTurnos);
@@ -116,22 +118,20 @@ class OpenAIService {
         );
     }
 
-    async registrarDiagnosticoRAG({ tipo, pregunta, respuesta, decision = 'responder', idConversacion = null }) {
-        if (!this.ragMonitorService || !this._ultimoRAGDetalle) {
+    async registrarDiagnosticoRAG({ tipo, pregunta, respuesta, decision = 'responder', idConversacion = null, ragDetalle = null }) {
+        if (!this.ragMonitorService || !ragDetalle) {
             return null;
         }
-        const detalle = this._ultimoRAGDetalle;
-        this._ultimoRAGDetalle = null;
         try {
             await this.ragMonitorService.registrar({
                 idConversacion,
                 tipo,
                 pregunta,
                 respuesta,
-                resultados: detalle.resultados || [],
-                similitudMaxima: detalle.similitudMaxima || 0,
-                umbral: detalle.umbral || 0.7,
-                contextoIncluido: !!detalle.contextoIncluido,
+                resultados: ragDetalle.resultados || [],
+                similitudMaxima: ragDetalle.similitudMaxima || 0,
+                umbral: ragDetalle.umbral || 0.55,
+                contextoIncluido: !!ragDetalle.contextoIncluido,
                 decision,
                 modelo: chatConfig.openai.model,
             });
@@ -140,9 +140,10 @@ class OpenAIService {
         }
     }
 
-    async registrarDiagnosticoRAGAsync({ tipo, pregunta, respuesta, decision = 'responder', idConversacion = null }) {
+    async registrarDiagnosticoRAGAsync({ tipo, pregunta, respuesta, decision = 'responder', idConversacion = null, ragDetalle = null }) {
+        if (!ragDetalle) return;
         setImmediate(async () => {
-            await this.registrarDiagnosticoRAG({ tipo, pregunta, respuesta, decision, idConversacion });
+            await this.registrarDiagnosticoRAG({ tipo, pregunta, respuesta, decision, idConversacion, ragDetalle });
         });
     }
 
@@ -173,7 +174,7 @@ class OpenAIService {
         }
     }
 
-    async construirPromptCompleto(mensajeUsuario, { promptId = null, sessionId, tipo = 'publico', consentimiento = false, ragDetalle = null, queryEmbedding = null } = {}) {
+    async construirPromptCompleto(mensajeUsuario, { promptId = null, sessionId, tipo = 'publico', consentimiento = false, idUsuario = null, visitorId = null, ragDetalle = null, queryEmbedding = null } = {}) {
         let prompt = SYSTEM_PROMPT_COMPLETO + '\n\n';
 
         prompt += 'INSTRUCCIONES CRÍTICAS:\n';
@@ -219,7 +220,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
 
         prompt += wrapUntrusted('informacion_institucion', informacionFundacion);
 
-        const historial = await this.construirHistorialContexto({ sessionId, tipo, consentimiento });
+        const historial = await this.construirHistorialContexto({ sessionId, tipo, consentimiento, idUsuario, visitorId });
         if (historial) {
             prompt += wrapUntrusted('historial_conversacion', historial);
         }
@@ -227,13 +228,11 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
         if (this.ragService) {
             try {
                 const ragDeta = ragDetalle || await this.obtenerRAGDetalle(mensajeUsuario, tipo, queryEmbedding);
-                this._ultimoRAGDetalle = ragDeta || null;
                 if (ragDeta?.context) {
                     prompt += wrapUntrusted('contexto_base_conocimiento', ragDeta.context);
                 }
             } catch (error) {
                 console.warn('Error obteniendo contexto RAG:', error.message);
-                this._ultimoRAGDetalle = null;
                 prompt += 'No se pudo acceder a la base de conocimiento en este momento.\n\n';
             }
         }
@@ -311,8 +310,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
 
         const startTime = Date.now();
         let promptCompleto;
-
-        this._ultimoRAGDetalle = null;
+        let ragDetalleUsado = null;
 
         if (promptId) {
             const promptRecord = await models.ChatPrompt.findByPk(promptId);
@@ -330,7 +328,8 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             promptCompleto += `${chatConfig.systemPrompt.userMessageFormat}\n`;
             promptCompleto += wrapUntrusted('mensaje_usuario', mensaje);
         } else {
-            promptCompleto = await this.construirPromptCompleto(mensaje, { promptId, sessionId, tipo: 'publico', consentimiento, ragDetalle, queryEmbedding });
+            ragDetalleUsado = ragDetalle;
+            promptCompleto = await this.construirPromptCompleto(mensaje, { promptId, sessionId, tipo: 'publico', consentimiento, idUsuario, visitorId, ragDetalle, queryEmbedding });
         }
 
         let responseFromOpenAI;
@@ -418,6 +417,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             pregunta: mensaje,
             respuesta,
             idConversacion: conversacion?.id_conversacion || null,
+            ragDetalle: ragDetalleUsado,
         });
 
         return {
@@ -448,8 +448,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
         }
 
         const startTime = Date.now();
-        this._ultimoRAGDetalle = null;
-        const promptCompleto = await this.construirPromptCompleto(mensaje, { sessionId, tipo: 'interno', ragDetalle, queryEmbedding });
+        const promptCompleto = await this.construirPromptCompleto(mensaje, { sessionId, tipo: 'interno', idUsuario, ragDetalle, queryEmbedding });
 
         const payloadOpenAI = {
             model: chatConfig.openai.model,
@@ -515,6 +514,7 @@ Utiliza esta información para responder preguntas sobre horarios, servicios, ub
             pregunta: mensaje,
             respuesta,
             idConversacion: conversacion?.id_conversacion || null,
+            ragDetalle,
         });
 
         return { respuesta, id_conversacion: conversacion?.id_conversacion || null, responseTime, tokensUsed };

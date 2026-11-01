@@ -60,6 +60,10 @@ const ChatConocimientoSchema = {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    embedding_model: {
+        type: DataTypes.STRING(80),
+        allowNull: true,
+    },
     fuente_verificacion: {
         type: DataTypes.STRING,
         allowNull: true,

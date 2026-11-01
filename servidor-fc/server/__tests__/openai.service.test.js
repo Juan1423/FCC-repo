@@ -67,12 +67,11 @@ describe('OpenAIService.construirPromptCompleto', () => {
         expect(prompt).toContain('INFORMACIÓN RELEVANTE DE LA BASE DE CONOCIMIENTOS');
     });
 
-    test('guardar _ultimoRAGDetalle para alimentar el monitor', async () => {
+    test('inyecta el bloque RAG sin guardar estado compartido en el singleton', async () => {
         const { svc } = makeService();
-        await svc.construirPromptCompleto('test', { tipo: 'interno' });
-        expect(svc._ultimoRAGDetalle).not.toBeNull();
-        expect(svc._ultimoRAGDetalle.similitudMaxima).toBeCloseTo(0.86, 3);
-        expect(svc._ultimoRAGDetalle.contextoIncluido).toBe(true);
+        const prompt = await svc.construirPromptCompleto('test', { tipo: 'interno', idUsuario: 1 });
+        expect(prompt).toContain('INFORMACIÓN RELEVANTE DE LA BASE DE CONOCIMIENTOS');
+        expect(svc._ultimoRAGDetalle).toBeUndefined();
     });
 });
 
@@ -98,7 +97,7 @@ describe('OpenAIService.construirHistorialContexto', () => {
 
     test('incluye historial en público cuando hay consentimiento', async () => {
         const svc = withHistory();
-        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'publico', consentimiento: true });
+        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'publico', consentimiento: true, visitorId: 'v-1' });
         expect(ctx).toContain('HISTORIAL RECIENTE DE LA CONVERSACIÓN');
         expect(ctx).toContain('140586');
         expect(ctx).toContain('08:00 a 18:00');
@@ -106,14 +105,21 @@ describe('OpenAIService.construirHistorialContexto', () => {
 
     test('NO incluye historial en público sin consentimiento', async () => {
         const svc = withHistory();
-        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'publico', consentimiento: false });
+        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'publico', consentimiento: false, visitorId: 'v-1' });
+        expect(ctx).toBe('');
+        expect(svc.conversationsService.getRecentBySessionId).not.toHaveBeenCalled();
+    });
+
+    test('NO incluye historial si falta el identificador del titular', async () => {
+        const svc = withHistory();
+        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'publico', consentimiento: true });
         expect(ctx).toBe('');
         expect(svc.conversationsService.getRecentBySessionId).not.toHaveBeenCalled();
     });
 
     test('incluye historial en interno sin requerir consentimiento', async () => {
         const svc = withHistory();
-        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'interno', consentimiento: false });
+        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'interno', consentimiento: false, idUsuario: 1 });
         expect(ctx).toContain('HISTORIAL RECIENTE DE LA CONVERSACIÓN');
     });
 
@@ -123,7 +129,7 @@ describe('OpenAIService.construirHistorialContexto', () => {
             configService: { getConfig: jest.fn().mockResolvedValue({ memory_enabled: false }) },
             conversationsService: { getRecentBySessionId: jest.fn() },
         });
-        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'interno', consentimiento: true });
+        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'interno', consentimiento: true, idUsuario: 1 });
         expect(ctx).toBe('');
     });
 
@@ -139,7 +145,7 @@ describe('OpenAIService.construirHistorialContexto', () => {
                 ]),
             },
         });
-        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'interno', consentimiento: true });
+        const ctx = await svc.construirHistorialContexto({ sessionId: 's-1', tipo: 'interno', consentimiento: true, idUsuario: 1 });
         expect(ctx).toContain('HISTORIAL RECIENTE DE LA CONVERSACIÓN');
         expect(ctx).toContain('140586');
         expect(ctx).not.toContain('No tengo información suficiente');
@@ -148,7 +154,7 @@ describe('OpenAIService.construirHistorialContexto', () => {
 
     test('construirPromptCompleto inyecta el bloque de historial', async () => {
         const svc = withHistory();
-        const prompt = await svc.construirPromptCompleto('¿y en qué horario es eso?', { sessionId: 's-1', tipo: 'publico', consentimiento: true });
+        const prompt = await svc.construirPromptCompleto('¿y en qué horario es eso?', { sessionId: 's-1', tipo: 'publico', consentimiento: true, visitorId: 'v-1' });
         expect(prompt).toContain('HISTORIAL RECIENTE DE LA CONVERSACIÓN');
         expect(prompt).toContain('140586');
     });
@@ -184,7 +190,7 @@ describe('OpenAIService.tieneContextoRelevante', () => {
 });
 
 describe('OpenAIService.obtenerRAGDetalle', () => {
-    test('genera el detalle una sola vez y setea _ultimoRAGDetalle', async () => {
+    test('genera el detalle una sola vez sin guardar estado compartido', async () => {
         const buildRAGContextDetalle = jest.fn().mockResolvedValue(DETALLE_RAG);
         const svc = new OpenAIService();
         svc.setDependencies({
@@ -194,8 +200,8 @@ describe('OpenAIService.obtenerRAGDetalle', () => {
         const detalle = await svc.obtenerRAGDetalle('¿qué es?', 'interno');
         expect(buildRAGContextDetalle).toHaveBeenCalledTimes(1);
         expect(buildRAGContextDetalle).toHaveBeenCalledWith('¿qué es?', 3, 0.7, 'interno', { queryEmbedding: null });
-        expect(svc._ultimoRAGDetalle).toBe(DETALLE_RAG);
         expect(detalle).toBe(DETALLE_RAG);
+        expect(svc._ultimoRAGDetalle).toBeUndefined();
     });
 
     test('reutiliza el queryEmbedding del guardrail en la búsqueda RAG', async () => {
@@ -257,7 +263,7 @@ describe('OpenAIService.chatInterno', () => {
             const { svc } = makeService({
                 respuesta: 'No tengo información suficiente para responder esa pregunta.',
             });
-            const result = await svc.chatInterno({ mensaje: '¿hay una rifa?', idUsuario: 1, sessionId: 's1' });
+            const result = await svc.chatInterno({ mensaje: '¿hay una rifa?', idUsuario: 1, sessionId: 's1', ragDetalle: DETALLE_RAG });
 
             expect(result.respuesta).toContain('No tengo información suficiente');
 
@@ -287,6 +293,7 @@ describe('OpenAIService.chatPublico', () => {
                 mensaje: '¿tienen información sobre salud publica?',
                 sessionId: 's-pub',
                 consentimiento: true,
+                ragDetalle: DETALLE_RAG,
             });
 
             expect(result.respuesta).toBe('Respuesta normal.');

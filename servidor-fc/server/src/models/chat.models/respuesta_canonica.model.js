@@ -36,6 +36,10 @@ const ChatRespuestaCanonicaSchema = {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    embedding_model: {
+        type: DataTypes.STRING(80),
+        allowNull: true,
+    },
     respuesta_canonica: {
         type: DataTypes.TEXT,
         allowNull: false,

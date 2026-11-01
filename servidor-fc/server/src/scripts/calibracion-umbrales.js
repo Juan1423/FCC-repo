@@ -31,6 +31,7 @@ const {
     guardrailsService,
     openaiService,
 } = require('../services/chat.services/index');
+const { barrerUmbral } = require('../utils/threshold.calibration');
 
 function parseEmbedding(valor) {
     if (!valor) return null;
@@ -51,15 +52,27 @@ function redondear(score) {
 const cacheEmbeddingsSensibles = new Map();
 
 async function obtenerMaxScoreSensible(embeddingPregunta, { generarEmbeddingsSensibles = true } = {}) {
-    const protocolos = await models.ChatProtocoloSensible.findAll({
-        where: { activo: true },
-        attributes: ['id_protocolo', 'categoria', 'palabras_clave', 'embedding_keywords'],
-        raw: true,
-    });
+    let protocolos = [];
+    try {
+        protocolos = await models.ChatProtocoloSensible.findAll({
+            where: { activo: true },
+            attributes: ['id_protocolo', 'categoria', 'palabras_clave', 'embedding_keywords', 'embedding_model'],
+            raw: true,
+        });
+    } catch (error) {
+        if (!/embedding_model/i.test(String(error.message))) throw error;
+        protocolos = await models.ChatProtocoloSensible.findAll({
+            where: { activo: true },
+            attributes: ['id_protocolo', 'categoria', 'palabras_clave', 'embedding_keywords'],
+            raw: true,
+        });
+    }
 
+    const modeloActual = ragService.getEmbeddingModel ? ragService.getEmbeddingModel() : null;
     let maxScore = 0;
     for (const protocolo of protocolos) {
-        let embedding = parseEmbedding(protocolo.embedding_keywords);
+        const incompatible = modeloActual && protocolo.embedding_model && protocolo.embedding_model !== modeloActual;
+        let embedding = incompatible ? null : parseEmbedding(protocolo.embedding_keywords);
 
         if (!embedding && generarEmbeddingsSensibles) {
             embedding = cacheEmbeddingsSensibles.get(protocolo.id_protocolo);
@@ -86,14 +99,26 @@ async function obtenerMaxScoreSensible(embeddingPregunta, { generarEmbeddingsSen
 }
 
 async function obtenerMaxScoreOffTopic(embeddingPregunta) {
-    const temas = await models.ChatTemaValido.findAll({
-        where: { activo: true },
-        attributes: ['id_tema', 'tema', 'embedding'],
-        raw: true,
-    });
+    let temas = [];
+    try {
+        temas = await models.ChatTemaValido.findAll({
+            where: { activo: true },
+            attributes: ['id_tema', 'tema', 'embedding', 'embedding_model'],
+            raw: true,
+        });
+    } catch (error) {
+        if (!/embedding_model/i.test(String(error.message))) throw error;
+        temas = await models.ChatTemaValido.findAll({
+            where: { activo: true },
+            attributes: ['id_tema', 'tema', 'embedding'],
+            raw: true,
+        });
+    }
 
+    const modeloActual = ragService.getEmbeddingModel ? ragService.getEmbeddingModel() : null;
     let maxScore = 0;
     for (const tema of temas) {
+        if (modeloActual && tema.embedding_model && tema.embedding_model !== modeloActual) continue;
         const embedding = parseEmbedding(tema.embedding);
         if (!embedding) continue;
         const score = guardrailsService.cosineSimilarity(embeddingPregunta, embedding);
@@ -163,6 +188,41 @@ async function ejecutarCalibracion(preguntas, opciones = {}) {
 
     console.log('\n=== CALIBRACIÓN DE UMBRALES COSENO ===');
     console.table(filas);
+
+    const modelo = (ragService && ragService.getEmbeddingModel)
+        ? ragService.getEmbeddingModel()
+        : (process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-ada-002');
+    const recomendado = ragService && ragService.getUmbralRecomendado
+        ? ragService.getUmbralRecomendado(modelo)
+        : { piso: 0.55, alto: 0.75 };
+
+    // Las preguntas SENSIBLE se interceptan antes del RAG, por lo que no deben
+    // participar del barrido del umbral de recuperación.
+    const ragSweep = barrerUmbral(filas, { objetivo: 'RAG_VALIDO', excluir: ['SENSIBLE'], minRecall: 0.85 });
+    const sensibleSweep = barrerUmbral(
+        filas.map((fila) => ({
+            ...fila,
+            'Max Score RAG': typeof fila['Max Score Sensible'] === 'number' ? fila['Max Score Sensible'] : 0,
+        })),
+        { objetivo: 'SENSIBLE', minRecall: 0.9 }
+    );
+
+    console.log('\n=== SUGERENCIA DATA-DRIVEN ===');
+    console.log(`Modelo de embeddings: ${modelo} | banda recomendada [${recomendado.piso}, ${recomendado.alto}]`);
+    if (ragSweep.mejor) {
+        console.log(
+            `RAG: umbral sugerido ${ragSweep.mejor.redondeado} ` +
+            `(precision=${ragSweep.mejor.precision.toFixed(3)}, recall=${ragSweep.mejor.recall.toFixed(3)}, f1=${ragSweep.mejor.f1.toFixed(3)})`
+        );
+        console.table(ragSweep.candidatos);
+    }
+    if (sensibleSweep.mejor) {
+        console.log(
+            `Guardrail sensible: umbral sugerido ${sensibleSweep.mejor.redondeado} ` +
+            `(precision=${sensibleSweep.mejor.precision.toFixed(3)}, recall=${sensibleSweep.mejor.recall.toFixed(3)}, f1=${sensibleSweep.mejor.f1.toFixed(3)})`
+        );
+    }
+
     return filas;
 }
 
@@ -243,4 +303,4 @@ if (require.main === module) {
         });
 }
 
-module.exports = { ejecutarCalibracion, PREGUNTAS_DE_PRUEBA };
+module.exports = { ejecutarCalibracion, barrerUmbral, PREGUNTAS_DE_PRUEBA };

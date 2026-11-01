@@ -31,7 +31,53 @@ async function getTesseract() {
 }
 
 function limpiarTexto(texto) {
-    return texto.replace(/\r/g, ' ').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+    return String(texto || '')
+        .replace(/\r\n?/g, '\n')
+        .replace(/[ \t\f\v]+/g, ' ')
+        .replace(/[ \t]*\n[ \t]*/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+}
+
+/**
+ * Reconstruye el texto de una página agrupando fragmentos por línea (eje Y de
+ * pdfjs) y ordenándolos por X. Sin esto, `join(' ')` mezcla celdas de tablas y
+ * columnas, y el chunk resultante pierde la estructura que da sentido al dato.
+ */
+function reconstruirTextoPorLineas(items, toleranciaY = 2.5) {
+    const fragmentos = (items || [])
+        .filter((item) => item && typeof item.str === 'string' && item.str.length > 0)
+        .map((item) => {
+            const transform = item.transform || [];
+            return {
+                texto: item.str,
+                x: Number(transform[4]) || 0,
+                y: Number(transform[5]) || 0,
+            };
+        });
+
+    if (fragmentos.length === 0) return '';
+
+    const lineas = [];
+    for (const fragmento of fragmentos) {
+        let linea = lineas.find((l) => Math.abs(l.y - fragmento.y) <= toleranciaY);
+        if (!linea) {
+            linea = { y: fragmento.y, fragmentos: [] };
+            lineas.push(linea);
+        }
+        linea.fragmentos.push(fragmento);
+    }
+
+    lineas.sort((a, b) => b.y - a.y);
+    return lineas
+        .map((linea) => linea.fragmentos
+            .sort((a, b) => a.x - b.x)
+            .map((f) => f.texto)
+            .join(' ')
+            .replace(/[ \t]+/g, ' ')
+            .trim())
+        .filter(Boolean)
+        .join('\n');
 }
 
 async function ocrPage(pdfjs, page, scale = 2) {
@@ -75,7 +121,7 @@ async function extraerTextoConOCR(bufferPdf, { scale = 2 } = {}) {
         }
     }
 
-    return { texto: textoTotal.join(' '), paginasOCR: textoTotal.length };
+    return { texto: textoTotal.join('\n\n'), paginasOCR: textoTotal.length };
 }
 
 async function extraerTextoCompletoConOCR(bufferPdf, { ocrHabilitado = false, ocrForzado = false, minTextoPagina = 5, scale = 2 } = {}) {
@@ -103,11 +149,7 @@ async function extraerTextoCompletoConOCR(bufferPdf, { ocrHabilitado = false, oc
             let pageText = '';
             try {
                 const tc = await page.getTextContent();
-                pageText = (tc.items || [])
-                    .map((i) => (i && i.str ? i.str : ''))
-                    .join(' ')
-                    .replace(/\s+/g, ' ')
-                    .trim();
+                pageText = limpiarTexto(reconstruirTextoPorLineas(tc.items));
             } catch (te) {
                 console.warn(`Error extrayendo texto nativo de la página ${p}:`, te.message);
             }
@@ -133,7 +175,9 @@ async function extraerTextoCompletoConOCR(bufferPdf, { ocrHabilitado = false, oc
                 }
             }
 
-            if (pageText.trim()) partes.push(pageText.trim());
+            // El marcador de página sobrevive al chunking: permite citar de qué
+            // página salió cada fragmento y detectar pérdida de contenido.
+            if (pageText.trim()) partes.push(`[Página ${p}] ${pageText.trim()}`);
             try { page.cleanup(); } catch (e) { /* ignore */ }
         }
     } finally {
@@ -144,11 +188,16 @@ async function extraerTextoCompletoConOCR(bufferPdf, { ocrHabilitado = false, oc
     }
 
     return {
-        texto: partes.join('\n'),
+        texto: partes.join('\n\n'),
         totalPaginas,
         paginasOCR: paginasConOCR.length,
         paginasConOCR,
     };
 }
 
-module.exports = { extraerTextoConOCR, extraerTextoCompletoConOCR, limpiarTexto };
+module.exports = {
+    extraerTextoConOCR,
+    extraerTextoCompletoConOCR,
+    limpiarTexto,
+    reconstruirTextoPorLineas,
+};
