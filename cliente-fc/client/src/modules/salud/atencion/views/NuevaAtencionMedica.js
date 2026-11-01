@@ -486,10 +486,10 @@ export default function NuevaAtencionMedica() {
               py: { xs: 1, sm: 0 },
             }}
           >
-            <Grid item sx={8}>
+            <Grid item xs={8}>
               <CuadroPaciente isDeleteDisable={false} />
             </Grid>
-            <Grid item sx={4}>
+            <Grid item xs={4}>
               <Box
                 sx={{
                   mt: isMobile ? 2 : 0,

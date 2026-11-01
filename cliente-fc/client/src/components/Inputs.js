@@ -149,7 +149,9 @@ const TextInput = ({ label, name, value, onChange, error, helperText, disabled, 
         fullWidth
         multiline
         name={name}
-        value={value}
+        // Evita el warning de MUI "value prop on textarea should not be null":
+        // los inputs controlados esperan string, no null.
+        value={value ?? ""}
         onChange={onChange}
         onBlur={onBlur}
         error={!!error}

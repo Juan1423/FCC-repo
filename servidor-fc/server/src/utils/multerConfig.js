@@ -41,7 +41,9 @@ const multerConfig = {
   }),
   limits: {
     fileSize: 10 * 1024 * 1024,
-    files: 1,
+    // El formulario de paciente puede enviar hasta 3 archivos:
+    // imagen de perfil, documentos de cédula y certificado médico.
+    files: 3,
   },
   fileFilter(req, file, cb) {
     if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'application/pdf') {

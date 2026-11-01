@@ -41,7 +41,16 @@ export default function TablaPaciente({ handleEdit, handleDeletePaciente, filter
     return nameMatches;
   });
 
-  const startIndex = page * rowsPerPage;
+  // Si la lista se reduce (filtro, eliminación) la página actual puede quedar
+  // fuera de rango y MUI lanza "page prop ... is out of range". La acotamos.
+  const maxPage = Math.max(0, Math.ceil(filteredPacientes.length / rowsPerPage) - 1);
+  const safePage = Math.min(page, maxPage);
+
+  React.useEffect(() => {
+    if (page > maxPage) setPage(maxPage);
+  }, [page, maxPage]);
+
+  const startIndex = safePage * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const paginatedPacientes = filteredPacientes.slice(startIndex, endIndex);
 
@@ -127,7 +136,7 @@ export default function TablaPaciente({ handleEdit, handleDeletePaciente, filter
                 colSpan={7}
                 count={filteredPacientes.length}
                 rowsPerPage={rowsPerPage}
-                page={page}
+                page={safePage}
                 SelectProps={{
                   inputProps: { 'aria-label': 'rows per page' },
                   native: true,

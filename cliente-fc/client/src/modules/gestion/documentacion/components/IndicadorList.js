@@ -171,6 +171,9 @@ const IndicadorList = () => {
   };
 
   const openRegistros = (row) => {
+    // Mitiga el warning "Blocked aria-hidden ... retained focus": quitamos el foco
+    // del icono disparador antes de que MUI oculte el fondo con aria-hidden.
+    document.activeElement?.blur();
     setRegIndicador({ id: row.id_indicador, nombre: row.nombre_indicador || '' });
     setRegOpen(true);
   };

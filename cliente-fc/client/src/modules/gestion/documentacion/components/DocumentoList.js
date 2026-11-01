@@ -26,6 +26,13 @@ const emptyForm = () => ({
   observaciones_documento: '', objetivo_documento: '',
 });
 
+// Normaliza fechas ISO ("2026-10-09T00:00:00.000Z") al formato que exige <input type="date">.
+const toDateInput = (value) => {
+  if (!value) return '';
+  const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : '';
+};
+
 const DocumentoList = () => {
   const [items, setItems] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -102,6 +109,15 @@ const DocumentoList = () => {
 
   useEffect(() => { setPage(0); }, [search]);
 
+  // Evita "The page prop of a TablePagination is out of range" cuando la lista
+  // se reduce por búsqueda/eliminación y la página actual queda fuera de rango.
+  const maxPage = rowsPerPage === -1 ? 0 : Math.max(0, Math.ceil(filtered.length / rowsPerPage) - 1);
+  const safePage = Math.min(page, maxPage);
+
+  useEffect(() => {
+    if (page > maxPage) setPage(maxPage);
+  }, [page, maxPage]);
+
   const handleChangePage = (event, newPage) => { setPage(newPage); };
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
@@ -110,9 +126,18 @@ const DocumentoList = () => {
 
   const announce = (msg) => { const el = document.getElementById(liveId); if (el) el.textContent = msg; };
 
-  const openCreate = () => { setEditingId(null); setForm(emptyForm()); setArchivoFile(null); setOpenModal(true); };
+  const openCreate = () => {
+    // Mitiga el warning "Blocked aria-hidden ... retained focus": quitamos el foco
+    // del botón disparador antes de que MUI oculte el fondo con aria-hidden.
+    document.activeElement?.blur();
+    setEditingId(null);
+    setForm(emptyForm());
+    setArchivoFile(null);
+    setOpenModal(true);
+  };
 
   const openEdit = (row) => {
+    document.activeElement?.blur();
     setEditingId(row.id_documento);
     setForm({
       id_tipo_documento: row.id_tipo_documento ?? '',
@@ -123,9 +148,9 @@ const DocumentoList = () => {
       descripcion_documento: row.descripcion_documento || '',
       responsable_documento: row.responsable_documento || '',
       palabras_documento: row.palabras_documento || '',
-      fecha_envio_documento: row.fecha_envio_documento || '',
-      fecha_recepcion_documento: row.fecha_recepcion_documento || '',
-      fecha_revision_documento: row.fecha_revision_documento || '',
+      fecha_envio_documento: toDateInput(row.fecha_envio_documento),
+      fecha_recepcion_documento: toDateInput(row.fecha_recepcion_documento),
+      fecha_revision_documento: toDateInput(row.fecha_revision_documento),
       remitente_documento: row.remitente_documento || '',
       recibe_documento: row.recibe_documento || '',
       estado_documento: row.estado_documento || '',
@@ -186,7 +211,7 @@ const DocumentoList = () => {
 
   const paginatedItems = rowsPerPage === -1
     ? filtered
-    : filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    : filtered.slice(safePage * rowsPerPage, safePage * rowsPerPage + rowsPerPage);
 
   return (
     <>
@@ -198,7 +223,7 @@ const DocumentoList = () => {
               <Typography variant="body2" sx={{ color: '#a8a29e', fontSize: '0.8rem', mt: 0.25 }}>{filtered.length} {filtered.length === 1 ? 'documento' : 'documentos'}{search && ' encontrados'}</Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-              <TextField size="small" placeholder="Buscar documentos..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar documentos por nombre, responsable, tipo o estado" slotProps={{ input: { startAdornment: <SearchIcon sx={{ color: '#a8a29e', mr: 0.5, fontSize: 18 }} /> } }} sx={{ width: { xs: 1, sm: 'auto' }, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#ffffff', fontSize: '0.85rem', '& fieldset': { borderColor: '#e7e5e4' }, '&:hover fieldset': { borderColor: '#d6d3d1' }, '&.Mui-focused fieldset': { borderColor: '#0d9488' } } }} />
+              <TextField size="small" placeholder="Buscar documentos..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar documentos por nombre, responsable, tipo o estado" InputProps={{ startAdornment: <SearchIcon sx={{ color: '#a8a29e', mr: 0.5, fontSize: 18 }} /> }} sx={{ width: { xs: 1, sm: 'auto' }, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#ffffff', fontSize: '0.85rem', '& fieldset': { borderColor: '#e7e5e4' }, '&:hover fieldset': { borderColor: '#d6d3d1' }, '&.Mui-focused fieldset': { borderColor: '#0d9488' } } }} />
               <Button variant="contained" size="small" onClick={openCreate} startIcon={<AddIcon />} aria-label="Crear nuevo documento" sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#0f766e' }, textTransform: 'none', fontWeight: 600, borderRadius: '8px', px: 2, py: 0.75, fontSize: '0.85rem', boxShadow: '0 1px 3px rgba(13,148,136,0.2)', whiteSpace: 'nowrap' }}>Nuevo documento</Button>
             </Box>
           </Box>
@@ -254,7 +279,7 @@ const DocumentoList = () => {
                     colSpan={5}
                     count={filtered.length}
                     rowsPerPage={rowsPerPage}
-                    page={page}
+                    page={safePage}
                     SelectProps={{ inputProps: { 'aria-label': 'Filas por página' }, native: true }}
                     onPageChange={handleChangePage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
@@ -270,7 +295,7 @@ const DocumentoList = () => {
       </Box>
 
       <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="md" fullWidth scroll="paper" aria-labelledby={dialogTitleId}
-        slotProps={{ backdrop: { sx: { backdropFilter: 'blur(2px)', bgcolor: 'rgba(0,0,0,0.3)' } } }}
+        BackdropProps={{ sx: { backdropFilter: 'blur(2px)', bgcolor: 'rgba(0,0,0,0.3)' } }}
         PaperProps={{ sx: { borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.12)' } }}>
         <DialogTitle id={dialogTitleId} sx={{ fontWeight: 700, color: '#1c1917', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: '#e7e5e4', px: 3, py: 2 }}>
           {editingId ? 'Editar documento' : 'Nuevo documento'}

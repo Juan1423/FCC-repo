@@ -23,6 +23,13 @@ import {
 } from '@mui/material';
 import * as documentacionService from '../../../../services/documentacionService';
 
+// Normaliza fechas ISO ("2026-10-09T00:00:00.000Z") al formato que exige <input type="date">.
+const toDateInput = (value) => {
+  if (!value) return '';
+  const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : '';
+};
+
 const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onClose, onChanged }) => {
   const [rows, setRows] = useState([]);
   const [procesos, setProcesos] = useState([]);
@@ -81,6 +88,9 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
   };
 
   const openCreate = () => {
+    // Mitiga el warning "Blocked aria-hidden ... retained focus": quitamos el foco
+    // del botón disparador antes de que MUI oculte el fondo con aria-hidden.
+    document.activeElement?.blur();
     setEditingId(null);
     setForm({
       id_proceso: '',
@@ -92,12 +102,13 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
   };
 
   const openEdit = (row) => {
+    document.activeElement?.blur();
     setEditingId(row.id_registrar_procesos);
     setForm({
       id_proceso: row.id_proceso,
       id_normativa: row.id_normativa,
       descripcion_registrar_procesos: row.descripcion_registrar_procesos || '',
-      fecha_registrar_proceso: row.fecha_registrar_proceso || '',
+      fecha_registrar_proceso: toDateInput(row.fecha_registrar_proceso),
     });
     setModalOpen(true);
   };
@@ -193,7 +204,7 @@ const RegistrarProcesosPorIndicador = ({ idIndicador, nombreIndicador, open, onC
                       <TableCell sx={{ color: '#1c1917' }}>{procesoLabel(r.id_proceso)}</TableCell>
                       <TableCell sx={{ color: '#1c1917' }}>{normativaLabel(r.id_normativa)}</TableCell>
                       <TableCell sx={{ color: '#57534e' }}>{r.descripcion_registrar_procesos}</TableCell>
-                      <TableCell sx={{ color: '#57534e' }}>{r.fecha_registrar_proceso}</TableCell>
+                      <TableCell sx={{ color: '#57534e' }}>{toDateInput(r.fecha_registrar_proceso)}</TableCell>
                       <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                         <Button size="small" onClick={() => openEdit(r)} sx={{ mr: 0.5, textTransform: 'none', fontWeight: 500, color: '#0d9488', minWidth: 0 }} aria-label="Editar registro">Editar</Button>
                         <Button size="small" color="error" onClick={() => handleDelete(r.id_registrar_procesos)} sx={{ textTransform: 'none', fontWeight: 500, minWidth: 0 }} aria-label="Eliminar registro">Eliminar</Button>
