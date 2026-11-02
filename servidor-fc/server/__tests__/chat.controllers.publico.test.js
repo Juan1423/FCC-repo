@@ -227,7 +227,7 @@ describe('publico.controller.enviarMensaje — validaciones offline', () => {
         expect(openaiService.chatPublico).not.toHaveBeenCalled();
     });
 
-    test('un error interno devuelve 500 con mensaje, no un 200 vacío', async () => {
+    test('un error interno devuelve 500 genérico, no un 200 vacío ni detalles internos', async () => {
         openaiService.chatPublico.mockRejectedValue(new Error('proveedor caído'));
         const res = crearRes();
         const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -236,7 +236,9 @@ describe('publico.controller.enviarMensaje — validaciones offline', () => {
 
         expect(res.statusCode).toBe(500);
         expect(res.body.success).toBe(false);
-        expect(res.body.message).toContain('proveedor caído');
+        expect(res.body.message).toBe('Error interno del servidor');
+        expect(res.body.message).not.toContain('proveedor caído');
+        expect(errorSpy).toHaveBeenCalled();
         errorSpy.mockRestore();
     });
 });

@@ -5,6 +5,7 @@ const { models } = require('../../libs/sequelize');
 const chatConfig = require('../../config/chatConfig');
 const { v4: uuidv4 } = require('uuid');
 const { getRequestIp, hashIdentifier } = require('../../utils/request.util');
+const { validatePayload, ValidationError } = require('../../utils/security.utils');
 
 const LIMITE_VISITANTE_POR_IP = parseInt(process.env.RATE_LIMIT_VISITANTE_IP_DIARIO || '50', 10);
 
@@ -195,22 +196,34 @@ const enviarMensaje = async (req, res) => {
                 retryAfter: error.retryAfter,
             });
         }
-        console.error('Error en enviarMensaje:', error.message);
+        console.error('Error en enviarMensaje:', error);
         res.status(500).json({
             success: false,
-            message: error.message,
+            message: 'Error interno del servidor',
         });
     }
 };
 
+const FEEDBACK_SCHEMA = {
+    id_conversacion: { type: 'integer', required: true, min: 1 },
+    calificacion: { type: 'integer', required: true, min: 1, max: 5 },
+    comentario: { type: 'string', maxLength: 1000 },
+};
+
 const enviarFeedback = async (req, res) => {
     try {
-        const { id_conversacion, calificacion, comentario } = req.body;
-        const { learningService, configService } = require('../../services/chat.services');
-
-        if (!id_conversacion) {
-            return res.status(400).json({ success: false, message: 'id_conversacion es requerido' });
+        let payload;
+        try {
+            payload = validatePayload(req.body, FEEDBACK_SCHEMA);
+        } catch (validationError) {
+            if (validationError instanceof ValidationError) {
+                return res.status(400).json({ success: false, message: validationError.message });
+            }
+            throw validationError;
         }
+
+        const { id_conversacion, calificacion, comentario } = payload;
+        const { learningService, configService } = require('../../services/chat.services');
 
         const isVisitor = req.isVisitor || req.user?.isVisitor || false;
         const idUsuario = isVisitor ? null : (req.user?.user || null);
@@ -259,22 +272,29 @@ const enviarFeedback = async (req, res) => {
             message: 'Feedback recibido exitosamente',
         });
     } catch (error) {
-        console.error('Error en feedback:', error.message);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('Error en feedback:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor' });
     }
+};
+
+const REGISTRO_ANONIMO_SCHEMA = {
+    cedula: { type: 'string', required: true, minLength: 5, maxLength: 20, pattern: /^[A-Za-z0-9-]+$/ },
+    nombre: { type: 'string', required: true, minLength: 2, maxLength: 120 },
 };
 
 const registrarAnonimo = async (req, res) => {
     try {
-        const { cedula, nombre } = req.body;
-
-        if (!cedula || !nombre) {
-            return res.status(400).json({
-                success: false,
-                message: 'cedula y nombre son requeridos',
-            });
+        let payload;
+        try {
+            payload = validatePayload(req.body, REGISTRO_ANONIMO_SCHEMA);
+        } catch (validationError) {
+            if (validationError instanceof ValidationError) {
+                return res.status(400).json({ success: false, message: validationError.message });
+            }
+            throw validationError;
         }
 
+        const { cedula, nombre } = payload;
         const existing = await models.ChatUsuarioAnonimo.findOne({ where: { cedula } });
 
         if (existing) {
@@ -311,18 +331,31 @@ const registrarAnonimo = async (req, res) => {
             throw createError;
         }
     } catch (error) {
-        console.error('Error registrando anónimo:', error.message);
+        console.error('Error registrando anónimo:', error);
         res.status(500).json({ success: false, message: 'No fue posible registrar al usuario anónimo' });
     }
 };
 
+const PREGUNTA_ANONIMA_SCHEMA = {
+    nombre: { type: 'string', maxLength: 120 },
+    cedula: { type: 'string', maxLength: 20, pattern: /^[A-Za-z0-9-]+$/ },
+    pregunta: { type: 'string', required: true, minLength: 3, maxLength: 2000 },
+    id_usuario_anonimo: { type: 'integer', min: 1 },
+};
+
 const crearPreguntaAnonima = async (req, res) => {
     try {
-        const { nombre, cedula, pregunta, id_usuario_anonimo } = req.body;
-
-        if (!pregunta || !pregunta.trim()) {
-            return res.status(400).json({ success: false, message: 'La pregunta es requerida' });
+        let payload;
+        try {
+            payload = validatePayload(req.body, PREGUNTA_ANONIMA_SCHEMA);
+        } catch (validationError) {
+            if (validationError instanceof ValidationError) {
+                return res.status(400).json({ success: false, message: validationError.message });
+            }
+            throw validationError;
         }
+
+        const { nombre, cedula, pregunta, id_usuario_anonimo } = payload;
 
         const preguntaAn = await models.ChatPreguntaAnonima.create({
             nombre: nombre || null,
@@ -337,8 +370,8 @@ const crearPreguntaAnonima = async (req, res) => {
             data: preguntaAn,
         });
     } catch (error) {
-        console.error('Error creando pregunta anÃ³nima:', error.message);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('Error creando pregunta anónima:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor' });
     }
 };
 
