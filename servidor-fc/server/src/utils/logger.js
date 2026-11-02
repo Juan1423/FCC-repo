@@ -23,8 +23,6 @@ const LEVELS = {
     error: 40,
 };
 
-let logsDirReady = false;
-
 const realConsole = {
     log: console.log.bind(console),
     info: console.info.bind(console),
@@ -33,23 +31,75 @@ const realConsole = {
     error: console.error.bind(console),
 };
 
-function ensureLogsDir() {
-    fs.mkdirSync(LOGS_DIR, { recursive: true });
-}
+// B-02: la escritura usa un stream asíncrono y una cola en memoria. Nunca se
+// bloquea el event loop con appendFileSync/statSync bajo carga.
+let logStream = null;
+let streamInit = null;
+let pendingLines = [];
+let bytesWritten = 0;
+const MAX_PENDING_LINES = 1000;
 
-function rotateIfNeeded() {
+const closeLogStream = () => new Promise((resolve) => {
+    if (!logStream) return resolve();
+    const current = logStream;
+    logStream = null;
+    current.end(() => resolve());
+});
+
+async function rotateIfNeeded() {
     try {
-        const stat = fs.statSync(LOG_FILE);
+        const stat = await fs.promises.stat(LOG_FILE);
         if (stat.size > MAX_BYTES) {
+            await closeLogStream();
             const backup = `${LOG_FILE}.1`;
-            if (fs.existsSync(backup)) fs.unlinkSync(backup);
-            fs.renameSync(LOG_FILE, backup);
+            await fs.promises.rm(backup, { force: true });
+            await fs.promises.rename(LOG_FILE, backup);
         }
     } catch (err) {
         if (err.code !== 'ENOENT') {
             realConsole.error('Error al rotar el archivo de log:', err);
         }
     }
+}
+
+async function openLogStream() {
+    await fs.promises.mkdir(LOGS_DIR, { recursive: true });
+    await rotateIfNeeded();
+    logStream = fs.createWriteStream(LOG_FILE, { flags: 'a' });
+    logStream.on('error', (err) => {
+        realConsole.error('Error al escribir el archivo de log:', err.message);
+    });
+}
+
+function flushPending() {
+    if (!logStream) return;
+    for (const line of pendingLines) {
+        logStream.write(line);
+        bytesWritten += Buffer.byteLength(line);
+    }
+    pendingLines = [];
+}
+
+function scheduleStreamInit() {
+    if (streamInit) return;
+    streamInit = openLogStream()
+        .then(() => {
+            streamInit = null;
+            flushPending();
+        })
+        .catch((err) => {
+            streamInit = null;
+            realConsole.error('Error al inicializar el archivo de log:', err.message);
+            pendingLines = [];
+        });
+}
+
+async function rotateStreamIfNeeded() {
+    if (bytesWritten < MAX_BYTES) return;
+    bytesWritten = 0;
+    await closeLogStream();
+    await openLogStream();
+    flushPending();
 }
 
 function redactString(value) {
@@ -120,16 +170,22 @@ function getCaller() {
 }
 
 function writeToFile(level, caller, message) {
-    const line = `[${new Date().toISOString()}] [${level}] [${caller}] ${message}`;
-    try {
-        if (!logsDirReady) {
-            ensureLogsDir();
-            logsDirReady = true;
-        }
-        rotateIfNeeded();
-        fs.appendFileSync(LOG_FILE, `${line}\n`);
-    } catch (err) {
-        realConsole.error('Error al escribir el archivo de log:', err.message);
+    const line = `[${new Date().toISOString()}] [${level}] [${caller}] ${message}\n`;
+
+    if (!logStream) {
+        if (pendingLines.length < MAX_PENDING_LINES) pendingLines.push(line);
+        scheduleStreamInit();
+        return;
+    }
+
+    logStream.write(line);
+    bytesWritten += Buffer.byteLength(line);
+
+    // Rotación no bloqueante: se comprueba por tamaño acumulado, sin statSync.
+    if (bytesWritten >= MAX_BYTES) {
+        rotateStreamIfNeeded().catch((err) => {
+            realConsole.error('Error al rotar el archivo de log:', err.message);
+        });
     }
 }
 
