@@ -1,1 +1,19 @@
 node_modules
+npm-debug.log*
+yarn-error.log*
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+
+# Historial, tests y artefactos locales
+.git
+.gitignore
+coverage
+cypress/videos
+cypress/screenshots
+build
+.DS_Store
+.vscode
+.idea

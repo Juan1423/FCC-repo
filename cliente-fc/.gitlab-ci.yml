@@ -91,7 +91,7 @@ deploy:
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - ssh -o StrictHostKeyChecking=no root@$PROD_SERVER_IP "docker pull $DOCKER_IMAGE && docker stop clientfundacion || true && docker rm clientfundacion || true && docker run -p 3005:3005 -d --name clientfundacion $DOCKER_IMAGE && sudo systemctl restart nginx"
+    - ssh -o StrictHostKeyChecking=accept-new root@$PROD_SERVER_IP "docker pull $DOCKER_IMAGE && docker stop clientfundacion || true && docker rm clientfundacion || true && docker run -p 3005:3005 -d --name clientfundacion $DOCKER_IMAGE && sudo systemctl restart nginx"
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $SKIP_DEPLOY == "false"
       when: on_success

@@ -5,19 +5,15 @@ stages:
 
 build:
   stage: build
-  image: node
+  image: node:20-alpine
   script:
     - echo "Start building App"
     - cd server
-    - npm install
-    - node -e "require('dotenv').config(); console.log(process.env.DB_USER);"
-    - node app &
+    - npm ci
+    # No se inicia el servidor ni se imprimen variables de entorno en el build:
+    # evita filtrar secretos en los logs de CI.
+    - node --check app.js
     - echo "Build successfully!"
-  artifacts:
-    expire_in: 1 hour
-    paths:
-      - build
-      - node_modules/
 
 docker-build:
   stage: docker-build
@@ -40,6 +36,26 @@ deploy:
   script:
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > key.pem
     - chmod 400 key.pem
-    - ssh -o StrictHostKeyChecking=no -i key.pem root@$PROD_SERVER_IP "docker pull registry.gitlab.com/christopheryepezch/back-end-fcc"
-    - ssh -o StrictHostKeyChecking=no -i key.pem root@$PROD_SERVER_IP "docker stop serverfundacion || true && docker rm serverfundacion || true"
-    - ssh -o StrictHostKeyChecking=no -i key.pem root@$PROD_SERVER_IP "docker run -e DB_USER=$DB_USER -e DB_PASSWORD=$DB_PASSWORD -e DB_HOST=$DB_HOST -e DB_PORT=$DB_PORT -e DB_DATABASE=$DB_DATABASE -e CIE11_CLIENT_ID=$CIE11_CLIENT_ID -e CIE11_CLIENT_SECRET=$CIE11_CLIENT_SECRET -e JWT_SECRET=$JWT_SECRET -e NEW_RELIC_APP_NAME=$NEW_RELIC_APP_NAME -e NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY -e BASE_URL=$BASE_URL -p 5000:5000 -v archivosfcc:/app/src/uploads -d --name serverfundacion registry.gitlab.com/christopheryepezch/back-end-fcc"
+    # M-06: los secretos se envían en un archivo temporal y se consumen con
+    # --env-file. Así no quedan visibles en `ps`/historial del host remoto.
+    - |
+      cat > fcc-server.env <<EOF
+      DB_USER=$DB_USER
+      DB_PASSWORD=$DB_PASSWORD
+      DB_HOST=$DB_HOST
+      DB_PORT=$DB_PORT
+      DB_DATABASE=$DB_DATABASE
+      CIE11_CLIENT_ID=$CIE11_CLIENT_ID
+      CIE11_CLIENT_SECRET=$CIE11_CLIENT_SECRET
+      JWT_SECRET=$JWT_SECRET
+      NEW_RELIC_APP_NAME=$NEW_RELIC_APP_NAME
+      NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
+      BASE_URL=$BASE_URL
+      NODE_ENV=production
+      CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
+      EOF
+    - chmod 600 fcc-server.env
+    - scp -o StrictHostKeyChecking=accept-new -i key.pem fcc-server.env root@$PROD_SERVER_IP:/tmp/fcc-server.env
+    - ssh -o StrictHostKeyChecking=accept-new -i key.pem root@$PROD_SERVER_IP "chmod 600 /tmp/fcc-server.env && docker pull registry.gitlab.com/christopheryepezch/back-end-fcc"
+    - ssh -o StrictHostKeyChecking=accept-new -i key.pem root@$PROD_SERVER_IP "docker stop serverfundacion || true && docker rm serverfundacion || true"
+    - ssh -o StrictHostKeyChecking=accept-new -i key.pem root@$PROD_SERVER_IP "docker run --env-file /tmp/fcc-server.env -p 5000:5000 -v archivosfcc:/app/src/uploads -d --name serverfundacion registry.gitlab.com/christopheryepezch/back-end-fcc && rm -f /tmp/fcc-server.env"

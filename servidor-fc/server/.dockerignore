@@ -1,1 +1,28 @@
 node_modules
+npm-debug.log*
+yarn-error.log*
+
+# Secretos: nunca deben viajar dentro de la imagen
+.env
+.env.*
+!.env.example
+
+# Artefactos locales / historial
+.git
+.gitignore
+logs
+*.log
+newrelic_agent.log
+coverage
+temp
+
+# Código y datos que no se necesitan en runtime
+__tests__
+*.test.js
+*.rar
+src/uploads
+
+# Metadatos de herramientas
+.vscode
+.idea
+.DS_Store
