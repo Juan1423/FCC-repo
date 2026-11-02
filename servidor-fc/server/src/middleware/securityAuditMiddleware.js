@@ -2,6 +2,7 @@ const { models } = require('../libs/sequelize');
 const { verifyAuthToken } = require('../utils/jwt.util');
 const { getRequestIp } = require('../utils/request.util');
 const { extractToken } = require('./verifyToken');
+const { sanitizeAuditDetail } = require('../utils/security.utils');
 
 const PUBLIC_ROUTES = [
   { method: 'POST', path: '/auth' },
@@ -154,21 +155,24 @@ function buildDetail(req) {
     }
   }
 
-  return JSON.stringify(detail);
+  // M-03: se conserva la estructura (endpoint, campos) pero se redactan
+  // valores de PII (cédulas, nombres, correos, filtros) y secretos.
+  return sanitizeAuditDetail(detail);
 }
 
 const securityAuditMiddleware = async (req, res, next) => {
   if (req.method === 'OPTIONS') return next();
 
-  const isPublic = PUBLIC_ROUTES.some(
-    r => r.method === req.method && req.path === r.path
-  );
-  if (isPublic) return next();
-
+  // M-02: el bloqueo de IP se evalúa ANTES del bypass de rutas públicas.
   const ip = getRequestIp(req);
   if (await isIpBlocked(ip)) {
     return res.status(403).json({ mensaje: 'Acceso denegado desde esta IP' });
   }
+
+  const isPublic = PUBLIC_ROUTES.some(
+    r => r.method === req.method && req.path === r.path
+  );
+  if (isPublic) return next();
 
   const token = extractToken(req);
 

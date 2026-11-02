@@ -2,11 +2,11 @@
 
 const { models } = require('../../libs/sequelize');
 const { Op } = require('sequelize');
+const { escapeCsvCell } = require('../../utils/security.utils');
 
-const escapeCsv = (value) => {
-    const text = value === null || value === undefined ? '' : String(value);
-    return `"${text.replace(/"/g, '""')}"`;
-};
+// M-04: además de entrecomillar, neutraliza fórmulas (=, +, -, @) para evitar
+// ejecución de comandos al abrir el CSV en Excel/LibreOffice.
+const escapeCsv = (value) => escapeCsvCell(value);
 
 class ConversationsService {
     async getAll(options = {}) {

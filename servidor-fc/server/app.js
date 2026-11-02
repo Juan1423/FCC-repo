@@ -32,6 +32,11 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
+// M-01: la documentación interactiva solo se publica en desarrollo. En
+// producción exige habilitarla explícitamente con ENABLE_API_DOCS=true.
+const apiDocsEnabled = process.env.ENABLE_API_DOCS === 'true' ||
+  (process.env.NODE_ENV !== 'production' && process.env.ENABLE_API_DOCS !== 'false');
+
 app.disable('x-powered-by');
 
 const trustProxy = process.env.TRUST_PROXY_HOPS;
@@ -62,7 +67,33 @@ app.use(cors({
 
 app.use(express.json({ limit: '1mb' }));
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// M-09: ninguna respuesta 5xx debe filtrar mensajes internos (SQL, rutas,
+// stack, detalles de servicios). Se normaliza antes de enviar. Los 4xx
+// conservan sus mensajes de validación para el cliente.
+app.use((req, res, next) => {
+  const GENERIC_ERROR = { success: false, message: 'Error interno del servidor' };
+  const originalJson = res.json.bind(res);
+  const originalSend = res.send.bind(res);
+
+  res.json = function jsonSeguro(body) {
+    if (this.statusCode >= 500) {
+      return originalJson(GENERIC_ERROR);
+    }
+    return originalJson(body);
+  };
+
+  res.send = function sendSeguro(body) {
+    if (this.statusCode >= 500) {
+      return originalSend(GENERIC_ERROR);
+    }
+    return originalSend(body);
+  };
+  next();
+});
+
+if (apiDocsEnabled) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+}
 
 app.get('/', (req, res) => {
   res.send('Back-End system for Fundacion con Cristo');
@@ -95,7 +126,11 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
     app.listen(port, () => {
         console.log(`Servidor escuchando en el puerto ${port}`);
-        console.log(`Documentación Swagger disponible en ${baseUrl}/api-docs`);
+        if (apiDocsEnabled) {
+            console.log(`Documentación Swagger disponible en ${baseUrl}/api-docs`);
+        } else {
+            console.log('Documentación Swagger deshabilitada (ENABLE_API_DOCS=false o producción)');
+        }
     });
 }
 
