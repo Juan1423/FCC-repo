@@ -1,18 +1,21 @@
 const InteraccionService = require('../../services/comunidad.services/interaccion.services');
+const { Interaccion } = require('../../models/comunidad.models/interaccion.model');
+const { pickModelFields } = require('../../utils/security.utils');
 const service = new InteraccionService();
 
 
 const create = async ( req, res ) => {
     try { 
-        const { body, file } = req;
+        const { file } = req;
+        const body = pickModelFields(Interaccion, req.body);
         if (file) {
-            // Assuming the 'uploads' directory is served statically at the root
             body.archivo_interaccion = `/uploads/comunidad/interacciones/${file.filename}`;
         }
         const response = await service.create(body);
         res.json({ success: true, data: response});
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -21,7 +24,8 @@ const get = async ( req, res ) => {
         const response = await service.find();
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -31,18 +35,20 @@ const getById = async ( req, res ) => {
         const response = await service.findOne(id);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
 const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const body = req.body;
+        const body = pickModelFields(Interaccion, req.body);
         const response = await service.update(id,body);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -52,7 +58,8 @@ const _delete = async (req, res) => {
         const response = await service.delete(id);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -62,7 +69,8 @@ const getByPersonaId = async (req, res) => {
         const response = await service.findByPersonaId(idPersona);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 

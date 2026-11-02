@@ -1,12 +1,16 @@
 const CapacitacionService = require('../../services/capacitaciones.services/capacitacion.service');
+const { Capacitacion } = require('../../models/capacitaciones.models/capacitacion.model');
+const { pickModelFields } = require('../../utils/security.utils');
 const service = new CapacitacionService();
 
 const create = async (req, res) => {
     try {
-        const response = await service.create(req.body);
+        const body = pickModelFields(Capacitacion, req.body);
+        const response = await service.create(body);
         res.json({ success: true, data: response });
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 };
 
