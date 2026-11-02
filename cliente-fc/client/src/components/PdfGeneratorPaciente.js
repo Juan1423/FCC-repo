@@ -44,14 +44,27 @@ const PDFGeneratorPaciente = ({ paciente }) => {
     setOptions({ ...options, [event.target.name]: event.target.checked });
   };
 
-  // Function to load images asynchronously
-  const loadImage = (src) => {
+  // Carga imágenes con credenciales (cookie HttpOnly) y las convierte a blob
+  // local. Así las rutas /uploads protegidas por verifyToken (C-03) funcionan y
+  // el canvas de jsPDF no queda "tainted" al usar un blob del mismo origen.
+  const loadImage = async (src) => {
+    const response = await fetch(src, { credentials: 'include' });
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar la imagen (${response.status})`);
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = 'Anonymous';  // Add this line to handle CORS issues
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = src;
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('La imagen no se pudo decodificar'));
+      };
+      img.src = objectUrl;
     });
   };
 

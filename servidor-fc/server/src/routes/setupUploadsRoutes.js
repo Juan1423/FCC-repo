@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const { verifyToken } = require('../middleware/verifyToken');
 
 const uploadsPath = path.join(__dirname, '../uploads');
 
@@ -23,49 +24,46 @@ const sendUpload = (res, filePath) => {
 };
 
 function setupUploadsRoutes(app) {
-  // Ruta para las imágenes de perfil de pacientes
-  app.get('/uploads/pacientes/perfil/fotos/:img', function (req, res) {
+  // Rutas con datos personales/médicos: exigen sesión autenticada (C-03).
+  // El navegador envía la cookie HttpOnly `auth_token` en peticiones same-site;
+  // en despliegues cross-site requiere COOKIE_SAME_SITE=none.
+  app.get('/uploads/pacientes/perfil/fotos/:img', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('pacientes', 'perfil', 'fotos', safeParam(req.params.img)));
   });
 
-  // Ruta para las cédulas de pacientes
-  app.get('/uploads/pacientes/cedulas/archivos/:file', function (req, res) {
+  app.get('/uploads/pacientes/cedulas/archivos/:file', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('pacientes', 'cedulas', safeParam(req.params.file)));
   });
 
-  // Ruta para los certificados médicos de pacientes
-  app.get('/uploads/pacientes/certificados/archivos/:file', function (req, res) {
+  app.get('/uploads/pacientes/certificados/archivos/:file', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('pacientes', 'certificados', safeParam(req.params.file)));
   });
 
-  // Ruta para archivos de historia
-  app.get('/uploads/historia/:file', function (req, res) {
+  app.get('/uploads/historia/:file', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('historia', safeParam(req.params.file)));
   });
 
-  // Rutas para personal de salud
-  app.get('/uploads/personal/perfil/archivo/:img', function (req, res) {
+  app.get('/uploads/personal/perfil/archivo/:img', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('personal', 'perfil', safeParam(req.params.img)));
   });
 
-  app.get('/uploads/personal/hdv/archivo/:file', function (req, res) {
+  app.get('/uploads/personal/hdv/archivo/:file', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('personal', 'hdv', safeParam(req.params.file)));
   });
 
-  app.get('/uploads/examenes/:id_historia/:file', function (req, res) {
+  app.get('/uploads/examenes/:id_historia/:file', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('examenes', safeParam(req.params.id_historia), safeParam(req.params.file)));
   });
 
-  app.get('/uploads/terapias/:id_historia/:file', function (req, res) {
+  app.get('/uploads/terapias/:id_historia/:file', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('terapias', safeParam(req.params.id_historia), safeParam(req.params.file)));
   });
 
-  // Comunidad: fotos de personas e interacciones
-  app.get('/uploads/comunidad/personas/:file', function (req, res) {
+  app.get('/uploads/comunidad/personas/:file', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('comunidad', 'personas', safeParam(req.params.file)));
   });
 
-  app.get('/uploads/comunidad/interacciones/:file', function (req, res) {
+  app.get('/uploads/comunidad/interacciones/:file', verifyToken, function (req, res) {
     return sendUpload(res, resolveUpload('comunidad', 'interacciones', safeParam(req.params.file)));
   });
 
