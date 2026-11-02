@@ -1,12 +1,15 @@
 const EnfermedadesService = require('../../services/historiaclinica.services/enfermedades.service');
+const { Enfermedad } = require('../../models/historiaclinica.models/enfermedades.model');
+const { pickModelFields } = require('../../utils/security.utils');
 const service = new EnfermedadesService();
 
 const create = async (req, res) => {
     try {
-        const response = await service.create(req.body);
+        const response = await service.create(pickModelFields(Enfermedad, req.body));
         res.json({ success: true, data: response });
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -48,11 +51,12 @@ const getByHistoria = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const body = req.body;
+        const body = pickModelFields(Enfermedad, req.body);
         const response = await service.update(id, body);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 

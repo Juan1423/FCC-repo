@@ -1,10 +1,11 @@
 const AuditoriaService = require("../../services/historiaclinica.services/auditoria.service");
+const { Auditoria } = require("../../models/historiaclinica.models/auditoria.model");
+const { pickModelFields } = require("../../utils/security.utils");
 const service = new AuditoriaService();
 
 const create = async (req, res) => {
   try {
-    console.log("Received audit data:", req.body);
-    const data = req.body;
+    const data = pickModelFields(Auditoria, req.body);
 
     // Enhanced validation
     if (!data.id_usuario || !data.modulo || !data.operacion || !data.detalle) {
@@ -26,12 +27,9 @@ const create = async (req, res) => {
       });
     }
 
-    console.log("Processed audit data:", data);
     const response = await service.create(data);
-    
-    console.log("Audit created successfully:", response);
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       data: response,
       message: "Auditoría creada exitosamente"
     });
@@ -45,9 +43,7 @@ const create = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Error al crear la auditoría",
-      error: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: "Error interno del servidor"
     });
   }
 };
@@ -57,7 +53,8 @@ const get = async (req, res) => {
     const response = await service.find();
     res.json(response);
   } catch (error) {
-    res.status(500).send({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).send({ success: false, message: 'Error interno del servidor' });
   }
 };
 
@@ -67,19 +64,20 @@ const getById = async (req, res) => {
     const response = await service.findOne(id);
     res.json(response);
   } catch (error) {
-    res.status(500).send({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).send({ success: false, message: 'Error interno del servidor' });
   }
 };
 
 const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const body = req.body;
+    const body = pickModelFields(Auditoria, req.body);
     const response = await service.update(id, body);
-    console.log("auditoria actualizada con exito");
     res.json(response);
   } catch (error) {
-    res.status(500).send({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).send({ success: false, message: 'Error interno del servidor' });
   }
 };
 
@@ -89,7 +87,8 @@ const _delete = async (req, res) => {
     const response = await service.delete(id);
     res.json(response);
   } catch (error) {
-    res.status(500).send({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).send({ success: false, message: 'Error interno del servidor' });
   }
 };
 

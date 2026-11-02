@@ -1,24 +1,37 @@
 const AtencionService = require('../../services/historiaclinica.services/atencion.service');
+const { Aps } = require('../../models/historiaclinica.models/atencion.model');
+const { pickModelFields } = require('../../utils/security.utils');
 const service = new AtencionService();
 
 const create = async (req, res) => {
     try {
-        const body = req.body;
+        const body = pickModelFields(Aps, req.body);
         if (body.revision_actual_sistema) {
-            body.revision_actual_sistema = JSON.stringify(JSON.parse(body.revision_actual_sistema));
+            try {
+                body.revision_actual_sistema = JSON.stringify(JSON.parse(body.revision_actual_sistema));
+            } catch (parseError) {
+                return res.status(400).json({ success: false, message: 'Formato inválido en revisión actual del sistema' });
+            }
         }
         if (body.examen_fisico) {
-            body.examen_fisico = JSON.stringify(JSON.parse(body.examen_fisico));
+            try {
+                body.examen_fisico = JSON.stringify(JSON.parse(body.examen_fisico));
+            } catch (parseError) {
+                return res.status(400).json({ success: false, message: 'Formato inválido en examen físico' });
+            }
         }
         if (body.diagnostico) {
-            body.diagnostico = JSON.stringify(JSON.parse(body.diagnostico));
+            try {
+                body.diagnostico = JSON.stringify(JSON.parse(body.diagnostico));
+            } catch (parseError) {
+                return res.status(400).json({ success: false, message: 'Formato inválido en diagnóstico' });
+            }
         }
-        console.log(body);
         const response = await service.create(body);
-        
         res.json({ success: true, data: response });
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -33,17 +46,18 @@ const findFirstAtencionByHistoriaId = async (req, res) => {
             return res.status(404).json({ message: 'No se encontró ninguna atención médica para esta historia' });
         }
     } catch (error) {
+        console.error(error);
         return res.status(500).json({ message: 'Error al obtener la primera atención médica' });
     }
 }
 
 const get = async (req, res) => {
-    
     try {
         const response = await service.find();
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -56,7 +70,7 @@ const getById = async (req, res) => {
         }
         return res.json(atencion);
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ message: 'Error al obtener atención médica' });
     }
 }
@@ -70,6 +84,7 @@ const getByHistoria = async (req, res) => {
         }
         return res.json(atenciones);
     } catch (error) {
+        console.error(error);
         return res.status(500).json({ message: 'Error al obtener atenciones médicas' });
     }
 }
@@ -77,11 +92,12 @@ const getByHistoria = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const body = req.body;
+        const body = pickModelFields(Aps, req.body);
         const response = await service.update(id, body);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -91,7 +107,8 @@ const _delete = async (req, res) => {
         const response = await service.delete(id);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -107,6 +124,7 @@ const findLastAtencionByHistoriaId = async (req, res) => {
             return null; // Puedes manejar el caso en que no haya registros
         }
     } catch (error) {
+        console.error(error);
         return res.status(500).json({ message: 'Error al obtener atención médica' });
     }
 }

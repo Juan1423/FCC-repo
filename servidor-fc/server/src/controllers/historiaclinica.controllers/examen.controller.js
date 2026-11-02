@@ -2,29 +2,38 @@ const ExamenService = require('../../services/historiaclinica.services/examen.se
 const service = new ExamenService();
 const multer = require('multer');
 const multerConfigExamen = require('../../utils/multerConfigExamen');
+const { pickFields } = require('../../utils/security.utils');
+const { validateUploadedFileSignatures } = require('../../utils/fileSignature');
 
 const upload = multer(multerConfigExamen).single('archivo_examen');
+
+const EXAMEN_FIELDS = [
+    'id_historia', 'fecha_solicitud_examen', 'url_examen', 'nombre_examen',
+    'comentario_examen', 'estado_examen', 'id_aps',
+];
 
 const fileUpload = async (req, res, next) => {
     upload(req, res, function (error) {
         if (error) {
             res.status(400).json({ success: false, message: error.message });
         } else {
-            return next();
+            return validateUploadedFileSignatures(req, res, next);
         }
     });
 };
 
 const create = async (req, res) => {
     try {
+        const body = pickFields(req.body, EXAMEN_FIELDS);
         if (req.file) {
-            req.body.url_examen = `/uploads/examenes/${req.body.id_historia}/${req.file.filename}`;
+            body.url_examen = `/uploads/examenes/${body.id_historia}/${req.file.filename}`;
         }
 
-        const response = await service.create(req.body);
+        const response = await service.create(body);
         res.json({ success: true, data: response });
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error('Error creando examen:', error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 };
 
@@ -46,14 +55,15 @@ const changeStatus = async (req, res) => {
         const response = await service.update(id, updateData);
         res.json({ success: true, data: response });
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error('Error cambiando estado de examen:', error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 };
 
 const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const body = req.body;
+        const body = pickFields(req.body, EXAMEN_FIELDS);
 
         if (req.file) {
             body.url_examen = `/uploads/examenes/${body.id_historia}/${req.file.filename}`;
@@ -62,7 +72,8 @@ const update = async (req, res) => {
         const response = await service.update(id, body);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error('Error actualizando examen:', error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 };
 
@@ -71,7 +82,8 @@ const get = async (req, res) => {
         const response = await service.find();
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
@@ -125,7 +137,8 @@ const _delete = async (req, res) => {
         const response = await service.delete(id);
         res.json(response);
     } catch (error) {
-        res.status(500).send({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
 }
 
