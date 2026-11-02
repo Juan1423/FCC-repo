@@ -3,6 +3,7 @@ const router = express.Router();
 const interaccionController = require('../../controllers/comunidad.controllers/interaccion.controller');
 const multer = require('multer');
 const multerConfigInteraccion = require('../../utils/multerConfigInteraccion');
+const { validateUploadedFileSignatures } = require('../../utils/fileSignature');
 
 const upload = multer(multerConfigInteraccion);
 
@@ -92,7 +93,7 @@ router.get('/:id', interaccionController.getById);
  *       400:
  *         description: Datos de entrada inválidos
  */
-router.post('/', upload.single('archivo_interaccion'), interaccionController.create);
+router.post('/', upload.single('archivo_interaccion'), validateUploadedFileSignatures, interaccionController.create);
 
 /**
  * @swagger

@@ -3,6 +3,7 @@ const router = express.Router();
 const personaController = require('../../controllers/comunidad.controllers/persona.controller');
 const multer = require('multer');
 const multerConfigPersona = require('../../utils/multerConfigPersona');
+const { validateUploadedFileSignatures } = require('../../utils/fileSignature');
 
 const upload = multer(multerConfigPersona);
 
@@ -30,7 +31,7 @@ const upload = multer(multerConfigPersona);
  *                 $ref: '#/components/schemas/Persona'
  */
 router.get('/', personaController.get);
-router.post('/upload-foto', upload.single('foto_persona'), personaController.uploadPhoto);
+router.post('/upload-foto', upload.single('foto_persona'), validateUploadedFileSignatures, personaController.uploadPhoto);
 
 /**
  * @swagger

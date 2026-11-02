@@ -5,6 +5,7 @@ const router = express.Router();
 const { verifyTokenAdmin } = require('../../middleware/verifyToken');
 const multer = require('multer');
 const knowledgeController = require('../../controllers/chat.controllers/knowledge.controller');
+const { validateUploadedFileSignatures } = require('../../utils/fileSignature');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -16,7 +17,7 @@ router.put('/:id', verifyTokenAdmin, knowledgeController.update);
 router.delete('/:id', verifyTokenAdmin, knowledgeController.delete);
 router.patch('/:id/toggle-bloqueo', verifyTokenAdmin, knowledgeController.toggleBloqueo);
 
-router.post('/upload-documento', verifyTokenAdmin, upload.single('pdf'), knowledgeController.uploadDocumento);
+router.post('/upload-documento', verifyTokenAdmin, upload.single('pdf'), validateUploadedFileSignatures, knowledgeController.uploadDocumento);
 router.post('/generate-embeddings', verifyTokenAdmin, knowledgeController.generateEmbeddings);
 router.post('/regenerar-memoria', verifyTokenAdmin, knowledgeController.regenerarMemoria);
 router.post('/bloquear-todos', verifyTokenAdmin, knowledgeController.bloquearTodos);
@@ -39,7 +40,8 @@ async function getStats(req, res) {
         const sinEmbedding = await models.ChatConocimiento.count({ where: { embedding: null } });
         res.json({ success: true, data: { total, bloqueados, vigentes, sinEmbedding } });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor' });
     }
 }
 
