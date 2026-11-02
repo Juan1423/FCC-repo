@@ -163,6 +163,24 @@ const checkType = (field, value, rule) => {
         throw new ValidationError(`El campo ${field} debe ser booleano`);
     }
 
+    if (type === 'date') {
+        const date = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            throw new ValidationError(`El campo ${field} debe ser una fecha válida`);
+        }
+        return value;
+    }
+
+    if (type === 'json') {
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            return value;
+        }
+        if (value !== null && typeof value === 'object') {
+            return value;
+        }
+        throw new ValidationError(`El campo ${field} debe ser JSON válido`);
+    }
+
     throw new ValidationError(`Tipo de validación no soportado para ${field}`);
 };
 
@@ -177,7 +195,7 @@ const checkType = (field, value, rule) => {
  *   estado_usuario: { type: 'boolean' },
  * }
  */
-const validatePayload = (body, schema) => {
+const validatePayload = (body, schema, { partial = false } = {}) => {
     if (!isPlainObject(body)) {
         throw new ValidationError('El cuerpo de la solicitud no es válido');
     }
@@ -186,7 +204,7 @@ const validatePayload = (body, schema) => {
     for (const [field, rule] of Object.entries(schema)) {
         const value = body[field];
         if (value === undefined || value === '') {
-            if (rule.required) {
+            if (rule.required && !partial) {
                 throw new ValidationError(`El campo ${field} es obligatorio`);
             }
             if (rule.default !== undefined) result[field] = rule.default;

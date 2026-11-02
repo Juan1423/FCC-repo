@@ -1,13 +1,25 @@
 const EnfermedadesService = require('../../services/historiaclinica.services/enfermedades.service');
 const { Enfermedad } = require('../../models/historiaclinica.models/enfermedades.model');
-const { pickModelFields } = require('../../utils/security.utils');
+const { pickModelFields, validatePayload, ValidationError } = require('../../utils/security.utils');
 const service = new EnfermedadesService();
+
+const ENFERMEDAD_SCHEMA = {
+    id_historia: { type: 'integer', required: true, min: 1 },
+    codigo_enfermedad: { type: 'string', maxLength: 240 },
+    tipo_enfermedad: { type: 'string', maxLength: 240 },
+    nombre_enfermedad: { type: 'string', maxLength: 240 },
+    descripcion_enfermedad: { type: 'string', maxLength: 240 },
+};
 
 const create = async (req, res) => {
     try {
-        const response = await service.create(pickModelFields(Enfermedad, req.body));
+        const body = validatePayload(req.body, ENFERMEDAD_SCHEMA);
+        const response = await service.create(pickModelFields(Enfermedad, body));
         res.json({ success: true, data: response });
     } catch (error) {
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
         console.error(error);
         res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }
@@ -51,10 +63,13 @@ const getByHistoria = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const body = pickModelFields(Enfermedad, req.body);
+        const body = pickModelFields(Enfermedad, validatePayload(req.body, ENFERMEDAD_SCHEMA, { partial: true }));
         const response = await service.update(id, body);
         res.json(response);
     } catch (error) {
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
         console.error(error);
         res.status(500).send({ success: false, message: 'Error interno del servidor' });
     }

@@ -47,10 +47,13 @@ const isAdmin = (req) => {
     return rol === 'admin' || rol === 'administrador';
 };
 
+const COOKIE_SAME_SITE = (process.env.COOKIE_SAME_SITE || 'lax').toLowerCase();
+
 const COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.COOKIE_SAME_SITE || 'lax',
+    // SameSite=None exige Secure=true o el navegador descarta la cookie.
+    secure: COOKIE_SAME_SITE === 'none' || process.env.NODE_ENV === 'production',
+    sameSite: COOKIE_SAME_SITE,
     path: '/',
 };
 

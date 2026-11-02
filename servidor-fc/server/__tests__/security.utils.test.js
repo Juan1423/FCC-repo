@@ -99,3 +99,43 @@ describe('security.utils — CSV seguro (M-04)', () => {
         expect(escapeCsvCell('texto normal')).toBe('"texto normal"');
     });
 });
+
+describe('security.utils — validación extendida (M-10)', () => {
+    const schema = {
+        titulo: { type: 'string', required: true, maxLength: 10 },
+        fecha_inicio: { type: 'date', required: true },
+        fecha_fin: { type: 'date' },
+        meta: { type: 'json' },
+        costo: { type: 'number', min: 0 },
+    };
+
+    test('partial permite updates sin campos obligatorios', () => {
+        const result = validatePayload({ titulo: 'Curso' }, schema, { partial: true });
+        expect(result).toEqual({ titulo: 'Curso' });
+    });
+
+    test('partial sigue validando el formato de los campos presentes', () => {
+        expect(() => validatePayload({ fecha_inicio: 'no-es-fecha' }, schema, { partial: true }))
+            .toThrow(ValidationError);
+    });
+
+    test('acepta fechas y JSON válidos', () => {
+        const result = validatePayload({
+            titulo: 'Curso',
+            fecha_inicio: '2026-01-15',
+            meta: { cupos: 20 },
+        }, schema);
+        expect(result.fecha_inicio).toBe('2026-01-15');
+        expect(result.meta).toEqual({ cupos: 20 });
+    });
+
+    test('rechaza fechas inválidas y JSON no serializable', () => {
+        expect(() => validatePayload({ titulo: 'Curso', fecha_inicio: 'x' }, schema))
+            .toThrow(ValidationError);
+        expect(() => validatePayload({
+            titulo: 'Curso',
+            fecha_inicio: '2026-01-15',
+            meta: () => {},
+        }, schema)).toThrow(ValidationError);
+    });
+});
