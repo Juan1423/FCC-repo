@@ -67,6 +67,23 @@ app.use(cors({
 
 app.use(express.json({ limit: '1mb' }));
 
+// M-12: si la cookie de sesión viaja cross-site (COOKIE_SAME_SITE=none), el
+// navegador deja de aplicar la protección CSRF de SameSite. En ese escenario
+// exigimos que las peticiones que cambian estado declaren un Origin permitido.
+// Los navegadores siempre envían Origin en POST/PUT/PATCH/DELETE, así que un
+// formulario malicioso de otro dominio queda bloqueado con 403.
+if ((process.env.COOKIE_SAME_SITE || 'lax').toLowerCase() === 'none') {
+  app.use((req, res, next) => {
+    const MUTATING = ['POST', 'PUT', 'PATCH', 'DELETE'];
+    if (!MUTATING.includes(req.method)) return next();
+    const origin = req.get('origin');
+    // Sin Origin no hay navegador/cookie ambiental: no es un vector CSRF.
+    if (!origin) return next();
+    if (ALLOWED_ORIGINS.includes(origin)) return next();
+    return res.status(403).json({ success: false, message: 'Origen no permitido' });
+  });
+}
+
 // M-09: ninguna respuesta 5xx debe filtrar mensajes internos (SQL, rutas,
 // stack, detalles de servicios). Se normaliza antes de enviar. Los 4xx
 // conservan sus mensajes de validación para el cliente.
