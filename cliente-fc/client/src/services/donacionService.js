@@ -1,7 +1,11 @@
 import { API_URL } from './apiConfig';
 import axios from 'axios';
 
-const ROLES_ASIGNABLES = ['admin', 'personal_administrativo'];
+// ---- Usuarios asignables ----
+export const getUsuariosAsignables = async () => {
+  const { data } = await axios.get(`${API_URL}/users/asignables`);
+  return Array.isArray(data) ? data : [];
+};
 
 // ---- Geo nacional ----
 export const getRegiones = () => axios.get(`${API_URL}/region`).then(r => r.data);
@@ -17,12 +21,6 @@ export const getCiudades = () => axios.get(`${API_URL}/ciudad`).then(r => r.data
 // ---- Catálogos ----
 export const getTipoDonantes = () => axios.get(`${API_URL}/tipo_donante`).then(r => r.data);
 export const getTipoDonaciones = () => axios.get(`${API_URL}/tipo_donacion`).then(r => r.data);
-
-export const getUsuariosAsignables = async () => {
-  const { data } = await axios.get(`${API_URL}/users`);
-  const list = Array.isArray(data) ? data : [];
-  return list.filter(u => ROLES_ASIGNABLES.includes(u.rol_usuario) && u.estado_usuario === true);
-};
 
 // ---- Donante Nacional ----
 export const createDonanteNacional = (data) => axios.post(`${API_URL}/donante_nacional`, data).then(r => r.data);
