@@ -32,7 +32,12 @@ import {
   Phone as PhoneIcon,
   Cake as CakeIcon,
   MedicalServices as MedicalServicesIcon,
-  LocalHospital as LocalHospitalIcon
+  LocalHospital as LocalHospitalIcon,
+  Person as PersonIcon,
+  AccountCircle as AccountCircleIcon,
+  Badge as BadgeIcon,
+  Public as PublicIcon,
+  Home as HomeIcon
 } from "@mui/icons-material";
 import { getUsuario, updateUsuario } from "../../../../services/usuarioServices";
 import { getPersonalSaludId, updatePersonalSalud, getEstadisticas } from "../../../../services/personalsaludServices";
@@ -214,17 +219,18 @@ const Perfil = () => {
 
   const profileDetails = personalSalud
     ? [
-        { label: 'Nombre completo', value: fullName, field: 'nombres_personal', isPersonalSalud: true },
+        { label: 'Nombres completos', value: fullName, field: 'nombre_completo', isPersonalSalud: true, icon: <PersonIcon /> },
+        { label: 'Nombre de usuario', value: user.username_usuario || '', field: 'username_usuario', icon: <AccountCircleIcon /> },
         { label: 'Correo electrónico', value: user.correo_usuario, field: 'correo_usuario', icon: <EmailIcon /> },
         { label: 'Teléfono', value: personalSalud.telefono_personal || 'No especificado', field: 'telefono_personal', icon: <PhoneIcon />, isPersonalSalud: true },
-        { label: 'Especialidad', value: personalSalud.especialidad?.nombre_especialidad || 'No especificada', field: 'id_especialidad', isPersonalSalud: true },
-        { label: 'Número de licencia', value: personalSalud.dni_personal || 'No especificado', field: 'dni_personal', isPersonalSalud: true },
-        { label: 'Nacionalidad', value: personalSalud.nacionalidad_personal || 'No especificada', field: 'nacionalidad_personal', isPersonalSalud: true },
-        { label: 'Dirección', value: personalSalud.direccion_personal || 'No especificada', field: 'direccion_personal', isPersonalSalud: true },
+        { label: 'Especialidad', value: personalSalud.especialidad?.nombre_especialidad || 'No especificada', field: 'id_especialidad', icon: <MedicalServicesIcon />, isPersonalSalud: true },
+        { label: 'Número de licencia', value: personalSalud.dni_personal || 'No especificado', field: 'dni_personal', icon: <BadgeIcon />, isPersonalSalud: true },
+        { label: 'Nacionalidad', value: personalSalud.nacionalidad_personal || 'No especificada', field: 'nacionalidad_personal', icon: <PublicIcon />, isPersonalSalud: true },
+        { label: 'Dirección', value: personalSalud.direccion_personal || 'No especificada', field: 'direccion_personal', icon: <HomeIcon />, isPersonalSalud: true },
       ]
     : [
-        { label: 'Nombre completo', value: fullName, field: 'apellido_usuario' },
-        { label: 'Nombre de usuario', value: user.nombre_usuario || '', field: 'nombre_usuario' },
+        { label: 'Nombres completos', value: fullName, field: 'nombre_completo', icon: <PersonIcon /> },
+        { label: 'Nombre de usuario', value: user.username_usuario || '', field: 'username_usuario', icon: <AccountCircleIcon /> },
         { label: 'Correo electrónico', value: user.correo_usuario, field: 'correo_usuario', icon: <EmailIcon /> },
       ];
 
@@ -326,7 +332,28 @@ const Perfil = () => {
                     <List>
                       {profileDetails.map((detail, index) => (
                         <ListItem key={index} divider={index !== profileDetails.length - 1}>
-                          {isEditing ? (
+                          {isEditing && detail.field === 'nombre_completo' ? (
+                            <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                              <TextField
+                                fullWidth
+                                label="Nombres"
+                                name={detail.isPersonalSalud ? 'nombres_personal' : 'nombre_usuario'}
+                                value={(detail.isPersonalSalud ? editedPersonalSalud : editedUser)[detail.isPersonalSalud ? 'nombres_personal' : 'nombre_usuario'] || ''}
+                                onChange={(e) => handleChange(e, detail.isPersonalSalud)}
+                                variant="outlined"
+                                sx={{ my: 1 }}
+                              />
+                              <TextField
+                                fullWidth
+                                label="Apellidos"
+                                name={detail.isPersonalSalud ? 'apellidos_personal' : 'apellido_usuario'}
+                                value={(detail.isPersonalSalud ? editedPersonalSalud : editedUser)[detail.isPersonalSalud ? 'apellidos_personal' : 'apellido_usuario'] || ''}
+                                onChange={(e) => handleChange(e, detail.isPersonalSalud)}
+                                variant="outlined"
+                                sx={{ my: 1 }}
+                              />
+                            </Box>
+                          ) : isEditing ? (
                             <TextField
                               fullWidth
                               label={detail.label}

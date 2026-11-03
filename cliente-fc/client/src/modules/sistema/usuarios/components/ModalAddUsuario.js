@@ -87,6 +87,7 @@ export default function ModalAddUsuario({ open, onClose, onAddUser, existingUser
     setError('');
     if (value) {
       setEmail(value.email_personal || '');
+      setUsername((value.email_personal || '').split('@')[0]);
     } else {
       setEmail('');
     }
@@ -103,8 +104,21 @@ export default function ModalAddUsuario({ open, onClose, onAddUser, existingUser
       return;
     }
 
-    if (!username || !email || !password) {
+    const nombreUsuario = tipoPersonal === 'salud'
+      ? (selectedPersonal?.nombres_personal || '')
+      : nombres.trim();
+    const apellidoUsuario = tipoPersonal === 'salud'
+      ? (selectedPersonal?.apellidos_personal || '')
+      : apellidos.trim();
+    const usernameUsuario = username.trim();
+
+    if (!nombreUsuario || !apellidoUsuario || !usernameUsuario || !email || !password) {
       setError('Por favor, complete todos los campos.');
+      return;
+    }
+
+    if (/\s/.test(usernameUsuario)) {
+      setError('El nombre de usuario no puede contener espacios.');
       return;
     }
 
@@ -121,10 +135,9 @@ export default function ModalAddUsuario({ open, onClose, onAddUser, existingUser
     try {
       const newUser = {
         id_personal_salud: tipoPersonal === 'salud' ? selectedPersonal.id_personalsalud : null,
-        nombre_usuario: username,
-        apellido_usuario: tipoPersonal === 'salud'
-          ? `${selectedPersonal.nombres_personal} ${selectedPersonal.apellidos_personal}`
-          : `${nombres.trim()} ${apellidos.trim()}`,
+        nombre_usuario: nombreUsuario,
+        apellido_usuario: apellidoUsuario,
+        username_usuario: usernameUsuario,
         correo_usuario: email,
         password_usuario: password,
         rol_usuario: role,
@@ -139,12 +152,12 @@ export default function ModalAddUsuario({ open, onClose, onAddUser, existingUser
       const detailedDescription = {
         accion: "CREAR",
         tabla: 'usuarios',
-        id_registro: newUser.id_personal_salud || username,
+        id_registro: newUser.id_personal_salud || nombreUsuario,
         datos_modificados: {
           estado_anterior: null,
           estado_nuevo: newUser,
           detalles_usuario: {
-            nombre: username,
+            nombre: nombreUsuario,
             email: email,
             rol: role,
             tipo_personal: tipoPersonal,
@@ -167,7 +180,7 @@ export default function ModalAddUsuario({ open, onClose, onAddUser, existingUser
 
   const isSaveDisabled = () => {
     if (error) return true;
-    if (!username || !email || !password) return true;
+    if (!email || !password || !username.trim()) return true;
     if (tipoPersonal === 'salud') {
       return !selectedPersonal;
     }
@@ -255,20 +268,27 @@ export default function ModalAddUsuario({ open, onClose, onAddUser, existingUser
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Nombre de Usuario"
+              label="Nombre de usuario"
               variant="outlined"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              autoComplete="off"
+              helperText="Identifica tu cuenta. No puede contener espacios."
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Correo Electrónico"
+              label="Correo Electr��nico"
               variant="outlined"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => {
+                if (!username.trim() && email.trim()) {
+                  setUsername(email.split('@')[0]);
+                }
+              }}
               autoComplete="off"
             />
           </Grid>
