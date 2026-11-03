@@ -12,6 +12,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CREATE_SCHEMA = {
     nombre_usuario: { type: 'string', maxLength: 250 },
     apellido_usuario: { type: 'string', maxLength: 250 },
+    username_usuario: { type: 'string', maxLength: 250 },
     correo_usuario: { type: 'string', maxLength: 250, pattern: EMAIL_PATTERN },
     password_usuario: { type: 'string', required: true, minLength: 6, maxLength: 250 },
     rol_usuario: { type: 'string', enum: ROLES_VALIDOS },
@@ -22,6 +23,7 @@ const CREATE_SCHEMA = {
 const SELF_UPDATE_SCHEMA = {
     nombre_usuario: { type: 'string', maxLength: 250 },
     apellido_usuario: { type: 'string', maxLength: 250 },
+    username_usuario: { type: 'string', maxLength: 250 },
     correo_usuario: { type: 'string', maxLength: 250, pattern: EMAIL_PATTERN },
 };
 
@@ -163,8 +165,18 @@ const changePassword = async (req, res, next) => {
     }
 };
 
+const getAsignables = async ( req, res ) => {
+    try {
+        const response = await service.findAsignables();
+        res.json(response);
+    } catch (error) {
+        console.error('Error listando usuarios asignables:', error);
+        res.status(500).send({ success: false, message: 'Error interno del servidor' });
+    }
+}
+
 module.exports = {
-    create, get, getById, update, _delete, login, logout, changePassword
+    create, get, getById, update, _delete, login, logout, changePassword, getAsignables
 };
 
 

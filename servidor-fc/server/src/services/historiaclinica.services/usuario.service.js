@@ -19,6 +19,17 @@ class UsuarioService  {
         const res = await models.Usuario.findAll();
         return res.map((user) => this.toSafeUser(user));
     }
+
+    async findAsignables() {
+        const res = await models.Usuario.findAll({
+            where: {
+                estado_usuario: true,
+                rol_usuario: ['admin', 'personal_administrativo'],
+            },
+            attributes: ['id_usuario', 'nombre_usuario', 'apellido_usuario', 'rol_usuario', 'estado_usuario'],
+        });
+        return res.map((user) => this.toSafeUser(user));
+    }
     async encryptPassword(password) {
         const newpassword = bcrypt.hashSync(password, saltRounds);
         return newpassword;

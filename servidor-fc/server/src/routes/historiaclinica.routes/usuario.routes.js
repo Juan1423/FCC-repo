@@ -13,6 +13,7 @@ const esMismoUsuarioOAdmin = (req, res, next) => {
 
 router
     .get('/', verifyToken, requireRole(['admin']), usuarioController.get)
+    .get('/asignables', verifyToken, requireRole(['admin', 'personal_administrativo']), usuarioController.getAsignables)
     .get('/:id', verifyToken, esMismoUsuarioOAdmin, usuarioController.getById)
     .post('/', verifyToken, requireRole(['admin']), usuarioController.create)
     .put('/:id', verifyToken, esMismoUsuarioOAdmin, usuarioController.update)
