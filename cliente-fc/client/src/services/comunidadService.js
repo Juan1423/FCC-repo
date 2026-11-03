@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { logAuditAction } from './auditoriaServices';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/fcc';
+import { API_URL } from './apiConfig';
 
 const getRegiones = () => {
   return axios.get(`${API_URL}/geo?nivel=region`);
