@@ -118,7 +118,7 @@ const TipoDocumentoList = () => {
               <Typography variant="body2" sx={{ color: "#a8a29e", fontSize: "0.8rem", mt: 0.25 }}>{filtered.length} {filtered.length === 1 ? "tipo" : "tipos"}{search && " encontrados"}</Typography>
             </Box>
             <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
-              <TextField size="small" placeholder="Buscar tipos..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar tipos de documento por nombre o descripción" slotProps={{ input: { startAdornment: <SearchIcon sx={{ color: "#a8a29e", mr: 0.5, fontSize: 18 }} /> } }} sx={{ width: { xs: 1, sm: "auto" }, "& .MuiOutlinedInput-root": { borderRadius: "8px", bgcolor: "#ffffff", fontSize: "0.85rem", "& fieldset": { borderColor: "#e7e5e4" }, "&:hover fieldset": { borderColor: "#d6d3d1" }, "&.Mui-focused fieldset": { borderColor: "#0d9488" } } }} />
+              <TextField size="small" placeholder="Buscar tipos..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar tipos de documento por nombre o descripción" InputProps={{ startAdornment: <SearchIcon sx={{ color: "#a8a29e", mr: 0.5, fontSize: 18 }} /> }} sx={{ width: { xs: 1, sm: "auto" }, "& .MuiOutlinedInput-root": { borderRadius: "8px", bgcolor: "#ffffff", fontSize: "0.85rem", "& fieldset": { borderColor: "#e7e5e4" }, "&:hover fieldset": { borderColor: "#d6d3d1" }, "&.Mui-focused fieldset": { borderColor: "#0d9488" } } }} />
               <Button variant="contained" size="small" onClick={openCreate} startIcon={<AddIcon />} aria-label="Crear nuevo tipo de documento" sx={{ bgcolor: "#0d9488", "&:hover": { bgcolor: "#0f766e" }, textTransform: "none", fontWeight: 600, borderRadius: "8px", px: 2, py: 0.75, fontSize: "0.85rem", boxShadow: "0 1px 3px rgba(13,148,136,0.2)", whiteSpace: "nowrap" }}>Nuevo tipo</Button>
             </Box>
           </Box>
@@ -179,7 +179,7 @@ const TipoDocumentoList = () => {
       </Box>
 
       <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth aria-labelledby={dialogTitleId}
-        slotProps={{ backdrop: { sx: { backdropFilter: "blur(2px)", bgcolor: "rgba(0,0,0,0.3)" } } }}
+        BackdropProps={{ sx: { backdropFilter: "blur(2px)", bgcolor: "rgba(0,0,0,0.3)" } }}
         PaperProps={{ sx: { borderRadius: "12px", boxShadow: "0 20px 60px rgba(0,0,0,0.12)" } }}>
         <DialogTitle id={dialogTitleId} sx={{ fontWeight: 700, color: "#1c1917", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid", borderColor: "#e7e5e4", px: 3, py: 2 }}>
           {editingId ? "Editar tipo de documento" : "Nuevo tipo de documento"}
