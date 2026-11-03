@@ -18,3 +18,4 @@ doc_para_pruebas/
 .opencode/schema/
 .opencode/test-*.mjs
 .opencode/codebase-index.json
+cliente-fc/client/.env
