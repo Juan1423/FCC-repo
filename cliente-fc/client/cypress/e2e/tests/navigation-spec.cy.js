@@ -21,16 +21,15 @@ describe('Navigation Functionality', () => {
           cy.contains('Menu Principal').click()
           cy.url().should('include', '/fcc-menu-principal')
     
-          cy.contains('Paciente').click()
+          cy.contains('Historia Cl').click()
+          cy.contains('Pacientes').should('be.visible').click()
           cy.url().should('include', '/fcc-pacientes')
     
-          // Modificado: búsqueda más precisa de "Historia Clínica" e "Historia"
-          cy.contains('Historia Clínica').click()
           cy.contains(/^Historia$/).should('be.visible').click()
           cy.url().should('include', '/fcc-historias-clinicas')
     
-          cy.contains('Administración').click()
-          cy.contains('Usuarios').click()
+          cy.contains('Operaciones').click()
+          cy.contains('Usuarios').should('be.visible').click()
           cy.url().should('include', '/fcc-usuarios')
         })
       })    

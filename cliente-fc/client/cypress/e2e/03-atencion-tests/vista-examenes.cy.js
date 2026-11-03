@@ -2,7 +2,7 @@ describe('Vista de Exámenes', () => {
     beforeEach(() => {
     cy.login();
       cy.visit('/fcc-atencion');
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/paciente').as('getPacientes');
+      cy.intercept('GET', '**/api/fcc/paciente').as('getPacientes');
       cy.contains('button', 'Escoger Paciente').click();
       cy.wait('@getPacientes');
       cy.get('.MuiModal-root').not('#menu-appbar').within(() => {

@@ -82,43 +82,12 @@ it('should add a new patient', () => {
       .first()
       .click();
 
-// Encontrar el campo de fecha de nacimiento y abrirlo
-cy.contains('label', 'Fecha de Nacimiento')
-  .closest('.MuiFormControl-root')
-  .within(() => {
-    // Hacer clic en el icono del calendario para abrir el selector de fecha
-    cy.get('button[aria-label="Choose date"]').click();
-  });
-
-// El selector de fecha de MUI se abre en un diálogo
-cy.get('.MuiPickersPopper-root')
-  .should('be.visible')
-  .within(() => {
-    // Cambiar a la vista de año
-    cy.get('button[aria-label="calendar view is open, switch to year view"]')
-      .should('be.visible')
-      .click({ force: true });
-
-    // Esperar a que la vista de año sea visible y seleccionar el año 2015
-    cy.contains('button', '2015')
-      .should('be.visible')
-      .click({ force: true });
-
-    // Esperar a que la vista de mes sea visible
-    cy.get('.MuiDayCalendar-header').should('be.visible');
-
-    // Navegar al mes de septiembre
-    cy.get('button[title="Next month"]')
-      .click({ multiple: true, force: true });
-
-    // Seleccionar el día 9
-    cy.contains('button', '9')
-      .should('be.visible')
-      .click({ force: true });
-  });
-
-// Verificar que la fecha se ha seleccionado correctamente
-cy.get('input[placeholder="MM/DD/YYYY"]').should('have.value', '09/09/2015');
+// Escribir la fecha directamente evita depender del mes actual del calendario.
+cy.get('input[placeholder="MM/DD/YYYY"]')
+  .clear()
+  .type('09/09/2015')
+  .blur()
+  .should('have.value', '09/09/2015');
 
     cy.contains('button', 'Siguiente').click();
   

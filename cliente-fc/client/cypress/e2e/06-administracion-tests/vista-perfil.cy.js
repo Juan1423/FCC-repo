@@ -2,10 +2,10 @@ describe('Perfil View', () => {
 
     beforeEach(() => {
         cy.login(); 
+      cy.intercept('GET', '**/api/fcc/users/*').as('getUsuario');
+      cy.intercept('GET', '**/api/fcc/personalsalud/*/estadisticas').as('getEstadisticas');
+      cy.intercept('GET', '**/api/fcc/personalsalud/*').as('getPersonalSalud');
       cy.visit('/perfil');
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/users/*').as('getUsuario');
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/personalsalud/*').as('getPersonalSalud');
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/personalsalud/*/estadisticas').as('getEstadisticas');
       cy.wait(['@getUsuario', '@getPersonalSalud', '@getEstadisticas']);
     });
 
@@ -21,10 +21,10 @@ describe('Perfil View', () => {
     });
 
     it('should display professional statistics', () => {
-      cy.contains('Estadísticas profesionales').should('be.visible');
-      cy.contains('Pacientes atendidos').should('be.visible');
-      cy.contains('Años de experiencia').should('be.visible');
-      cy.contains('Terapias realizadas').should('be.visible');
+      cy.contains('Estadísticas profesionales').scrollIntoView().should('be.visible');
+      cy.contains('Pacientes atendidos').scrollIntoView().should('be.visible');
+      cy.contains('Años de experiencia').scrollIntoView().should('be.visible');
+      cy.contains('Terapias realizadas').scrollIntoView().should('be.visible');
     });
 
     it('should allow editing the profile', () => {
@@ -49,7 +49,7 @@ describe('Perfil View', () => {
     });
 
     it('should handle error when updating profile', () => {
-      cy.intercept('PUT', 'https://newfreshstudio.com:5001/api/fcc/usuario/*', {
+      cy.intercept('PUT', '**/api/fcc/users/*', {
         statusCode: 500,
         body: 'Server error'
       }).as('updateUsuarioError');

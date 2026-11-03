@@ -50,7 +50,9 @@ const abrirChatComoVisitante = () => {
     cy.get('.MuiDialog-root').within(() => {
         cy.get('input').eq(0).type('Visitante Cypress');
         cy.get('input').eq(1).type('1712345678');
-        cy.contains('button', 'Registrar y continuar').click();
+        // Esperar a que React sincronice el estado de los inputs antes de enviar
+        cy.wait(1000);
+        cy.contains('button', 'Registrar y continuar').should('not.be.disabled').click();
     });
     cy.wait('@registrarVisitante');
 };
@@ -61,8 +63,8 @@ const aceptarConsentimiento = () => {
 };
 
 const enviarMensaje = (texto) => {
-    cy.get('input[type="text"]').clear().type(texto, { delay: 0 });
-    cy.contains('button', 'Enviar').click();
+    cy.get('.chatbot-input input').clear().type(texto, { delay: 0 });
+    cy.get('.chatbot-input button').click();
 };
 
 describe('Chatbot público RAG — UI', () => {
@@ -79,10 +81,11 @@ describe('Chatbot público RAG — UI', () => {
         abrirChatComoVisitante();
         aceptarConsentimiento();
 
-        cy.contains('button', 'Enviar').click();
+        cy.get('.chatbot-input button').click();
         cy.get('.message.user').should('have.length', 0);
 
-        enviarMensaje('     ');
+        cy.get('.chatbot-input input').clear().type('     ');
+        cy.get('.chatbot-input button').click();
         cy.get('.message.user').should('have.length', 0);
     });
 
@@ -222,7 +225,7 @@ describe('Chatbot público RAG — UI', () => {
 
         abrirChatComoVisitante();
         aceptarConsentimiento();
-        cy.get('input[type="text"]').should('be.disabled');
-        cy.get('input[type="text"]').should('have.attr', 'placeholder', 'Límite de preguntas alcanzado');
+        cy.get('.chatbot-input input').should('be.disabled');
+        cy.get('.chatbot-input input').should('have.attr', 'placeholder', 'Límite de preguntas alcanzado');
     });
 });

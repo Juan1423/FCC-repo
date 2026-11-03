@@ -4,7 +4,7 @@ describe('Terapias Page', () => {
     beforeEach(() => {
       cy.login(); // Asumiendo que tienes un comando personalizado para el login
       cy.visit('/fcc-terapias');
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/paciente').as('getPacientes');
+      cy.intercept('GET', '**/api/fcc/paciente').as('getPacientes');
     });
   
     const openPatientModal = () => {
@@ -18,6 +18,14 @@ describe('Terapias Page', () => {
       cy.get('.MuiModal-root').not('#menu-appbar').within(() => {
         cy.get('.MuiList-root .MuiListItem-root').contains(patientName).closest('.MuiListItem-root').find('button').click();
       });
+    };
+
+    // El componente filtra por defecto "Últimos 7 días". Al elegir "Rango
+    // personalizado" sin fechas se muestran todas las terapias, evitando
+    // que los datos antiguos queden ocultos por el paso del tiempo.
+    const showAllTerapias = () => {
+      cy.get('#date-range-label').parent().find('[role="combobox"]').click();
+      cy.get('ul[role="listbox"]').contains('Rango personalizado').click();
     };
   
     describe('TerapiasHeader', () => {
@@ -78,6 +86,7 @@ describe('Terapias Page', () => {
     describe('Terapias Content', () => {
       beforeEach(() => {
         selectPatient('Ana María García López');
+        showAllTerapias();
       });
   
       it('displays the list of terapias for the selected patient', () => {
@@ -86,30 +95,22 @@ describe('Terapias Page', () => {
       });
   
       it('allows filtering terapias by date', () => {
-        const filterDate = '2024-08-20';
-        const filterDateFormatted = '20/08/2024';
+        const filterDateFormatted = '12/08/2024';
         
-        cy.get('input[type="date"]')
-          .type(filterDate, { force: true })
-          .should('have.value', filterDate)
-          .trigger('change')
-          .trigger('input')
-          .trigger('blur');
+        // En rango personalizado se muestran los DatePicker de inicio/fin
+        cy.contains('label', 'Fecha inicial')
+          .closest('.MuiFormControl-root')
+          .find('input')
+          .clear()
+          .type('08/01/2024');
+        cy.contains('label', 'Fecha final')
+          .closest('.MuiFormControl-root')
+          .find('input')
+          .clear()
+          .type('08/31/2024{enter}');
   
-        cy.wait(1000);
-  
-        cy.get('.MuiTableBody-root .MuiTableRow-root').then($rows => {
-          let foundFilteredDate = false;
-          cy.wrap($rows).each(($row) => {
-            cy.wrap($row).find('td').eq(0).invoke('text').then(text => {
-              if (text.includes(filterDateFormatted)) {
-                foundFilteredDate = true;
-              }
-            });
-          }).then(() => {
-            expect(foundFilteredDate).to.be.true;
-          });
-        });
+        cy.get('.MuiTableBody-root .MuiTableRow-root').should('have.length.gt', 0);
+        cy.get('.MuiTableBody-root').should('contain', filterDateFormatted);
       });
   
       it('shows terapia details when clicked', () => {

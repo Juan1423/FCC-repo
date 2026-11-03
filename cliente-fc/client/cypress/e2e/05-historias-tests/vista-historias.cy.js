@@ -3,9 +3,9 @@
 describe('Historia Component', () => {
     beforeEach(() => {
       cy.login();
+      cy.intercept('GET', '**/api/fcc/paciente').as('getPacientes');
+      cy.intercept('GET', '**/api/fcc/historia/*').as('getHistoria');
       cy.visit('/fcc-historias-clinicas');
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/paciente').as('getPacientes');
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/historia/*').as('getHistoria');
     });
   
     const openPatientModal = () => {
@@ -67,7 +67,7 @@ describe('Historia Component', () => {
     });
   
     it('Should show loading state while fetching historia', () => {
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/historia/*', (req) => {
+      cy.intercept('GET', '**/api/fcc/historia/*', (req) => {
         req.on('response', (res) => {
           res.setDelay(1000);
         });
@@ -83,8 +83,8 @@ describe('Historia Component', () => {
     });
       
     it('Should allow adding a new historia', () => {
-      selectPatient('Paciente Nuevo');
-      cy.get('button').contains('Agregar Historia').should('be.visible').click();
+      selectPatient('Ana María García López');
+      cy.get('button').contains(/Historia Clínica General/).should('be.visible').click();
       // Here you would add assertions for the new historia form or modal
       // For example:
       // cy.get('.MuiDialog-root').should('be.visible');

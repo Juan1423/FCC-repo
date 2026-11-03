@@ -6,7 +6,7 @@ describe('Componente de Atención', () => {
     beforeEach(() => {
         cy.login();
       cy.visit('/fcc-atencion');
-      cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/paciente').as('getPacientes');
+      cy.intercept('GET', '**/api/fcc/paciente').as('getPacientes');
     });
   
     const openPatientModal = () => {
@@ -21,6 +21,14 @@ describe('Componente de Atención', () => {
       cy.get('.MuiModal-root').not('#menu-appbar').within(() => {
         cy.get('.MuiList-root .MuiListItem-root').contains(patientName).closest('.MuiListItem-root').find('button').click();
       });
+    };
+
+    // El componente filtra por defecto "Últimos 7 días". Al elegir "Rango
+    // personalizado" sin fechas se muestran todas las atenciones, evitando
+    // que los datos antiguos queden ocultos por el paso del tiempo.
+    const showAllAtenciones = () => {
+      cy.get('#date-range-label').parent().find('[role="combobox"]').click();
+      cy.get('ul[role="listbox"]').contains('Rango personalizado').click();
     };
   
     it('Debe permitir seleccionar un paciente', () => {
@@ -38,6 +46,7 @@ describe('Componente de Atención', () => {
   
     it('Debe mostrar la lista de atenciones del paciente seleccionado', () => {
       selectPatient('Ana María García López');
+      showAllAtenciones();
       cy.get('.MuiTableContainer-root').should('be.visible');
       cy.get('.MuiTableBody-root .MuiTableRow-root').should('have.length.gt', 0);
     });
@@ -45,6 +54,7 @@ describe('Componente de Atención', () => {
    
     it('should filter atenciones by date on the front end', () => {
         selectPatient('Ana María García López');
+        showAllAtenciones();
         
         // Store the initial number of rows
         let initialRowCount;
@@ -100,12 +110,14 @@ describe('Componente de Atención', () => {
   
     it('Debe mostrar los detalles de una atención al hacer clic', () => {
       selectPatient('Ana María García López');
+      showAllAtenciones();
       cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('.MuiIconButton-root').click();
       cy.get('.MuiCollapse-root').should('be.visible');
     });
   
     it('Debe permitir generar un reporte PDF', () => {
       selectPatient('Ana María García López');
+      showAllAtenciones();
       cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('.MuiIconButton-root').click();
       
       cy.contains('button', 'Generar Informe').should('be.visible').click();

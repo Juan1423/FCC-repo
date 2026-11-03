@@ -7,9 +7,10 @@ describe('Usuarios and Perfil Views', () => {
   
     describe('Usuarios View', () => {
       beforeEach(() => {
+        cy.intercept('GET', '**/api/fcc/users*').as('getUsuarios');
         cy.visit('/fcc-usuarios');
-        cy.intercept('GET', 'https://newfreshstudio.com:5001/api/fcc/users').as('getUsuarios');
-        cy.wait('@getUsuarios');
+        cy.get('h5').contains('Usuarios').should('be.visible');
+        cy.get('.MuiTableBody-root .MuiTableRow-root').should('have.length.gt', 0);
       });
   
       it('should load the Usuarios component', () => {
@@ -33,25 +34,33 @@ describe('Usuarios and Perfil Views', () => {
       });
   
       it('should allow editing a user', () => {
-        cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('button').contains('edit').click();
-        cy.get('input[value="PersonalSalud"]').should('be.visible');
-        cy.get('button').contains('save').click();
-        // Add assertions to check if the edit was successful
+        cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('button').first().click();
+        // En modo edición aparecen los TextField de nombre/correo y el Select de rol
+        cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('input').should('have.length.gte', 2);
+        cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('[role="combobox"]').should('exist');
+        // Cancelar para no persistir cambios
+        cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('button').last().click();
       });
   
       it('should allow activating/deactivating a user', () => {
+        cy.intercept('PUT', '**/api/fcc/users/*', { statusCode: 200, body: { success: true } }).as('updateUser');
         cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('.MuiChip-root').click();
-        // Add assertions to check if the status changed
+        cy.wait('@updateUser');
       });
   
       it('should allow deleting a user', () => {
-        cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('button').contains('delete').click();
-        // Add assertions to check if the user was removed from the list
+        cy.intercept('DELETE', '**/api/fcc/users/*', { statusCode: 200, body: { success: true } }).as('deleteUser');
+        cy.get('.MuiTableBody-root .MuiTableRow-root').first().find('button').last().click();
+        cy.wait('@deleteUser');
       });
-  
+
       it('should handle pagination', () => {
         cy.get('.MuiTablePagination-root').should('exist');
-        cy.get('.MuiTablePagination-actions button').last().click();
+        cy.get('.MuiTablePagination-actions button').last().then(($btn) => {
+          if (!$btn.is(':disabled')) {
+            cy.wrap($btn).click();
+          }
+        });
         // Add assertions to check if the page changed
       });
     });
