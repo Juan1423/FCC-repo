@@ -37,13 +37,15 @@ const Login = () => {
       try {
         const response = await authService.verifyToken();
         if (response.isValid === true) {
+          // Rehidratar el usuario si el token es válido pero falta en localStorage.
+          await authService.rehydrateUser(response.data);
           navigate("/fcc-menu-principal");
         } else {
           authService.logout();
         }
       } catch (error) {
-        console.error('Error verifying token:', error);
-        authService.logout();
+        // Error transitorio de red/servidor: no borrar la sesión local.
+        console.error('Error verifying token (transitorio):', error);
       } finally {
         setLoading(false);
       }

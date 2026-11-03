@@ -50,9 +50,30 @@ export const verifyToken = async () => {
         const response = await axios.post(`${API_URL}/auth`, {});
         return response.data;
     } catch (error) {
-        console.error('Error verifying token:', error);
-        return { isValid: false };
+        const status = error?.response?.status;
+        if (status === 400 || status === 401) {
+            // Token ausente o inválido: la sesión realmente no es válida.
+            return { isValid: false };
+        }
+        // Error de red o del servidor (caída, reinicio, 5xx): no invalidar la sesión local.
+        console.error('Error verificando token (transitorio):', error);
+        throw error;
     }
+};
+
+export const rehydrateUser = async (tokenPayload) => {
+    try {
+        if (!tokenPayload?.user) return null;
+        if (getUserInfo()) return getUserInfo();
+        const response = await axios.get(`${API_URL}/users/${tokenPayload.user}`);
+        if (response.data) {
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.data));
+            return response.data;
+        }
+    } catch (error) {
+        console.error('No se pudo restaurar los datos del usuario:', error);
+    }
+    return null;
 };
 
 export const setAuthToken = (token) => {

@@ -15,12 +15,19 @@ const PrivateRoute = ({ element: Element, allowedRoles, ...rest }) => {
         if (response.isValid === true) {
           setIsAuthenticated(true);
           setUserRole(response.data.rol);
+          // Si el token es válido pero falta el usuario local (p. ej. tras una caída del server), rehidratar.
+          await authService.rehydrateUser(response.data);
         } else {
           authService.logout();
         }
       } catch (error) {
-        console.error('Error verifying token:', error);
-        authService.logout();
+        // Error transitorio de red/servidor: conservar la sesión local y dejar reintentar.
+        console.error('Error verifying token (transitorio):', error);
+        const info = authService.getUserInfo();
+        if (info) {
+          setIsAuthenticated(true);
+          setUserRole(info.rol);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -47,7 +54,8 @@ const PrivateRoute = ({ element: Element, allowedRoles, ...rest }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/accessdenied" replace />;
+    // Sin sesión válida se vuelve al login, no a "acceso denegado".
+    return <Navigate to="/" replace />;
   }
 
   if (allowedRoles.includes(userRole)) {
