@@ -48,6 +48,7 @@ export default function ResponsiveDrawer({ open, onClose }) {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [isAdmin, setIsAdmin] = useState(false);
   const [canSeeGestionMenu, setCanSeeGestionMenu] = useState(false);
+  const [canSeeClinicalMenu, setCanSeeClinicalMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showChip, setShowChip] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -105,6 +106,7 @@ export default function ResponsiveDrawer({ open, onClose }) {
       const rol = userInfo?.rol;
       setIsAdmin(rol === 'admin');
       setCanSeeGestionMenu(rol === 'admin' || rol === 'personal_administrativo');
+      setCanSeeClinicalMenu(rol === 'admin' || rol === 'doctor' || rol === 'personal_salud');
     } catch (error) {
       console.error('Error fetching user info:', error);
     } finally {
@@ -135,6 +137,7 @@ export default function ResponsiveDrawer({ open, onClose }) {
       key: 'medicalHistory',
       text: 'Historia Clínica',
       icon: <AssignmentTurnedInIcon />,
+      isClinical: true,
       subItems: [
         { text: 'Historia', path: '/fcc-historias-clinicas', icon: <AssignmentIcon /> },
         { text: 'Pacientes', path: '/fcc-pacientes', icon: <FaceIcon /> },
@@ -190,6 +193,7 @@ export default function ResponsiveDrawer({ open, onClose }) {
   const renderListItem = (item, index, items) => {
     if (item.isAdmin && !isAdmin) return null;
     if (item.isGestion && !canSeeGestionMenu) return null;
+    if (item.isClinical && !canSeeClinicalMenu) return null;
 
     const isSelected = location.pathname === item.path || item.subItems?.some(subItem => location.pathname === subItem.path);
     const isLastItem = index === items.length - 1;

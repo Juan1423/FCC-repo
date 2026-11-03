@@ -119,22 +119,27 @@ const Dashboard = () => {
         const userInfo = getUserInfo();
         if (userInfo && userInfo.rol) {
           setUserRole(userInfo.rol);
+          const isClinical = ['admin', 'doctor', 'personal_salud'].includes(userInfo.rol);
           try {
-            const pacientes = await getPacientes();
-            const personal = await getPersonalSalud();
-            const historias = await getHistorias();
-            const atenciones = await getAllAtenciones();
+            if (isClinical) {
+              const [pacientes, personal, historias, atenciones] = await Promise.all([
+                getPacientes(),
+                getPersonalSalud(),
+                getHistorias(),
+                getAllAtenciones(),
+              ]);
 
-            setDashboardData({
-              pacientesActivos: pacientes.filter(
-                (p) => p.estado_paciente === true
-              ).length,
-              atencionesRealizadas: atenciones.length,
-              historiasRealizadas: historias.length,
-              personalDisponible: personal.filter(
-                (p) => p.estado_personal === true
-              ).length,
-            });
+              setDashboardData({
+                pacientesActivos: pacientes.filter(
+                  (p) => p.estado_paciente === true
+                ).length,
+                atencionesRealizadas: atenciones.length,
+                historiasRealizadas: historias.length,
+                personalDisponible: personal.filter(
+                  (p) => p.estado_personal === true
+                ).length,
+              });
+            }
             setIsLoading(false);
           } catch (error) {
             console.error("Error fetching dashboard data:", error);
@@ -169,6 +174,8 @@ const Dashboard = () => {
   const filteredMenuData = menuData.filter((item) =>
     item.roles.includes(userRole)
   );
+
+  const isClinicalRole = ['admin', 'doctor', 'personal_salud'].includes(userRole);
 
   if (isLoading) {
     return (
@@ -251,6 +258,7 @@ const Dashboard = () => {
               </Grid>
             ))}
           </Grid>
+          {isClinicalRole && (
           <Box sx={{ mt: 6 }}>
             <Typography
               variant="h5"
@@ -323,6 +331,7 @@ const Dashboard = () => {
               ))}
             </Grid>
           </Box>
+          )}
         </Container>
       </Box>
       <HelpModal

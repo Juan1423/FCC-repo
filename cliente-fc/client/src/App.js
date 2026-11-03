@@ -246,7 +246,7 @@ function App() {
             />
             <Route 
               path="/fcc-normativa/*"
-              element={<PrivateRoute element={NormativaModule} allowedRoles={['admin']} />} 
+              element={<PrivateRoute element={NormativaModule} allowedRoles={['admin', 'personal_administrativo']} />} 
             /> 
                    
             <Route 
