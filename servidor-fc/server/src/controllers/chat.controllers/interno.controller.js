@@ -104,6 +104,7 @@ const enviarMensaje = async (req, res) => {
 
         res.json({
             success: true,
+            decision: 'responder',
             respuesta: result.respuesta,
             id_conversacion: result.id_conversacion,
             sessionId: effectiveSessionId,
