@@ -9,6 +9,10 @@ const TOO_MANY_REQUESTS = {
     message: 'Demasiadas solicitudes. Intenta de nuevo en unos minutos.',
 };
 
+// Bypass opt-in para entornos locales/E2E. Se lee en tiempo de request porque
+// app.js hace dotenv.config() despues de requerir este modulo.
+const isRateLimitDisabled = () => process.env.RATE_LIMIT_DISABLED === 'true';
+
 const buildLimiter = ({ windowMs, max, keyGenerator, message = TOO_MANY_REQUESTS, skipSuccessfulRequests = false }) =>
     rateLimit({
         windowMs,
@@ -16,6 +20,7 @@ const buildLimiter = ({ windowMs, max, keyGenerator, message = TOO_MANY_REQUESTS
         standardHeaders: 'draft-7',
         legacyHeaders: false,
         skipSuccessfulRequests,
+        skip: isRateLimitDisabled,
         keyGenerator,
         handler: (req, res) => res.status(429).json(message),
     });
