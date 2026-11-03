@@ -12,6 +12,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import GavelIcon from "@mui/icons-material/Gavel";
 import { API_IMAGE_URL } from "../../../../services/apiConfig";
 import * as docService from "../../../../services/documentacionService";
@@ -52,6 +53,7 @@ const NormativaList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm());
+  const [archivoFile, setArchivoFile] = useState(null);
   const [search, setSearch] = useState("");
   const [animating, setAnimating] = useState(true);
   const [page, setPage] = useState(0);
@@ -145,6 +147,7 @@ const NormativaList = () => {
   const handleOpenModal = () => {
     setEditingId(null);
     setFormData(emptyForm());
+    setArchivoFile(null);
     setOpenModal(true);
   };
 
@@ -164,10 +167,14 @@ const NormativaList = () => {
       tipo_registro_normativa: item.tipo_registro_normativa || "",
       observaciones_normativa: item.observaciones_normativa || "",
     });
+    setArchivoFile(null);
     setOpenModal(true);
   };
 
-  const handleCloseModal = () => setOpenModal(false);
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setArchivoFile(null);
+  };
 
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value });
@@ -203,13 +210,26 @@ const NormativaList = () => {
     }
     const payload = buildPayload();
     try {
+      let dataToSend = payload;
+      if (archivoFile) {
+        const fd = new FormData();
+        Object.entries(payload).forEach(([key, value]) => {
+          if (key === "archivo_normativa") return;
+          if (value !== null && value !== undefined && value !== "") {
+            fd.append(key, value);
+          }
+        });
+        fd.append("archivo_normativa", archivoFile);
+        dataToSend = fd;
+      }
       if (editingId) {
-        await docService.updateNormativa(editingId, payload);
+        await docService.updateNormativa(editingId, dataToSend);
         announce("Normativa actualizada correctamente");
       } else {
-        await docService.createNormativa(payload);
+        await docService.createNormativa(dataToSend);
         announce("Normativa creada correctamente");
       }
+      setArchivoFile(null);
       setOpenModal(false);
       fetchNormativas();
     } catch {
@@ -316,12 +336,10 @@ const NormativaList = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 aria-label="Buscar normativas por nombre, descripción, tipo o registro"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <SearchIcon sx={{ color: "#a8a29e", mr: 0.5, fontSize: 18 }} />
-                    ),
-                  },
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: "#a8a29e", mr: 0.5, fontSize: 18 }} />
+                  ),
                 }}
                 sx={{
                   width: { xs: 1, sm: "auto" },
@@ -543,9 +561,7 @@ const NormativaList = () => {
         fullWidth
         scroll="paper"
         aria-labelledby={dialogTitleId}
-        slotProps={{
-          backdrop: { sx: { backdropFilter: "blur(2px)", bgcolor: "rgba(0,0,0,0.3)" } },
-        }}
+        BackdropProps={{ sx: { backdropFilter: "blur(2px)", bgcolor: "rgba(0,0,0,0.3)" } }}
         PaperProps={{ sx: { borderRadius: "12px", boxShadow: "0 20px 60px rgba(0,0,0,0.12)" } }}
       >
         <DialogTitle
@@ -595,21 +611,41 @@ const NormativaList = () => {
           {field("nivel_normativa", "Nivel", { type: "number" })}
           {field("jerarquia_normativa", "Jerarquía")}
           <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-            <TextField
-              fullWidth
-              label="Archivo (URL o ruta)"
-              value={formData.archivo_normativa}
-              onChange={handleChange("archivo_normativa")}
-              sx={{ flex: 1, minWidth: 200 }}
-            />
-            {formData.archivo_normativa && (
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{ textTransform: "none", borderRadius: "8px", borderColor: "#d6d3d1", color: "#44403c" }}
+            >
+              {archivoFile
+                ? archivoFile.name
+                : formData.archivo_normativa
+                  ? "Reemplazar archivo"
+                  : "Subir archivo"}
+              <input
+                type="file"
+                hidden
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt"
+                onChange={(e) => setArchivoFile(e.target.files?.[0] || null)}
+              />
+            </Button>
+            {archivoFile && (
+              <Button
+                size="small"
+                onClick={() => setArchivoFile(null)}
+                sx={{ textTransform: "none", fontWeight: 500, color: "#b91c1c" }}
+              >
+                Quitar
+              </Button>
+            )}
+            {formData.archivo_normativa && !archivoFile && (
               <Button
                 size="small"
                 onClick={() => openArchivo(formData.archivo_normativa)}
                 startIcon={<OpenInNewIcon fontSize="small" />}
                 sx={{ textTransform: "none", fontWeight: 500, color: "#0d9488" }}
               >
-                Ver archivo
+                Ver archivo actual
               </Button>
             )}
           </Box>
