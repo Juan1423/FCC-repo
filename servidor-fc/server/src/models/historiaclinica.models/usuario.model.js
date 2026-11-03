@@ -50,6 +50,10 @@ const UsuarioSchema = {
     type: DataTypes.STRING(250),
     allowNull: true,
   },
+  username_usuario: {
+    type: DataTypes.STRING(250),
+    allowNull: true,
+  },
   correo_usuario: {
     type: DataTypes.STRING(250),
     allowNull: true,

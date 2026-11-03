@@ -25,6 +25,7 @@ module.exports = {
       password_usuario: hashedPassword,
       nombre_usuario: personal.nombres_personal,
       apellido_usuario: personal.apellidos_personal,
+      username_usuario: personal.email_personal.split('@')[0],
       id_personal_salud: personal.id_personal_salud,
       estado_usuario: personal.estado,
       rol_usuario: personal.nombres_personal === 'Jorge' ? 'admin' : 'personal_salud',
