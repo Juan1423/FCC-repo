@@ -16,7 +16,7 @@ const CREATE_SCHEMA = {
     password_usuario: { type: 'string', required: true, minLength: 6, maxLength: 250 },
     rol_usuario: { type: 'string', enum: ROLES_VALIDOS },
     estado_usuario: { type: 'boolean' },
-    id_personal_salud: { type: 'integer', min: 1 },
+    id_personal_salud: { type: 'integer', min: 1, nullable: true },
 };
 
 const SELF_UPDATE_SCHEMA = {
@@ -29,7 +29,7 @@ const ADMIN_UPDATE_SCHEMA = {
     ...SELF_UPDATE_SCHEMA,
     rol_usuario: { type: 'string', enum: ROLES_VALIDOS },
     estado_usuario: { type: 'boolean' },
-    id_personal_salud: { type: 'integer', min: 1 },
+    id_personal_salud: { type: 'integer', min: 1, nullable: true },
 };
 
 const LOGIN_SCHEMA = {

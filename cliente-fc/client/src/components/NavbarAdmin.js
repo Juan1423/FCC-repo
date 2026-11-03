@@ -66,7 +66,10 @@ function NavbarAdmin({ onDrawerToggle }) {
         try {
           const user = await getUsuario(userId);
           setUserData(user);
-          const personal = await getPersonalSaludId(user.id_personal_salud);
+          // Guard: usuarios administrativos no tienen ficha en personal de salud
+          const personal = user.id_personal_salud
+            ? await getPersonalSaludId(user.id_personal_salud)
+            : null;
           setPersonalData(personal);
         } catch (error) {
           console.error('Error fetching user data:', error);
